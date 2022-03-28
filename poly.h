@@ -228,26 +228,6 @@ public:
   {
     *this+=monom;
   }
+  Polynomial (int64_t coef,int64_t pow):Polynomial{Monom{coef,pow}}{}
 };
-int main() {
-  Polynomial poly{};
-  poly += {30, 10};
-  std::cout << poly.to_string() << std::endl;
-  poly *= {2, 2};
-  std::cout << poly.to_string() << std::endl;
-  poly += {2, 2};
-  std::cout << poly.to_string() << std::endl;
-  poly += {3, 25};
-  std::cout << poly.to_string() << std::endl;
-  poly += {3, 37};
-  std::cout << poly.to_string() << std::endl;
-  poly /= {2, 2};
-  std::cout << poly.to_string() << std::endl;
-  Polynomial poly_div;
-  poly_div += {1, 2};
-  poly_div += {1, 1};
 
-  poly /= poly_div;
-
-  std::cout << poly.to_string() << std::endl;
-}
