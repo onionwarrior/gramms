@@ -74,8 +74,7 @@ public:
   inline auto begin() const { return terms_.begin(); }
   inline auto end() const { return terms_.end(); }
   inline void remove_zero() {
-    std::remove_if(terms_.begin(), terms_.end(),
-                   [](auto &&term) { return term.coef() == 0; });
+    terms_.remove_if([](auto &&term) { return term.coef() == 0; });
   }
   Polynomial &operator+=(const Monom &rhs) {
     auto same_power =
@@ -167,13 +166,15 @@ public:
 
   Polynomial &operator/=(const Polynomial &rhs) {
     auto quot = Polynomial{};
-    auto rem = *this;
-    while (rem.degree() >= rhs.degree()) {
-      auto t = rem.lead() / rhs.lead();
+    while (this->degree() >= rhs.degree()) {
+      std::cout << "This lead : " << lead().coef() << std::endl
+                << "other lead" << rhs.lead().repr() << std::endl;
+      auto t = this->lead() / rhs.lead();
       quot += t;
-      rem -= rhs * t;
+      *this -= rhs * t;
+      remove_zero();
     }
-    *this = quot + rem;
+    *this = quot;
     remove_zero();
     return *this;
   }
@@ -202,32 +203,25 @@ public:
     }
     return res.substr(1);
   }
-  Polynomial & operator^=(const int64_t pow)
-  {
+  Polynomial &operator^=(const int64_t pow) {
     const auto copy = *this;
-    if(pow==0)
-    {
-      *this=Monom{1,0};
+    if (pow == 0) {
+      *this = Monom{1, 0};
     }
-    for(auto i =0u;i<pow-1;++i)
-      *this*=copy;
+    for (auto i = 0u; i < pow - 1; ++i)
+      *this *= copy;
     return *this;
   }
-  friend Polynomial operator^(Polynomial lhs,const int64_t rhs)
-  {
-    lhs^=rhs;
+  friend Polynomial operator^(Polynomial lhs, const int64_t rhs) {
+    lhs ^= rhs;
     return lhs;
   }
-  Polynomial operator-() const {return *this*Monom{-1,0};};
-  Polynomial() {};
-  Polynomial(Polynomial&&)=default;
-  Polynomial(const Polynomial&)=default;
-  Polynomial& operator=(const Polynomial&)=default;
-  Polynomial&operator=(Polynomial&&)=default;
-  Polynomial (const Monom & monom)
-  {
-    *this+=monom;
-  }
-  Polynomial (int64_t coef,int64_t pow):Polynomial{Monom{coef,pow}}{}
+  Polynomial operator-() const { return *this * Monom{-1, 0}; };
+  Polynomial(){};
+  Polynomial(Polynomial &&) = default;
+  Polynomial(const Polynomial &) = default;
+  Polynomial &operator=(const Polynomial &) = default;
+  Polynomial &operator=(Polynomial &&) = default;
+  Polynomial(const Monom &monom) { *this += monom; }
+  Polynomial(int64_t coef, int64_t pow) : Polynomial{Monom{coef, pow}} {}
 };
-

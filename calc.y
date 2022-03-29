@@ -40,8 +40,9 @@ class driver;
 %%
 file_cont: polynomial END {std::cout<<$1.to_string();}
 
-polynomial:
-			 polynomial "+" polynomial
+polynomial:		monom
+				{ $$=$1;}
+			| polynomial "+" polynomial
 				{ $$=$1+$3; }
 			| polynomial "-" polynomial
 				{ $$=$1-$3; }
@@ -51,18 +52,16 @@ polynomial:
 				{ $$ = $2; }
 			| polynomial "/" polynomial
 				{ $$ =$1/$3;}
-			| polynomial "^" "int"
-			        { $$=$1^$3;}
-                        | monom
-                                { $$=$1;}
+			| "(" polynomial ")" "^" "int"
+			        { $$=$2^$5;}
 
 monom:
 			"int" "x" "^" "int"
-                                {$$={$1,$4};}
-                        |"int" "x"
+				{$$={$1,$4};}
+			|"x" "^" "int"
+				{$$={1,$3};}
+			|"int" "x"
                                 {$$={$1,1};}
-                        |"x" "^" "int"
-                                {$$={1,$3};}
                         |"x"
                                 {$$={1,1};}
                         |"int"

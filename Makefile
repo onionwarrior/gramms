@@ -1,6 +1,6 @@
 all:
 	@echo "Building calc to runner"
-	@bison -d calc.y &> /dev/null
+	@bison -d calc.y
 	@flex -o calc.lex.cc calc.lex
 	@g++  -o runner calc.lex.cc calc.tab.c driver.cpp runner.cpp -lm -std=c++17
 clean:
