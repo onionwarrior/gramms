@@ -1,51 +1,77 @@
-%language "c++"
-%require "3.2"
+%skeleton "lalr1.cc"
+%require "3.8.1"
 %code requires{
 #include "poly.h"
-#include <variant>
+class driver;
 }
-%define api.pure full
-%define api.value.type {std::variant<int64_t,Polynomial>}
-%token INTEGER
-%token PLUS MINUS MUL DIV POW
-%token LEFT RIGHT
-%token END
+%locations
+%define api.token.raw
+// Allows us to construct a parser instance in driver
+%define api.token.constructor
+%define api.value.type variant
+%define parse.trace
+%define parse.error detailed
+// Look-ahead correction
+%define parse.lac full
+// Avoid name clashes in generated files
+%define api.token.prefix {TOK_}
 
+%token <int64_t> INTEGER "int";
+%token
+	PLUS "+"
+	MINUS "-"
+	MUL "*"
+	DIV "/"
+	POW "^"
+	LEFT "("
+	RIGHT ")"
+	VAR "x"
+	;
+%token END 0 "end of file"
+%param { driver& drv }
+%type <Polynomial> polynomial;
+%type <Monom> monom;
 %left PLUS MINUS
 %left MUL DIV
 %right POW
-
+%code {
+# include "driver.h"
+}
 %%
+file_cont: polynomial END {std::cout<<$1.to_string();}
 
-poly:
-			| poly PLUS poly
-				{ $$=std::get<Polynomial>($1)+std::get<Polynomial>($3); }
-			| poly MINUS poly
-				{ $$=std::get<Polynomial>($1)-std::get<Polynomial>($3); }
-			| poly MUL poly
-				{ $$ = std::get<Polynomial>($1)*std::get<Polynomial>($3); }
-			| '-' poly %prec MINUS
-				{ $$ = -std::get<Polynomial>($2); }
-			| LEFT poly RIGHT
-				{ $$ = std::get<Polynomial>($2); }
-			| poly DIV poly
-				{ $$ = std::get<Polynomial>($1)/std::get<Polynomial>($2);}
-			| poly POW INTEGER
-			        { $$=std::get<Polynomial>($1)^std::get<int64_t>($3);}
+polynomial:
+			 polynomial "+" polynomial
+				{ $$=$1+$3; }
+			| polynomial "-" polynomial
+				{ $$=$1-$3; }
+			| polynomial "*" polynomial
+				{ $$ = $1*$3; }
+			|"(" polynomial ")"
+				{ $$ = $2; }
+			| polynomial "/" polynomial
+				{ $$ =$1/$3;}
+			| polynomial "^" "int"
+			        { $$=$1^$3;}
                         | monom
-                                { $$=std::get<int64_t>($1);}
+                                { $$=$1;}
 
 monom:
-                        |INTEGER 'x' POW INTEGER
-                                {$$=Polynomial(std::get<int64_t>($1),std::get<int64_t>($4));}
-                        |INTEGER 'x'
-                                {$$=Polynomial(std::get<int64_t>($1),1);}
-                        |'x' POW INTEGER
-                                {$$=Polynomial(1,std::get<int64_t>($3));}
-                        |'x'
-                                {$$=Polynomial(1,1);}
-                        |INTEGER
-                                {$$=Polynomial(std::get<int64_t>($1),0);}
+			"int" "x" "^" "int"
+                                {$$={$1,$4};}
+                        |"int" "x"
+                                {$$={$1,1};}
+                        |"x" "^" "int"
+                                {$$={1,$3};}
+                        |"x"
+                                {$$={1,1};}
+                        |"int"
+                                {$$={$1,0};}
 
 
 %%
+void
+yy::parser::error (const location_type& l, const std::string& m)
+{
+  std::cerr << l << ": " << m << '\n';
+}

@@ -1,21 +1,63 @@
 %{
-#include "calc.tab.hh"
 #include <string>
+#include <cstring>
+#include "driver.h"
+#include "calc.tab.h"
 %}
 /*
 *Any amount of tabs or spaces counts as newline:
 \*****************/
-%option noyywrap c++
-%option bison-bridge bison-locations
+%option noyywrap nounput noinput batch debug
+%{
+  // A number symbol corresponding to the value in S.
+  yy::parser::symbol_type
+  make_INTEGER (const std::string &s, const yy::parser::location_type& loc);
+%}
+%{
+  // Code run each time a pattern is matched.
+  # define YY_USER_ACTION  loc.columns (yyleng);
+%}
 %%
+%{
+  // A handy shortcut to the location held by the driver.
+  yy::location& loc = drv.location;
+  // Code run each time yylex is called.
+  loc.step ();
+%}
+[ \t]+
+[[:digit:]]+ return make_INTEGER(yytext,loc);
+"+" return yy::parser::make_PLUS(loc);
+"-" return yy::parser::make_MINUS(loc);
+"*" return yy::parser::make_MUL(loc);
+"/" return yy::parser::make_DIV(loc);
+"^" return yy::parser::make_POW(loc);
+"(" return yy::parser::make_LEFT(loc);
+")" return yy::parser::make_RIGHT(loc);
+"x" return yy::parser::make_VAR(loc);
+<<EOF>> return yy::parser::make_END(loc);
+%%
+yy::parser::symbol_type
+make_INTEGER (const std::string &s, const yy::parser::location_type& loc)
+{
+  errno = 0;
+  const int64_t n = std::stoll(s.c_str());
+  return yy::parser::make_INTEGER ( n, loc);
+}
+void
+driver::scan_begin ()
+{
+  yy_flex_debug = trace_scanning;
+  if (file.empty () || file == "-")
+    yyin = stdin;
+  else if (!(yyin = fopen (file.c_str (), "r")))
+    {
+      std::cerr << "cannot open " << file << ": " << strerror (errno) << '\n';
+      exit (EXIT_FAILURE);
+    }
+}
 
-[ \t]+ { }
-[[:digit:]]+ {yylval->emplace<int64_t>(std::stoll(yytext));return yy::parser::token::INTEGER;}
-"+" return yy::parser::token::PLUS;
-"-" return yy::parser::token::MINUS;
-"*" return yy::parser::token::MUL;
-"/" return yy::parser::token::DIV;
-"^" return yy::parser::token::POW;
-"(" return yy::parser::token::LEFT;
-")" return yy::parser::token::RIGHT;
-"\n" return yy::parser::token::END;
+void
+driver::scan_end ()
+{
+  fclose (yyin);
+}
