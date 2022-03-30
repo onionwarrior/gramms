@@ -167,8 +167,6 @@ public:
   Polynomial &operator/=(const Polynomial &rhs) {
     auto quot = Polynomial{};
     while (this->degree() >= rhs.degree()) {
-      std::cout << "This lead : " << lead().coef() << std::endl
-                << "other lead" << rhs.lead().repr() << std::endl;
       auto t = this->lead() / rhs.lead();
       quot += t;
       *this -= rhs * t;

@@ -34,6 +34,7 @@
 "(" return yy::parser::make_LEFT(loc);
 ")" return yy::parser::make_RIGHT(loc);
 "x" return yy::parser::make_VAR(loc);
+"\n" return yy::parser::make_NL(loc);
 <<EOF>> return yy::parser::make_END(loc);
 %%
 yy::parser::symbol_type

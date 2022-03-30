@@ -18,6 +18,7 @@ class driver;
 
 %token <int64_t> INTEGER "int";
 %token
+	NL "\n"
 	PLUS "+"
 	MINUS "-"
 	MUL "*"
@@ -38,7 +39,9 @@ class driver;
 # include "driver.h"
 }
 %%
-file_cont: polynomial END {std::cout<<$1.to_string();}
+file_cont:
+	 polynomial "\n" file_cont {std::cout<<$1.to_string();}
+	 | polynomial END {std::cout<<$1.to_string();}
 
 polynomial:		monom
 				{ $$=$1;}
