@@ -35,6 +35,7 @@ class driver;
 %type <Monom> monom;
 %type <int64_t> integer_const;
 %type <int64_t> int_eval;
+/*Everything is printed using <<*/
 %printer { yyo << $$; } <*>;
 %left PLUS MINUS
 %left MUL DIV
@@ -44,14 +45,21 @@ class driver;
 # include "driver.h"
 }
 %%
-calculation: |calculation line
+/* Correct input for calculation is either an empty input or a calculation
+ * followed by a line*/
+calculation:
+			%empty
+			|calculation line
 
-line: "\n"
-    | polynomial NL
-		{std::cout<<"Result: "<<$1<<std::endl;}
-polynomial:		monom
+/* Allows to skip empty lines*/
+line:
+			"\n"
+			| polynomial "\n"
+				{std::cout<<"Result: "<<$1<<std::endl;}
+polynomial:
+			monom /*A single monom*/
 				{ $$=$1;}
-			| "-" polynomial %prec UMINUS
+			| "-" polynomial %prec UMINUS /* Inverted polynomial*/
 				{$$=-$2;}
 			| polynomial "+" polynomial
 				{ $$=$1+$3; }
@@ -59,14 +67,17 @@ polynomial:		monom
 				{ $$=$1-$3; }
 			| polynomial "*" polynomial
 				{ $$ = $1*$3; }
-			|"(" polynomial ")"
+			|"(" polynomial ")" /*Brace support*/
 				{ $$ = $2; }
 			| polynomial "/" polynomial
 				{ $$ =$1/$3;}
 			| "(" polynomial ")" "^" integer_const
+				/*Raising a polynomial to a certain power
+				 * requires enclosing it with brackets*/
 			        { $$=$2^$5;}
 
 monom:
+			/*All possible ways to represent a monom*/
 			"int" "x" "^" integer_const
 				{$$={$1,$4};}
 			|"x" "^" integer_const
@@ -80,14 +91,19 @@ monom:
 			|"int" "^" integer_const
 				{$$={ipow64($1,$3),0};}
 
-integer_const:		"int"
+integer_const:		/*Wrapper for expression which
+			evaluates to an integer*/
+			"int"
 				{$$=$1;}
 			| "-" "int" %prec UMINUS
 				{$$=-$2;}
 			| "(" int_eval ")"
 				{$$=$2;}
 
-int_eval:		"int"
+int_eval:		/*This exists only to differentiate pure
+			numbers and polynomials since we cant raise
+			to a polynomial power*/
+			"int"
 				{$$=$1;}
 			| "-" "int" %prec UMINUS
 				{$$=-$2;}
