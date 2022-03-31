@@ -232,3 +232,10 @@ public:
   Polynomial(const Monom &monom) { *this += monom; }
   Polynomial(int64_t coef, int64_t pow) : Polynomial{Monom{coef, pow}} {}
 };
+inline int64_t ipow64(const int64_t base, const int64_t power)
+{
+	int64_t rv = 1;
+	for (int64_t i=0;i<power;++i)
+		rv*=base;
+	return rv;
+}

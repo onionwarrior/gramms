@@ -4,9 +4,7 @@
 #include "driver.h"
 #include "calc.tab.h"
 %}
-/*
-*Any amount of tabs or spaces counts as newline:
-\*****************/
+
 %option noyywrap nounput noinput batch debug
 %{
   // A number symbol corresponding to the value in S.

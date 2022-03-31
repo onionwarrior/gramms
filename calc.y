@@ -3,6 +3,7 @@
 %code requires{
 #include "poly.h"
 class driver;
+
 }
 %locations
 %define api.token.raw
@@ -32,6 +33,8 @@ class driver;
 %param { driver& drv }
 %type <Polynomial> polynomial;
 %type <Monom> monom;
+%type <int64_t> integer_const;
+%type <int64_t> int_eval;
 %printer { yyo << $$; } <*>;
 %left PLUS MINUS
 %left MUL DIV
@@ -60,13 +63,13 @@ polynomial:		monom
 				{ $$ = $2; }
 			| polynomial "/" polynomial
 				{ $$ =$1/$3;}
-			| "(" polynomial ")" "^" "int"
+			| "(" polynomial ")" "^" integer_const
 			        { $$=$2^$5;}
 
 monom:
-			"int" "x" "^" "int"
+			"int" "x" "^" integer_const
 				{$$={$1,$4};}
-			|"x" "^" "int"
+			|"x" "^" integer_const
 				{$$={1,$3};}
 			|"int" "x"
                                 {$$={$1,1};}
@@ -74,8 +77,28 @@ monom:
                                 {$$={1,1};}
                         |"int"
                                 {$$={$1,0};}
+			|"int" "^" integer_const
+				{$$={ipow64($1,$3),0};}
 
+integer_const:		"int"
+				{$$=$1;}
+			| "(" int_eval ")"
+				{$$=$2;}
 
+int_eval:		"int"
+				{$$=$1;}
+			|"(" int_eval ")"
+				{$$=$2;}
+			|int_eval "*" int_eval
+				{$$=$1*$3;}
+			| int_eval "/" int_eval
+				{$$=$1/$3;}
+			| int_eval "+" int_eval
+				{$$=$1+$3;}
+			| int_eval "-" int_eval
+				{$$=$1-$3;}
+			| int_eval "^" int_eval
+				{$$=ipow64($1,$3);}
 %%
 void
 yy::parser::error (const location_type& l, const std::string& m)
