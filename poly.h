@@ -64,12 +64,16 @@ public:
     return lhs;
   }
   Monom operator-() const { return {-coef_, pow_}; }
+  friend std::ostream &operator<<(std::ostream &stream, const Monom &mono) {
+    stream << mono.repr();
+    return stream;
+  }
 };
 class Polynomial {
   std::list<Monom> terms_;
 
 public:
-  inline int64_t degree() const { return terms_.front().get_pow(); }
+  inline int64_t degree() const { return terms_.empty() ?0: terms_.front().get_pow(); }
   inline Monom lead() const { return terms_.front(); }
   inline auto begin() const { return terms_.begin(); }
   inline auto end() const { return terms_.end(); }
@@ -199,7 +203,12 @@ public:
     for (auto &&term : terms_) {
       res += term.repr();
     }
-    return res.substr(1);
+    return res.substr(res[0] == '+');
+  }
+  friend std::ostream &operator<<(std::ostream &output,
+                                  const Polynomial &poly) {
+      output <<poly.to_string();
+    return output;
   }
   Polynomial &operator^=(const int64_t pow) {
     const auto copy = *this;

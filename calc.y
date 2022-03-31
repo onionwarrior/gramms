@@ -32,19 +32,24 @@ class driver;
 %param { driver& drv }
 %type <Polynomial> polynomial;
 %type <Monom> monom;
+%printer { yyo << $$; } <*>;
 %left PLUS MINUS
 %left MUL DIV
+%left UMINUS
 %right POW
 %code {
 # include "driver.h"
 }
 %%
-file_cont:
-	 polynomial "\n" file_cont {std::cout<<$1.to_string();}
-	 | polynomial END {std::cout<<$1.to_string();}
+calculation: |calculation line
 
+line: "\n"
+    | polynomial NL
+		{std::cout<<"Result: "<<$1<<std::endl;}
 polynomial:		monom
 				{ $$=$1;}
+			| "-" polynomial %prec UMINUS
+				{$$=-$2;}
 			| polynomial "+" polynomial
 				{ $$=$1+$3; }
 			| polynomial "-" polynomial
