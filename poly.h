@@ -170,6 +170,11 @@ public:
 
   Polynomial &operator/=(const Polynomial &rhs) {
     auto quot = Polynomial{};
+    if(rhs.degree()==0)
+    {
+      *this/=rhs.lead();
+      return *this;
+    }
     while (this->degree() >= rhs.degree()) {
       auto t = this->lead() / rhs.lead();
       quot += t;

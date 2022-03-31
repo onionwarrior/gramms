@@ -82,11 +82,15 @@ monom:
 
 integer_const:		"int"
 				{$$=$1;}
+			| "-" "int" %prec UMINUS
+				{$$=-$2;}
 			| "(" int_eval ")"
 				{$$=$2;}
 
 int_eval:		"int"
 				{$$=$1;}
+			| "-" "int" %prec UMINUS
+				{$$=-$2;}
 			|"(" int_eval ")"
 				{$$=$2;}
 			|int_eval "*" int_eval

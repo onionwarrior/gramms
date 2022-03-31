@@ -23,12 +23,12 @@
   loc.step ();
 %}
 [ \t\r]+
-[[:digit:]]+ return make_INTEGER(yytext,loc);
 "+" return yy::parser::make_PLUS(loc);
 "-" return yy::parser::make_MINUS(loc);
 "*" return yy::parser::make_MUL(loc);
 "/" return yy::parser::make_DIV(loc);
 "^" return yy::parser::make_POW(loc);
+-?[[:digit:]]+ return make_INTEGER(yytext,loc);
 "(" return yy::parser::make_LEFT(loc);
 ")" return yy::parser::make_RIGHT(loc);
 "x" return yy::parser::make_VAR(loc);
