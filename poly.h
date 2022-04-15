@@ -3,8 +3,11 @@
 #include <cstdint>
 #include <iostream>
 #include <list>
+#include <map>
 #include <numeric>
+#include <stdexcept>
 #include <string>
+#include <optional>
 class Monom {
   int64_t coef_ = 1;
   int64_t pow_ = 1;
@@ -73,7 +76,9 @@ class Polynomial {
   std::list<Monom> terms_;
 
 public:
-  inline int64_t degree() const { return terms_.empty() ?0: terms_.front().get_pow(); }
+  inline int64_t degree() const {
+    return terms_.empty() ? 0 : terms_.front().get_pow();
+  }
   inline Monom lead() const { return terms_.front(); }
   inline auto begin() const { return terms_.begin(); }
   inline auto end() const { return terms_.end(); }
@@ -170,9 +175,8 @@ public:
 
   Polynomial &operator/=(const Polynomial &rhs) {
     auto quot = Polynomial{};
-    if(rhs.degree()==0)
-    {
-      *this/=rhs.lead();
+    if (rhs.degree() == 0) {
+      *this /= rhs.lead();
       return *this;
     }
     while (this->degree() >= rhs.degree()) {
@@ -212,7 +216,7 @@ public:
   }
   friend std::ostream &operator<<(std::ostream &output,
                                   const Polynomial &poly) {
-      output <<poly.to_string();
+    output << poly.to_string();
     return output;
   }
   Polynomial &operator^=(const int64_t pow) {
@@ -237,10 +241,30 @@ public:
   Polynomial(const Monom &monom) { *this += monom; }
   Polynomial(int64_t coef, int64_t pow) : Polynomial{Monom{coef, pow}} {}
 };
-inline int64_t ipow64(const int64_t base, const int64_t power)
-{
-	int64_t rv = 1;
-	for (int64_t i=0;i<power;++i)
-		rv*=base;
-	return rv;
+inline int64_t ipow64(const int64_t base, const int64_t power) {
+  int64_t rv = 1;
+  for (int64_t i = 0; i < power; ++i)
+    rv *= base;
+  return rv;
 }
+class SymbolTable {
+  std::map<std::string, Polynomial> symbols_;
+  inline static SymbolTable * inst_=nullptr;
+  SymbolTable() = default;
+public:
+  static auto GetInst()
+{
+    if (inst_==nullptr)
+      inst_=new SymbolTable();
+    return inst_;
+  }
+  Polynomial & GetVar(const std::string &var_name) {
+    return symbols_[var_name];
+  }
+  const std::optional<Polynomial> ReadVar(const std::string & var_name ) const
+  {
+    if(symbols_.find(var_name)!=symbols_.cend())
+      return symbols_.at(var_name);
+    return {};
+  }
+};

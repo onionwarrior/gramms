@@ -3,7 +3,6 @@
 %code requires{
 #include "poly.h"
 class driver;
-
 }
 %locations
 %define api.token.raw
@@ -18,6 +17,7 @@ class driver;
 %define api.token.prefix {TOK_}
 
 %token <int64_t> INTEGER "int";
+%token <std::string> VAR "var";
 %token
 	NL "\n"
 	PLUS "+"
@@ -27,7 +27,8 @@ class driver;
 	POW "^"
 	LEFT "("
 	RIGHT ")"
-	VAR "x"
+	DECL ":="
+	PRINT "<<"
 	;
 %token END 0 "end of file"
 %param { driver& drv }
@@ -54,9 +55,17 @@ calculation:
 /* Allows to skip empty lines*/
 line:
 			"\n"
-			| polynomial "\n"
-				{std::cout<<"Result: "<<$1<<std::endl;}
-polynomial:
+			| "var" ":=" polynomial "\n"
+				{SymbolTable::GetInst()->GetVar($1)=$3;}
+			| "<<" "var" "\n"
+				{
+				const auto variable = SymbolTable::GetInst()->ReadVar($2);
+				if (variable)
+					std::cout<<variable.value()<<std::endl;
+				else throw std::invalid_argument("No such variable");
+				}
+
+			polynomial:
 			monom /*A single monom*/
 				{ $$=$1;}
 			| "-" polynomial %prec UMINUS /* Inverted polynomial*/
@@ -78,14 +87,15 @@ polynomial:
 
 monom:
 			/*All possible ways to represent a monom*/
-			"int" "x" "^" integer_const
+			"int" "var" "^" integer_const
 				{$$={$1,$4};}
-			|"x" "^" integer_const
+			|"var" "^" integer_const
 				{$$={1,$3};}
-			|"int" "x"
+			|"int" "var"
                                 {$$={$1,1};}
-                        |"x"
-                                {$$={1,1};}
+                        |"var"
+                                {if("var"=="x") $$={1,1};
+				else $$=SymbolTable::GetInst()->ReadVar($1).value();}
                         |"int"
                                 {$$={$1,0};}
 			|"int" "^" integer_const

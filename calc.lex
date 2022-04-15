@@ -15,6 +15,7 @@
   // Code run each time a pattern is matched.
   # define YY_USER_ACTION  loc.columns (yyleng);
 %}
+var_decl [a-zA-Z][a-zA-Z0-9_]*
 %%
 %{
   // A handy shortcut to the location held by the driver.
@@ -22,16 +23,18 @@
   // Code run each time yylex is called.
   loc.step ();
 %}
+{var_decl} return yy::parser::make_VAR(yytext,loc);
 [ \t\r]+
 "+" return yy::parser::make_PLUS(loc);
 "-" return yy::parser::make_MINUS(loc);
 "*" return yy::parser::make_MUL(loc);
 "/" return yy::parser::make_DIV(loc);
 "^" return yy::parser::make_POW(loc);
--?[[:digit:]]+ return make_INTEGER(yytext,loc);
+":=" return yy::parser::make_DECL(loc);
+[[:digit:]]+ return make_INTEGER(yytext,loc);
 "(" return yy::parser::make_LEFT(loc);
 ")" return yy::parser::make_RIGHT(loc);
-"x" return yy::parser::make_VAR(loc);
+"<<" return yy::parser::make_PRINT(loc);
 \n return yy::parser::make_NL(loc);
 <<EOF>> return yy::parser::make_END(loc);
 %%
