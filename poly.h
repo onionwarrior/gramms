@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <string>
 #include <optional>
+#include <variant>
 class Monom {
   int64_t coef_ = 1;
   int64_t pow_ = 1;
@@ -74,7 +75,7 @@ public:
 };
 class Polynomial {
   std::list<Monom> terms_;
-
+  char variable_ ;
 public:
   inline int64_t degree() const {
     return terms_.empty() ? 0 : terms_.front().get_pow();
@@ -238,8 +239,8 @@ public:
   Polynomial(const Polynomial &) = default;
   Polynomial &operator=(const Polynomial &) = default;
   Polynomial &operator=(Polynomial &&) = default;
-  Polynomial(const Monom &monom) { *this += monom; }
-  Polynomial(int64_t coef, int64_t pow) : Polynomial{Monom{coef, pow}} {}
+  Polynomial(const Monom &monom){ *this += monom; }
+  Polynomial(int64_t coef, int64_t pow ,const char variable) : Polynomial{Monom{coef, pow}} {variable_=variable;}
 };
 inline int64_t ipow64(const int64_t base, const int64_t power) {
   int64_t rv = 1;

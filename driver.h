@@ -1,6 +1,7 @@
 #ifndef _DRIVER_H_
 #define _DRIVER_H_
 #include "calc.tab.h"
+#include "location.hh"
 
 #define YY_DECL yy::parser::symbol_type yylex(driver &drv)
 YY_DECL;

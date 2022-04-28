@@ -18,6 +18,7 @@ class driver;
 
 %token <int64_t> INTEGER "int";
 %token <std::string> VAR "var";
+%token <char> BASIC "basic";
 %token
 	NL "\n"
 	PLUS "+"
@@ -33,7 +34,7 @@ class driver;
 %token END 0 "end of file"
 %param { driver& drv }
 %type <Polynomial> polynomial;
-%type <Monom> monom;
+%type <Polynomial> monom;
 %type <int64_t> integer_const;
 %type <int64_t> int_eval;
 /*Everything is printed using <<*/
@@ -46,26 +47,22 @@ class driver;
 # include "driver.h"
 }
 %%
-/* Correct input for calculation is either an empty input or a calculation
- * followed by a line*/
-calculation:
-			%empty
-			|calculation line
 
-/* Allows to skip empty lines*/
+calculation:
+			%empty {}
+			| calculation line{}
+
 line:
-			"\n"
-			| "var" ":=" polynomial "\n"
+			"var" ":=" polynomial "\n"
 				{SymbolTable::GetInst()->GetVar($1)=$3;}
 			| "<<" "var" "\n"
 				{
 				const auto variable = SymbolTable::GetInst()->ReadVar($2);
-				if (variable)
-					std::cout<<variable.value()<<std::endl;
-				else throw std::invalid_argument("No such variable");
+				if (!variable) throw std::invalid_argument("No such variable");
+				std::cout<<variable.value()<<std::endl;
 				}
-
-			polynomial:
+			| "\n"
+polynomial:
 			monom /*A single monom*/
 				{ $$=$1;}
 			| "-" polynomial %prec UMINUS /* Inverted polynomial*/
@@ -87,19 +84,20 @@ line:
 
 monom:
 			/*All possible ways to represent a monom*/
-			"int" "var" "^" integer_const
-				{$$={$1,$4};}
-			|"var" "^" integer_const
-				{$$={1,$3};}
-			|"int" "var"
-                                {$$={$1,1};}
-                        |"var"
-                                {if("var"=="x") $$={1,1};
-				else $$=SymbolTable::GetInst()->ReadVar($1).value();}
+			"int" "basic" "^" integer_const
+				{$$={$1,$4,$2};}
+			|"basic" "^" integer_const
+				{$$={1,$3,$1};}
+			|"int" "basic"
+                                {$$={$1,1,$2};}
+                        |"basic"
+                                {$$={1,1,$1};}
                         |"int"
-                                {$$={$1,0};}
+                                {$$={$1,0,0};}
 			|"int" "^" integer_const
-				{$$={ipow64($1,$3),0};}
+				{$$={ipow64($1,$3),0,0};}
+			|"var"
+				{$$={SymbolTable::GetInst()->ReadVar($1).value()};}
 
 integer_const:		/*Wrapper for expression which
 			evaluates to an integer*/
