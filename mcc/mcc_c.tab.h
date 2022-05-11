@@ -47,13 +47,12 @@
 // "%code requires" blocks.
 #line 3 "mcc_c.y"
 
-#include "poly.h"
-class driver;
 #include <stdio.h>
-int yylex();
+#include "mcc_utils.hpp"
 void yyerror(char *s);
+class driver;
 
-#line 57 "mcc_c.tab.h"
+#line 56 "mcc_c.tab.h"
 
 
 # include <cstdlib> // std::abort
@@ -188,7 +187,7 @@ void yyerror(char *s);
 #endif
 
 namespace yy {
-#line 192 "mcc_c.tab.h"
+#line 191 "mcc_c.tab.h"
 
 
 
@@ -429,7 +428,7 @@ namespace yy {
       enum token_kind_type
       {
         TOK_YYEMPTY = -2,
-    TOK_YYEOF = 0,                 // "end of file"
+    TOK_END = 0,                   // "end of file"
     TOK_YYerror = 1,               // error
     TOK_YYUNDEF = 2,               // "invalid token"
     TOK_IDENTIFIER = 3,            // "identifier"
@@ -454,64 +453,67 @@ namespace yy {
     TOK_CASE = 22,                 // "case"
     TOK_DEFAULT = 23,              // "default"
     TOK_IF = 24,                   // "if"
-    TOK_ELSE = 25,                 // "else"
-    TOK_SWITCH = 26,               // "switch"
-    TOK_WHILE = 27,                // "while"
-    TOK_DO = 28,                   // "do"
-    TOK_FOR = 29,                  // "for"
-    TOK_GOTO = 30,                 // "goto"
-    TOK_CONTINUE = 31,             // "continue"
-    TOK_BREAK = 32,                // "break"
-    TOK_RETURN = 33,               // "return"
-    TOK_STRUCT = 34,               // "struct"
-    TOK_UNION = 35,                // "union"
-    TOK_ENUM = 36,                 // "enum"
-    TOK_DIV_ASSIGN = 37,           // "/="
-    TOK_MOD_ASSIGN = 38,           // "%="
-    TOK_MUL_ASSIGN = 39,           // "*="
-    TOK_SUB_ASSIGN = 40,           // "-="
-    TOK_ADD_ASSIGN = 41,           // "+="
-    TOK_LEFT_ASSIGN = 42,          // "<<="
-    TOK_RIGHT_ASSIGN = 43,         // ">>="
-    TOK_AND_ASSIGN = 44,           // "&="
-    TOK_XOR_ASSIGN = 45,           // "^="
-    TOK_OR_ASSIGN = 46,            // "|="
-    TOK_TYPE_NAME = 47,            // "typename"
-    TOK_NL = 48,                   // "\n"
-    TOK_PLUS = 49,                 // "+"
-    TOK_MINUS = 50,                // "-"
-    TOK_MUL = 51,                  // "*"
-    TOK_DIV = 52,                  // "/"
-    TOK_XOR = 53,                  // "^"
-    TOK_SHL = 54,                  // "<<"
-    TOK_SHR = 55,                  // ">>"
-    TOK_OR = 56,                   // "|"
-    TOK_AND = 57,                  // "&"
-    TOK_MOD = 58,                  // "%"
-    TOK_ASS = 59,                  // "="
-    TOK_NOT = 60,                  // "!"
-    TOK_FLIP = 61,                 // "~"
-    TOK_LEFT_PAR = 62,             // "("
-    TOK_RIGHT_PAR = 63,            // ")"
-    TOK_PTR = 64,                  // "->"
-    TOK_L_CURLY = 65,              // "{"
-    TOK_R_CURLY = 66,              // "}"
-    TOK_L_SQBR = 67,               // "["
-    TOK_R_SQBR = 68,               // "]"
-    TOK_ELLIPSIS = 69,             // "..."
-    TOK_INC = 70,                  // "++"
-    TOK_DEC = 71,                  // "--"
-    TOK_EQ = 72,                   // "=="
-    TOK_GEQ = 73,                  // ">="
-    TOK_LEQ = 74,                  // "<="
-    TOK_NEQ = 75,                  // "!="
-    TOK_SEMI = 76,                 // ";"
-    TOK_DOT = 77,                  // "."
-    TOK_COMMA = 78,                // ","
-    TOK_COL = 79,                  // ":"
-    TOK_LE = 80,                   // "<"
-    TOK_GE = 81,                   // ">"
-    TOK_Q_MARK = 82                // "?"
+    TOK_INT = 25,                  // "int"
+    TOK_ELSE = 26,                 // "else"
+    TOK_SWITCH = 27,               // "switch"
+    TOK_WHILE = 28,                // "while"
+    TOK_DO = 29,                   // "do"
+    TOK_FOR = 30,                  // "for"
+    TOK_GOTO = 31,                 // "goto"
+    TOK_CONTINUE = 32,             // "continue"
+    TOK_BREAK = 33,                // "break"
+    TOK_RETURN = 34,               // "return"
+    TOK_STRUCT = 35,               // "struct"
+    TOK_UNION = 36,                // "union"
+    TOK_ENUM = 37,                 // "enum"
+    TOK_DIV_ASSIGN = 38,           // "/="
+    TOK_MOD_ASSIGN = 39,           // "%="
+    TOK_MUL_ASSIGN = 40,           // "*="
+    TOK_SUB_ASSIGN = 41,           // "-="
+    TOK_ADD_ASSIGN = 42,           // "+="
+    TOK_LEFT_ASSIGN = 43,          // "<<="
+    TOK_RIGHT_ASSIGN = 44,         // ">>="
+    TOK_AND_ASSIGN = 45,           // "&="
+    TOK_XOR_ASSIGN = 46,           // "^="
+    TOK_OR_ASSIGN = 47,            // "|="
+    TOK_TYPE_NAME = 48,            // "typename"
+    TOK_NL = 49,                   // "\n"
+    TOK_PLUS = 50,                 // "+"
+    TOK_MINUS = 51,                // "-"
+    TOK_MUL = 52,                  // "*"
+    TOK_DIV = 53,                  // "/"
+    TOK_XOR = 54,                  // "^"
+    TOK_SHL = 55,                  // "<<"
+    TOK_SHR = 56,                  // ">>"
+    TOK_OR = 57,                   // "|"
+    TOK_AND = 58,                  // "&"
+    TOK_MOD = 59,                  // "%"
+    TOK_ASS = 60,                  // "="
+    TOK_NOT = 61,                  // "!"
+    TOK_FLIP = 62,                 // "~"
+    TOK_LEFT_PAR = 63,             // "("
+    TOK_RIGHT_PAR = 64,            // ")"
+    TOK_PTR = 65,                  // "->"
+    TOK_L_CURLY = 66,              // "{"
+    TOK_R_CURLY = 67,              // "}"
+    TOK_L_SQBR = 68,               // "["
+    TOK_R_SQBR = 69,               // "]"
+    TOK_ELLIPSIS = 70,             // "..."
+    TOK_INC = 71,                  // "++"
+    TOK_DEC = 72,                  // "--"
+    TOK_EQ = 73,                   // "=="
+    TOK_GEQ = 74,                  // ">="
+    TOK_LEQ = 75,                  // "<="
+    TOK_NEQ = 76,                  // "!="
+    TOK_SEMI = 77,                 // ";"
+    TOK_DOT = 78,                  // "."
+    TOK_COMMA = 79,                // ","
+    TOK_COL = 80,                  // ":"
+    TOK_LE = 81,                   // "<"
+    TOK_GE = 82,                   // ">"
+    TOK_LOR = 83,                  // "&&"
+    TOK_LAND = 84,                 // "||"
+    TOK_Q_MARK = 85                // "?"
       };
       /// Backward compatibility alias (Bison 3.6).
       typedef token_kind_type yytokentype;
@@ -555,67 +557,67 @@ namespace yy {
         S_CASE = 22,                             // "case"
         S_DEFAULT = 23,                          // "default"
         S_IF = 24,                               // "if"
-        S_ELSE = 25,                             // "else"
-        S_SWITCH = 26,                           // "switch"
-        S_WHILE = 27,                            // "while"
-        S_DO = 28,                               // "do"
-        S_FOR = 29,                              // "for"
-        S_GOTO = 30,                             // "goto"
-        S_CONTINUE = 31,                         // "continue"
-        S_BREAK = 32,                            // "break"
-        S_RETURN = 33,                           // "return"
-        S_STRUCT = 34,                           // "struct"
-        S_UNION = 35,                            // "union"
-        S_ENUM = 36,                             // "enum"
-        S_DIV_ASSIGN = 37,                       // "/="
-        S_MOD_ASSIGN = 38,                       // "%="
-        S_MUL_ASSIGN = 39,                       // "*="
-        S_SUB_ASSIGN = 40,                       // "-="
-        S_ADD_ASSIGN = 41,                       // "+="
-        S_LEFT_ASSIGN = 42,                      // "<<="
-        S_RIGHT_ASSIGN = 43,                     // ">>="
-        S_AND_ASSIGN = 44,                       // "&="
-        S_XOR_ASSIGN = 45,                       // "^="
-        S_OR_ASSIGN = 46,                        // "|="
-        S_TYPE_NAME = 47,                        // "typename"
-        S_NL = 48,                               // "\n"
-        S_PLUS = 49,                             // "+"
-        S_MINUS = 50,                            // "-"
-        S_MUL = 51,                              // "*"
-        S_DIV = 52,                              // "/"
-        S_XOR = 53,                              // "^"
-        S_SHL = 54,                              // "<<"
-        S_SHR = 55,                              // ">>"
-        S_OR = 56,                               // "|"
-        S_AND = 57,                              // "&"
-        S_MOD = 58,                              // "%"
-        S_ASS = 59,                              // "="
-        S_NOT = 60,                              // "!"
-        S_FLIP = 61,                             // "~"
-        S_LEFT_PAR = 62,                         // "("
-        S_RIGHT_PAR = 63,                        // ")"
-        S_PTR = 64,                              // "->"
-        S_L_CURLY = 65,                          // "{"
-        S_R_CURLY = 66,                          // "}"
-        S_L_SQBR = 67,                           // "["
-        S_R_SQBR = 68,                           // "]"
-        S_ELLIPSIS = 69,                         // "..."
-        S_INC = 70,                              // "++"
-        S_DEC = 71,                              // "--"
-        S_EQ = 72,                               // "=="
-        S_GEQ = 73,                              // ">="
-        S_LEQ = 74,                              // "<="
-        S_NEQ = 75,                              // "!="
-        S_SEMI = 76,                             // ";"
-        S_DOT = 77,                              // "."
-        S_COMMA = 78,                            // ","
-        S_COL = 79,                              // ":"
-        S_LE = 80,                               // "<"
-        S_GE = 81,                               // ">"
-        S_Q_MARK = 82,                           // "?"
-        S_83_ = 83,                              // "||"
-        S_84_ = 84,                              // "&&"
-        S_85_int_ = 85,                          // "int"
+        S_INT = 25,                              // "int"
+        S_ELSE = 26,                             // "else"
+        S_SWITCH = 27,                           // "switch"
+        S_WHILE = 28,                            // "while"
+        S_DO = 29,                               // "do"
+        S_FOR = 30,                              // "for"
+        S_GOTO = 31,                             // "goto"
+        S_CONTINUE = 32,                         // "continue"
+        S_BREAK = 33,                            // "break"
+        S_RETURN = 34,                           // "return"
+        S_STRUCT = 35,                           // "struct"
+        S_UNION = 36,                            // "union"
+        S_ENUM = 37,                             // "enum"
+        S_DIV_ASSIGN = 38,                       // "/="
+        S_MOD_ASSIGN = 39,                       // "%="
+        S_MUL_ASSIGN = 40,                       // "*="
+        S_SUB_ASSIGN = 41,                       // "-="
+        S_ADD_ASSIGN = 42,                       // "+="
+        S_LEFT_ASSIGN = 43,                      // "<<="
+        S_RIGHT_ASSIGN = 44,                     // ">>="
+        S_AND_ASSIGN = 45,                       // "&="
+        S_XOR_ASSIGN = 46,                       // "^="
+        S_OR_ASSIGN = 47,                        // "|="
+        S_TYPE_NAME = 48,                        // "typename"
+        S_NL = 49,                               // "\n"
+        S_PLUS = 50,                             // "+"
+        S_MINUS = 51,                            // "-"
+        S_MUL = 52,                              // "*"
+        S_DIV = 53,                              // "/"
+        S_XOR = 54,                              // "^"
+        S_SHL = 55,                              // "<<"
+        S_SHR = 56,                              // ">>"
+        S_OR = 57,                               // "|"
+        S_AND = 58,                              // "&"
+        S_MOD = 59,                              // "%"
+        S_ASS = 60,                              // "="
+        S_NOT = 61,                              // "!"
+        S_FLIP = 62,                             // "~"
+        S_LEFT_PAR = 63,                         // "("
+        S_RIGHT_PAR = 64,                        // ")"
+        S_PTR = 65,                              // "->"
+        S_L_CURLY = 66,                          // "{"
+        S_R_CURLY = 67,                          // "}"
+        S_L_SQBR = 68,                           // "["
+        S_R_SQBR = 69,                           // "]"
+        S_ELLIPSIS = 70,                         // "..."
+        S_INC = 71,                              // "++"
+        S_DEC = 72,                              // "--"
+        S_EQ = 73,                               // "=="
+        S_GEQ = 74,                              // ">="
+        S_LEQ = 75,                              // "<="
+        S_NEQ = 76,                              // "!="
+        S_SEMI = 77,                             // ";"
+        S_DOT = 78,                              // "."
+        S_COMMA = 79,                            // ","
+        S_COL = 80,                              // ":"
+        S_LE = 81,                               // "<"
+        S_GE = 82,                               // ">"
+        S_LOR = 83,                              // "&&"
+        S_LAND = 84,                             // "||"
+        S_Q_MARK = 85,                           // "?"
         S_YYACCEPT = 86,                         // $accept
         S_primary_expression = 87,               // primary_expression
         S_postfix_expression = 88,               // postfix_expression
@@ -669,17 +671,22 @@ namespace yy {
         S_initializer = 136,                     // initializer
         S_initializer_list = 137,                // initializer_list
         S_statement = 138,                       // statement
-        S_labeled_statement = 139,               // labeled_statement
-        S_compound_statement = 140,              // compound_statement
-        S_declaration_list = 141,                // declaration_list
+        S_139_1 = 139,                           // $@1
+        S_labeled_statement = 140,               // labeled_statement
+        S_compound_statement = 141,              // compound_statement
         S_statement_list = 142,                  // statement_list
-        S_expression_statement = 143,            // expression_statement
-        S_selection_statement = 144,             // selection_statement
-        S_iteration_statement = 145,             // iteration_statement
-        S_jump_statement = 146,                  // jump_statement
-        S_translation_unit = 147,                // translation_unit
-        S_external_declaration = 148,            // external_declaration
-        S_function_definition = 149              // function_definition
+        S_declaration_list = 143,                // declaration_list
+        S_expression_statement = 144,            // expression_statement
+        S_selection_statement = 145,             // selection_statement
+        S_iteration_statement = 146,             // iteration_statement
+        S_jump_statement = 147,                  // jump_statement
+        S_translation_unit = 148,                // translation_unit
+        S_external_declaration = 149,            // external_declaration
+        S_function_definition = 150,             // function_definition
+        S_151_2 = 151,                           // $@2
+        S_152_3 = 152,                           // $@3
+        S_153_4 = 153,                           // $@4
+        S_154_5 = 154                            // $@5
       };
     };
 
@@ -862,7 +869,7 @@ switch (yykind)
     };
 
     /// Build a parser object.
-    parser ();
+    parser (driver& drv_yyarg);
     virtual ~parser ();
 
 #if 201103L <= YY_CPLUSPLUS
@@ -910,16 +917,16 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
-      make_YYEOF (location_type l)
+      make_END (location_type l)
       {
-        return symbol_type (token::TOK_YYEOF, std::move (l));
+        return symbol_type (token::TOK_END, std::move (l));
       }
 #else
       static
       symbol_type
-      make_YYEOF (const location_type& l)
+      make_END (const location_type& l)
       {
-        return symbol_type (token::TOK_YYEOF, l);
+        return symbol_type (token::TOK_END, l);
       }
 #endif
 #if 201103L <= YY_CPLUSPLUS
@@ -1280,6 +1287,21 @@ switch (yykind)
       make_IF (const location_type& l)
       {
         return symbol_type (token::TOK_IF, l);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
+      make_INT (location_type l)
+      {
+        return symbol_type (token::TOK_INT, std::move (l));
+      }
+#else
+      static
+      symbol_type
+      make_INT (const location_type& l)
+      {
+        return symbol_type (token::TOK_INT, l);
       }
 #endif
 #if 201103L <= YY_CPLUSPLUS
@@ -2140,6 +2162,36 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
+      make_LOR (location_type l)
+      {
+        return symbol_type (token::TOK_LOR, std::move (l));
+      }
+#else
+      static
+      symbol_type
+      make_LOR (const location_type& l)
+      {
+        return symbol_type (token::TOK_LOR, l);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
+      make_LAND (location_type l)
+      {
+        return symbol_type (token::TOK_LAND, std::move (l));
+      }
+#else
+      static
+      symbol_type
+      make_LAND (const location_type& l)
+      {
+        return symbol_type (token::TOK_LAND, l);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
       make_Q_MARK (location_type l)
       {
         return symbol_type (token::TOK_Q_MARK, std::move (l));
@@ -2215,7 +2267,7 @@ switch (yykind)
     static bool yy_table_value_is_error_ (int yyvalue) YY_NOEXCEPT;
 
     static const short yypact_ninf_;
-    static const signed char yytable_ninf_;
+    static const short yytable_ninf_;
 
     /// Convert a scanner token kind \a t to a symbol kind.
     /// In theory \a t should be a token_kind_type, but character literals
@@ -2496,12 +2548,14 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 1551,     ///< Last index in yytable_.
-      yynnts_ = 64,  ///< Number of nonterminal symbols.
-      yyfinal_ = 61 ///< Termination state number.
+      yylast_ = 1436,     ///< Last index in yytable_.
+      yynnts_ = 69,  ///< Number of nonterminal symbols.
+      yyfinal_ = 60 ///< Termination state number.
     };
 
 
+    // User arguments.
+    driver& drv;
 
   };
 
@@ -2618,7 +2672,7 @@ switch (yykind)
 
 
 } // yy
-#line 2622 "mcc_c.tab.h"
+#line 2676 "mcc_c.tab.h"
 
 
 

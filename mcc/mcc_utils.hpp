@@ -1,9 +1,12 @@
 #include <array>
 #include <cstddef>
+#include <iostream>
 #include <map>
 #include <string>
 #include <variant>
 #include <vector>
+#if !defined(MCC_UTILS)
+#define MCC_UTILS
 namespace mcc {
 enum class Primitive {
   Int,
@@ -21,6 +24,23 @@ enum class Primitive {
   LongDouble,
   Void
 };
+enum class TextColor { Error, Warning, Good };
+inline auto PrintColored(const std::string &text, TextColor color) {
+  switch (color) {
+  case TextColor::Error:
+    std::cout << "\033[31m"
+              << "<<<" << "Error: " << text << "\033[0m" << std::endl;
+    break;
+  case TextColor::Warning:
+    std::cout << "\033[33m"
+              << "<<<" << "Warning: " << text << "\033[0m" << std::endl;
+    break;
+  case TextColor::Good:
+    std::cout <<"\033[32m"
+              << "<<<" << "Debug: " << text << "\033[0m" << std::endl;
+    break;
+  }
+}
 enum class UsrTypeKind { Struct, Union, Typedef };
 class UserType {
 private:
@@ -51,7 +71,7 @@ inline auto Mangle(const std::string &name, const std::string &ns_name) {
 }
 class Symbol {
   type_t type;
-
+  bool is_const;
 private:
 };
 class SymbolTable {
@@ -109,3 +129,4 @@ public:
 
 }; // namespace mcc
 } // namespace mcc
+#endif

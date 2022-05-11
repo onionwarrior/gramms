@@ -1,11 +1,10 @@
 %skeleton "lalr1.cc"
 %require "3.8.1"
 %code requires{
-#include "poly.h"
-class driver;
 #include <stdio.h>
-int yylex();
+#include "mcc_utils.hpp"
 void yyerror(char *s);
+class driver;
 }
 %locations
 %define api.token.raw
@@ -42,6 +41,7 @@ void yyerror(char *s);
 	CASE "case"
 	DEFAULT "default"
 	IF "if"
+	INT "int"
 	ELSE "else"
 	SWITCH "switch"
 	WHILE "while"
@@ -99,10 +99,17 @@ void yyerror(char *s);
 	COL ":"
 	LE "<"
 	GE ">"
+	LOR "&&"
+	LAND "||"
 	Q_MARK "?"
 	;
+%token END 0 "end of file"
 %nonassoc "if"
 %nonassoc "else"
+%param { driver& drv }
+%code {
+# include "driver.h"
+}
 %start translation_unit
 %%
 
@@ -245,6 +252,7 @@ constant_expression
 
 declaration
 	: declaration_specifiers ";"
+	{mcc::PrintColored("declaration does not declare anything",mcc::TextColor::Warning);}
 	| declaration_specifiers init_declarator_list ";"
 	;
 
@@ -434,11 +442,12 @@ initializer_list
 
 statement
 	: labeled_statement
-	| compound_statement
+	| {mcc::PrintColored("Entered new scope",mcc::TextColor::Good);} compound_statement
 	| expression_statement
 	| selection_statement
 	| iteration_statement
 	| jump_statement
+	| declaration
 	;
 
 labeled_statement
@@ -448,22 +457,19 @@ labeled_statement
 	;
 
 compound_statement
-	: "{" "}"
-	| "{" statement_list "}"
-	| "{" declaration_list "}"
-	| "{" declaration_list statement_list "}"
-	;
-
-declaration_list
-	: declaration
-	| declaration_list declaration
+	:  "{"  statement_list "}"
+	|
+	"{" "}"
 	;
 
 statement_list
 	: statement
 	| statement_list statement
 	;
-
+declaration_list
+	:declaration
+	| declaration_list declaration
+	;
 expression_statement
 	: ";"
 	| expression ";"
@@ -501,28 +507,15 @@ external_declaration
 	;
 
 function_definition
-	: declaration_specifiers declarator declaration_list compound_statement
-	| declaration_specifiers declarator compound_statement
-	| declarator declaration_list compound_statement
-	| declarator compound_statement
+	: declaration_specifiers declarator declaration_list {mcc::PrintColored("Entered new scope",mcc::TextColor::Good);} compound_statement
+	| declaration_specifiers declarator {mcc::PrintColored("Entered new scope",mcc::TextColor::Good);} compound_statement
+	| declarator declaration_list {mcc::PrintColored("Entered new scope",mcc::TextColor::Good);} compound_statement
+	| declarator {mcc::PrintColored("Entered new scope",mcc::TextColor::Good);} compound_statement
 	;
 
 %%
-#include <stdio.h>
-
-extern char yytext[];
-extern int column;
-extern FILE * yyin;
-void yyerror(char *s)
+void
+yy::parser::error (const location_type& l, const std::string& m)
 {
-	fflush(stdout);
-	printf("\n%*s\n%*s\n", column, "^", column, s);
-}
-int main() {
-	yyin = fopen("input.c","r");
-	do {
-		yyparse();
-	} while(!feof(yyin));
-
-	return 0;
+  std::cerr << l << ": " << m << '\n';
 }

@@ -51,7 +51,7 @@ var_basic [a-z]
 "(" return yy::parser::make_LEFT(loc);
 ")" return yy::parser::make_RIGHT(loc);
 "<<" return yy::parser::make_PRINT(loc);
-\n  { loc.lines();return yy::parser::make_NL(loc);}
+\n  { loc.lines();}
 <<EOF>> return yy::parser::make_END(loc);
 %%
 yy::parser::symbol_type

@@ -4,23 +4,34 @@
 #include "driver.h"
 #include "mcc_c.tab.h"
 %}
+
+%option noyywrap nounput noinput batch debug
+  // A number symbol corresponding to the value in S.
+%{
+  // Code run each time a pattern is matched.
+  # define YY_USER_ACTION  loc.columns (yyleng);
+%}
+%x IN_COMMENT
 decimal			[0-9]
 letter			[a-zA-Z_]
 hex			[a-fA-F0-9]
 oct			[0-7]
-exp			[Ee][+-]?{D}+
+exp			[Ee][+-]?{decimal}+
 fs			(f|F|l|L)
 sgn			(u|U|l|L)*
 
 %{
-#include <stdio.h>
-#include "y.tab.h"
-void comment();
 void count();
-int check_type();
+yy::parser::symbol_type check_type(driver & drv);
 %}
 
 %%
+%{
+  // A handy shortcut to the location held by the driver.
+  yy::location& loc = drv.location;
+  // Code run each time yylex is called.
+  loc.step ();
+%}
 ^"//".*
 <INITIAL>"/*" BEGIN(IN_COMMENT);
 <IN_COMMENT>"*/"      BEGIN(INITIAL);
@@ -34,20 +45,20 @@ int check_type();
 "case"			{ count(); return yy::parser::make_CASE(loc); }
 "char"			{ count(); return yy::parser::make_CHAR(loc); }
 "const"			{ count(); return yy::parser::make_CONST(loc); }
-"continue"		{ count(); return yy::parser::make_CONTINUE(loc); }
+"continue"	{ count(); return yy::parser::make_CONTINUE(loc); }
 "default"		{ count(); return yy::parser::make_DEFAULT(loc); }
-"do"			{ count(); return yy::parser::make_DO(loc);  }
+"do"				{ count(); return yy::parser::make_DO(loc);  }
 "double"		{ count(); return yy::parser::make_DOUBLE(loc); }
 "else"			{ count(); return yy::parser::make_ELSE(loc); }
 "enum"			{ count(); return yy::parser::make_ENUM(loc); }
 "extern"		{ count(); return yy::parser::make_EXTERN(loc); }
 "float"			{ count(); return yy::parser::make_FLOAT(loc);}
-"for"			{ count(); return yy::parser::make_FOR(loc); }
-"goto"			{ count();return yy::parser::make_GOTO(loc); }
-"if"			{ count(); return yy::parser::make_IF(loc); }
-"int"			{ count(); return yy::parser::make_INT(loc); }
+"for"				{ count(); return yy::parser::make_FOR(loc); }
+"goto"			{ count(); return yy::parser::make_GOTO(loc); }
+"if"				{ count(); return yy::parser::make_IF(loc); }
+"int"				{ count(); return yy::parser::make_INT(loc); }
 "long"			{ count(); return yy::parser::make_LONG(loc); }
-"register"		{ count(); return yy::parser::make_REGISTER(loc); }
+"register"	{ count(); return yy::parser::make_REGISTER(loc); }
 "return"		{ count(); return yy::parser::make_RETURN(loc); }
 "short"			{ count(); return yy::parser::make_SHORT(loc); }
 "signed"		{ count(); return yy::parser::make_SIGNED(loc); }
@@ -57,80 +68,76 @@ int check_type();
 "switch"		{ count(); return yy::parser::make_SWITCH(loc); }
 "typedef"		{ count(); return yy::parser::make_TYPEDEF(loc); }
 "union"			{ count(); return yy::parser::make_UNION(loc); }
-"unsigned"		{ count(); return yy::parser::make_UNSIGNED(loc); }
+"unsigned"	{ count(); return yy::parser::make_UNSIGNED(loc); }
 "void"			{ count(); return yy::parser::make_VOID(loc); }
-"volatile"		{ count(); return yy::parser::make_VOLATILE(loc); }
+"volatile"	{ count(); return yy::parser::make_VOLATILE(loc); }
 "while"			{ count(); return yy::parser::make_WHILE(loc); }
 
-{L}({L}|{D})*		{ count(); return(check_type()); }
+{letter}({letter}|{decimal})*		{ count(); return(check_type(drv)); }
 
-0[xX]{H}+{IS}?		{ count(); return(CONSTANT); }
-0{D}+{IS}?		{ count(); return(CONSTANT); }
-{D}+{IS}?		{ count(); return(CONSTANT); }
-L?'(\\.|[^\\'])+'	{ count(); return(CONSTANT); }
+0[xX]{hex}+{sgn}?		{ count(); return yy::parser::make_CONSTANT(loc); }
+0{decimal}+{sgn}?		{ count(); return yy::parser::make_CONSTANT(loc); }
+{decimal}+{sgn}?		{ count(); return yy::parser::make_CONSTANT(loc); }
+L?'(\\.|[^\\'])+'	{ count(); return yy::parser::make_CONSTANT(loc); }
 
-{D}+{E}{FS}?		{ count(); return(CONSTANT); }
-{D}*"."{D}+({E})?{FS}?	{ count(); return(CONSTANT); }
-{D}+"."{D}*({E})?{FS}?	{ count(); return(CONSTANT); }
+{decimal}+{exp}{fs}?		{ count(); return yy::parser::make_CONSTANT(loc); }
+{decimal}*"."{decimal}+({exp})?{fs}?	{ count(); return yy::parser::make_CONSTANT(loc); }
+{decimal}+"."{decimal}*({exp})?{fs}?	{ count(); return yy::parser::make_CONSTANT(loc); }
 
-L?\"(\\.|[^\\"])*\"	{ count(); return(STRING_LITERAL); }
+L?\"(\\.|[^\\"])*\"	{ count(); return yy::parser::make_STRING_LITERAL(loc); }
 
-"..."			{ count(); return(ELLIPSIS); }
-">>="			{ count(); return(RIGHT_ASSIGN); }
-"<<="			{ count(); return(LEFT_ASSIGN); }
-"+="			{ count(); return(ADD_ASSIGN); }
-"-="			{ count(); return(SUB_ASSIGN); }
-"*="			{ count(); return(MUL_ASSIGN); }
-"/="			{ count(); return(DIV_ASSIGN); }
-"%="			{ count(); return(MOD_ASSIGN); }
-"&="			{ count(); return(AND_ASSIGN); }
-"^="			{ count(); return(XOR_ASSIGN); }
-"|="			{ count(); return(OR_ASSIGN); }
-">>"			{ count(); return(RIGHT_OP); }
-"<<"			{ count(); return(LEFT_OP); }
-"++"			{ count(); return(INC_OP); }
-"--"			{ count(); return(DEC_OP); }
-"->"			{ count(); return(PTR_OP); }
-"&&"			{ count(); return(AND_OP); }
-"||"			{ count(); return(OR_OP); }
-"<="			{ count(); return(LE_OP); }
-">="			{ count(); return(GE_OP); }
-"=="			{ count(); return(EQ_OP); }
-"!="			{ count(); return(NE_OP); }
-";"			{ count(); return(';'); }
-("{"|"<%")		{ count(); return('{'); }
-("}"|"%>")		{ count(); return('}'); }
-","			{ count(); return(','); }
-":"			{ count(); return(':'); }
-"="			{ count(); return('='); }
-"("			{ count(); return('('); }
-")"			{ count(); return(')'); }
-("["|"<:")		{ count(); return('['); }
-("]"|":>")		{ count(); return(']'); }
-"."			{ count(); return('.'); }
-"&"			{ count(); return('&'); }
-"!"			{ count(); return('!'); }
-"~"			{ count(); return('~'); }
-"-"			{ count(); return('-'); }
-"+"			{ count(); return('+'); }
-"*"			{ count(); return('*'); }
-"/"			{ count(); return('/'); }
-"%"			{ count(); return('%'); }
-"<"			{ count(); return('<'); }
-">"			{ count(); return('>'); }
-"^"			{ count(); return('^'); }
-"|"			{ count(); return('|'); }
-"?"			{ count(); return('?'); }
-
+"..."			{ count(); return yy::parser::make_ELLIPSIS(loc); }
+">>="			{ count(); return yy::parser::make_RIGHT_ASSIGN(loc); }
+"<<="			{ count(); return yy::parser::make_LEFT_ASSIGN(loc); }
+"+="			{ count(); return yy::parser::make_ADD_ASSIGN(loc); }
+"-="			{ count(); return yy::parser::make_SUB_ASSIGN(loc); }
+"*="			{ count(); return yy::parser::make_MUL_ASSIGN(loc); }
+"/="			{ count(); return yy::parser::make_DIV_ASSIGN(loc); }
+"%="			{ count(); return yy::parser::make_MOD_ASSIGN(loc); }
+"&="			{ count(); return yy::parser::make_AND_ASSIGN(loc); }
+"^="			{ count(); return yy::parser::make_XOR_ASSIGN(loc); }
+"|="			{ count(); return yy::parser::make_OR_ASSIGN(loc); }
+">>"			{ count(); return yy::parser::make_SHR(loc); }
+"<<"			{ count(); return yy::parser::make_SHL(loc); }
+"++"			{ count(); return yy::parser::make_INC(loc); }
+"--"			{ count(); return yy::parser::make_DEC(loc); }
+"->"			{ count(); return yy::parser::make_PTR(loc); }
+"&&"			{ count(); return yy::parser::make_LAND(loc); }
+"||"			{ count(); return yy::parser::make_LOR(loc); }
+"<="			{ count(); return yy::parser::make_LEQ(loc); }
+">="			{ count(); return yy::parser::make_GEQ(loc); }
+"=="			{ count(); return yy::parser::make_EQ(loc); }
+"!="			{ count(); return yy::parser::make_NEQ(loc); }
+";"				{ count(); return yy::parser::make_SEMI(loc); }
+("{"|"<%")		{ count(); return yy::parser::make_L_CURLY(loc); }
+("}"|"%>")		{ count(); return yy::parser::make_R_CURLY(loc); }
+","			{ count(); return yy::parser::make_COMMA(loc); }
+":"			{ count(); return yy::parser::make_COL(loc); }
+"="			{ count(); return yy::parser::make_ASS(loc); }
+"("			{ count(); return yy::parser::make_LEFT_PAR(loc); }
+")"			{ count(); return yy::parser::make_RIGHT_PAR(loc); }
+("["|"<:")		{ count(); return yy::parser::make_L_SQBR(loc); }
+("]"|":>")		{ count(); return yy::parser::make_R_SQBR(loc); }
+"."			{ count(); return yy::parser::make_DOT(loc); }
+"&"			{ count(); return yy::parser::make_AND(loc); }
+"!"			{ count(); return yy::parser::make_NOT(loc); }
+"~"			{ count(); return yy::parser::make_FLIP(loc); }
+"-"			{ count(); return yy::parser::make_MINUS(loc); }
+"+"			{ count(); return yy::parser::make_PLUS(loc); }
+"*"			{ count(); return yy::parser::make_MUL(loc); }
+"/"			{ count(); return yy::parser::make_DIV(loc); }
+"%"			{ count(); return yy::parser::make_MOD(loc); }
+"<"			{ count(); return yy::parser::make_LE(loc); }
+">"			{ count(); return yy::parser::make_GE(loc); }
+"^"			{ count(); return yy::parser::make_XOR(loc); }
+"|"			{ count(); return yy::parser::make_OR(loc); }
+"?"			{ count(); return yy::parser::make_Q_MARK(loc); }
+\n			{ count();loc.lines(); }
 [ \t\v\n\f]		{ count(); }
 .			{ /* ignore bad characters */ }
-
+<<EOF>> return yy::parser::make_END(loc);
 %%
 
-int yywrap()
-{
-	return(1);
-}
 
 
 
@@ -152,7 +159,7 @@ void count()
 }
 
 
-int check_type()
+yy::parser::symbol_type check_type(driver & drv)
 {
 /*
 * pseudo code --- this is what it should check
@@ -162,10 +169,28 @@ int check_type()
 *
 *	retrn(IDENTIFIER);
 */
+yy::location& loc = drv.location;
 
 /*
 *	it actually will only return IDENTIFIER
 */
+	return yy::parser::make_IDENTIFIER(loc);
+}
+void
+driver::scan_begin ()
+{
+  yy_flex_debug = trace_scanning;
+  if (file.empty () || file == "-")
+    yyin = stdin;
+  else if (!(yyin = fopen (file.c_str (), "r")))
+    {
+      std::cerr << "cannot open " << file << ": " << strerror (errno) << '\n';
+      exit (EXIT_FAILURE);
+    }
+}
 
-	return(IDENTIFIER);
+void
+driver::scan_end ()
+{
+  fclose (yyin);
 }
