@@ -4,6 +4,7 @@
 @vse_pidorasy := @ya_pidoras+@my_pidorasy
 @const := 10
 @from_const := (@const * 10)^(1+1)
+213123
 << @const
 << @from_const
 << @vse_pidorasy
