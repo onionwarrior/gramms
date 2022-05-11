@@ -1,8 +1,24 @@
-%{
+%skeleton "lalr1.cc"
+%require "3.8.1"
+%code requires{
+#include "poly.h"
+class driver;
 #include <stdio.h>
 int yylex();
 void yyerror(char *s);
-%}
+}
+%locations
+%define api.token.raw
+// Allows us to construct a parser instance in driver
+%define api.token.constructor
+%define api.value.type variant
+%define parse.trace
+%define parse.error detailed
+// Look-ahead correction
+%define parse.lac full
+// Avoid name clashes in generated files
+%define api.token.prefix {TOK_}
+
 %token
 	IDENTIFIER "identifier"
 	CONSTANT "constant"

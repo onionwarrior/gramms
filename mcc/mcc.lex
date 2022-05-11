@@ -1,3 +1,9 @@
+%{
+#include <string>
+#include <cstring>
+#include "driver.h"
+#include "mcc_c.tab.h"
+%}
 decimal			[0-9]
 letter			[a-zA-Z_]
 hex			[a-fA-F0-9]
@@ -15,40 +21,46 @@ int check_type();
 %}
 
 %%
-"/*"			{ comment(); }
+^"//".*
+<INITIAL>"/*" BEGIN(IN_COMMENT);
+<IN_COMMENT>"*/"      BEGIN(INITIAL);
+<IN_COMMENT>[^*\n]+   // eat comment in chunks
+<IN_COMMENT>"*"       // eat the lone star
+<IN_COMMENT>\n loc.lines();
+<IN_COMMENT><<EOF>> std::cerr<<"Warning: Could not match /* with */ at "<<loc<<std::endl; BEGIN(INITIAL);
 
-"auto"			{ count(); return(AUTO); }
-"break"			{ count(); return(BREAK); }
-"case"			{ count(); return(CASE); }
-"char"			{ count(); return(CHAR); }
-"const"			{ count(); return(CONST); }
-"continue"		{ count(); return(CONTINUE); }
-"default"		{ count(); return(DEFAULT); }
-"do"			{ count(); return(DO); }
-"double"		{ count(); return(DOUBLE); }
-"else"			{ count(); return(ELSE); }
-"enum"			{ count(); return(ENUM); }
-"extern"		{ count(); return(EXTERN); }
-"float"			{ count(); return(FLOAT); }
-"for"			{ count(); return(FOR); }
-"goto"			{ count(); return(GOTO); }
-"if"			{ count(); return(IF); }
-"int"			{ count(); return(INT); }
-"long"			{ count(); return(LONG); }
-"register"		{ count(); return(REGISTER); }
-"return"		{ count(); return(RETURN); }
-"short"			{ count(); return(SHORT); }
-"signed"		{ count(); return(SIGNED); }
-"sizeof"		{ count(); return(SIZEOF); }
-"static"		{ count(); return(STATIC); }
-"struct"		{ count(); return(STRUCT); }
-"switch"		{ count(); return(SWITCH); }
-"typedef"		{ count(); return(TYPEDEF); }
-"union"			{ count(); return(UNION); }
-"unsigned"		{ count(); return(UNSIGNED); }
-"void"			{ count(); return(VOID); }
-"volatile"		{ count(); return(VOLATILE); }
-"while"			{ count(); return(WHILE); }
+"auto"			{ count(); return yy::parser::make_AUTO(loc); }
+"break"			{ count(); return yy::parser::make_BREAK(loc); }
+"case"			{ count(); return yy::parser::make_CASE(loc); }
+"char"			{ count(); return yy::parser::make_CHAR(loc); }
+"const"			{ count(); return yy::parser::make_CONST(loc); }
+"continue"		{ count(); return yy::parser::make_CONTINUE(loc); }
+"default"		{ count(); return yy::parser::make_DEFAULT(loc); }
+"do"			{ count(); return yy::parser::make_DO(loc);  }
+"double"		{ count(); return yy::parser::make_DOUBLE(loc); }
+"else"			{ count(); return yy::parser::make_ELSE(loc); }
+"enum"			{ count(); return yy::parser::make_ENUM(loc); }
+"extern"		{ count(); return yy::parser::make_EXTERN(loc); }
+"float"			{ count(); return yy::parser::make_FLOAT(loc);}
+"for"			{ count(); return yy::parser::make_FOR(loc); }
+"goto"			{ count();return yy::parser::make_GOTO(loc); }
+"if"			{ count(); return yy::parser::make_IF(loc); }
+"int"			{ count(); return yy::parser::make_INT(loc); }
+"long"			{ count(); return yy::parser::make_LONG(loc); }
+"register"		{ count(); return yy::parser::make_REGISTER(loc); }
+"return"		{ count(); return yy::parser::make_RETURN(loc); }
+"short"			{ count(); return yy::parser::make_SHORT(loc); }
+"signed"		{ count(); return yy::parser::make_SIGNED(loc); }
+"sizeof"		{ count(); return yy::parser::make_SIZEOF(loc); }
+"static"		{ count(); return yy::parser::make_STATIC(loc); }
+"struct"		{ count(); return yy::parser::make_STRUCT(loc); }
+"switch"		{ count(); return yy::parser::make_SWITCH(loc); }
+"typedef"		{ count(); return yy::parser::make_TYPEDEF(loc); }
+"union"			{ count(); return yy::parser::make_UNION(loc); }
+"unsigned"		{ count(); return yy::parser::make_UNSIGNED(loc); }
+"void"			{ count(); return yy::parser::make_VOID(loc); }
+"volatile"		{ count(); return yy::parser::make_VOLATILE(loc); }
+"while"			{ count(); return yy::parser::make_WHILE(loc); }
 
 {L}({L}|{D})*		{ count(); return(check_type()); }
 
