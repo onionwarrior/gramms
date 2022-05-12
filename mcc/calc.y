@@ -1,6 +1,7 @@
 %skeleton "lalr1.cc"
 %require "3.8.1"
 %code requires{
+#include <sstream>
 #include "poly.h"
 class driver;
 }
@@ -49,7 +50,7 @@ class driver;
 %%
 
 calculation:
-			%empty {}
+			line {}
 			| calculation line{}
 
 line:
@@ -58,7 +59,12 @@ line:
 			| "<<" "var" "\n"
 				{
 				const auto variable = SymbolTable::GetInst()->ReadVar($2);
-				if (!variable) throw std::invalid_argument("No such variable");
+				if (!variable)
+				{
+					std::stringstream cause{};
+					cause<<"'<< "<<$2<<"' at "<<drv.location;
+					throw std::invalid_argument("No such variable, caused by: "+cause.str());
+				}
 				std::cout<<variable.value()<<std::endl;
 				}
 			| "\n"
@@ -68,19 +74,59 @@ polynomial:
 			| "-" polynomial %prec UMINUS /* Inverted polynomial*/
 				{$$=-$2;}
 			| polynomial "+" polynomial
-				{ $$=$1+$3; }
+				{
+						if($1.GetBase()!=$3.GetBase())
+						{
+								std::stringstream cause{};
+								cause<<"'Cant add"<<$1<<"and"<<$3<<"' at "<<drv.location;
+								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
+						}
+						$$=$1+$3;
+				}
 			| polynomial "-" polynomial
-				{ $$=$1-$3; }
+				{
+						if($1.GetBase()!=$3.GetBase())
+						{
+								std::stringstream cause{};
+								cause<<"'Cant add"<<$1<<"and"<<$3<<"' at "<<drv.location;
+								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
+						}
+						$$=$1-$3;
+				}
 			| polynomial "*" polynomial
-				{ $$ = $1*$3; }
+				{
+						if($1.GetBase()!=$3.GetBase())
+						{
+								std::stringstream cause{};
+								cause<<"'Cant multiply"<<$1<<" by "<<$3<<"' at "<<drv.location;
+								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
+						}
+						$$ = $1*$3;
+				}
 			|"(" polynomial ")" /*Brace support*/
 				{ $$ = $2; }
 			| polynomial "/" polynomial
-				{ $$ =$1/$3;}
+				{
+						if($1.GetBase()!=$3.GetBase())
+						{
+								std::stringstream cause{};
+								cause<<"'Cant div"<<$1<<" by "<<$3<<"' at "<<drv.location;
+								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
+						}
+						$$ =$1/$3;
+				}
 			| "(" polynomial ")" "^" integer_const
 				/*Raising a polynomial to a certain power
 				 * requires enclosing it with brackets*/
-			        { $$=$2^$5;}
+			        {
+					if($5<0)
+					{
+						std::stringstream cause{};
+						cause<<"'("<<$2<<")^"<<"("<<$5<<")' at "<<drv.location;
+						throw std::invalid_argument("Raising to negative power is forbiden, caused by: "+cause.str());
+					}
+					$$=$2^$5;
+				}
 
 monom:
 			/*All possible ways to represent a monom*/
@@ -97,7 +143,16 @@ monom:
 			|"int" "^" integer_const
 				{$$={ipow64($1,$3),0,0};}
 			|"var"
-				{$$={SymbolTable::GetInst()->ReadVar($1).value()};}
+				{
+					auto var = SymbolTable::GetInst()->ReadVar($1);
+					if (!var)
+					{
+						std::stringstream cause{};
+						cause<<"'"<<$1<<"' at "<<drv.location;
+						throw std::invalid_argument("No such variable, caused by: "+cause.str());
+					}
+				    $$=var.value();
+				};
 
 integer_const:		/*Wrapper for expression which
 			evaluates to an integer*/

@@ -77,6 +77,7 @@ class Polynomial {
   std::list<Monom> terms_;
   char variable_ ;
 public:
+  inline auto GetBase() const {return variable_;}
   inline int64_t degree() const {
     return terms_.empty() ? 0 : terms_.front().get_pow();
   }
