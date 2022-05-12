@@ -70,7 +70,7 @@ public:
 };
 
 struct Func;
-using type_t = std::variant<Primitive, UserType, Func *>;
+typedef std::variant<Primitive, UserType, Func *> type_t;
 struct Func {
   type_t return_type_;
   std::vector<type_t> args;

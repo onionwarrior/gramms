@@ -764,7 +764,7 @@ namespace yy {
 #line 418 "mcc_c.y"
         {
 		mcc::PrintColored("Array def:",mcc::TextColor::Good);
-		drv.AddSymbol(drv.GetCurrentScope()+yystack_[3].value.as < std::string > (),{yystack_[3].value.as < std::string > ().GetType(),1,true,true,true});
+		drv.AddSymbol(drv.GetCurrentScope()+yystack_[3].value.as < std::string > (),mcc::Symbol{yystack_[3].value.as < std::string > ().GetType(),1,true,true,true});
 	}
 #line 770 "mcc_c.tab.c"
     break;

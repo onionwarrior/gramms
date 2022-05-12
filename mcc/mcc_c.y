@@ -295,11 +295,13 @@ constant_expression
 declaration
 	: declaration_specifiers ";"
 	{mcc::PrintColored("declaration does not declare anything",mcc::TextColor::Warning);}
-	| declaration_specifiers init_declarator_list ";"
+	| declaration_specifiers {drv.SetCurrentType($1);} init_declarator_list ";"
+	{drv.UnsetCurrentType();}
 	;
 // must return a type
 declaration_specifiers
 	: storage_class_specifier
+	{$$}
 	| storage_class_specifier declaration_specifiers
 	| type_specifier
 	| type_specifier declaration_specifiers
@@ -417,7 +419,7 @@ direct_declarator
 	| direct_declarator  "[" constant_expression  "]"
 	{
 		mcc::PrintColored("Array def:",mcc::TextColor::Good);
-		drv.AddSymbol(drv.GetCurrentScope()+$1,{$1.GetType(),1,true,true,true});
+		drv.AddSymbol(drv.GetCurrentScope()+$1,mcc::Symbol{$1.GetType(),1,true,true,true});
 	}
 	| direct_declarator "[" "]"
 	{
