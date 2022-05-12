@@ -110,6 +110,11 @@ class driver;
 %type <std::string> "identifier";
 %type <std::vector<std::string>> identifier_list
 %type <std::string> declarator;
+%type <mcc::Symbol> primary_expression;
+%type <mcc::Symbol> postfix_expression
+%type <mcc::Symbol> expression
+%type <mcc::Symbol> "literal"
+%type <mcc::Symbol> "constant"
 %param { driver& drv }
 %code {
 # include "driver.h"
@@ -119,20 +124,53 @@ class driver;
 
 primary_expression
 	: "identifier"
+	{
+		const auto sym = drv.GetSymbol(drv.GetCurrentScope()+$1);
+		if(sym)
+		{
+			$$=sym.value();
+		}
+		else
+		{
+			$$={};
+		}
+	}
 	| "constant"
 	| "literal"
+	{mcc::PrintColored("String literal",mcc::TextColor::Good);}
 	| "(" expression ")"
 	;
 
 postfix_expression
 	: primary_expression
 	| postfix_expression "[" expression "]"
+	{
+		mcc::PrintColored("Array or ptr subscript operation",mcc::TextColor::Good);
+		const auto is_sub_int = mcc::IsIntegerT($3.GetType());
+		if( $1.IsPtr())
+		{
+			if(!is_sub_int && !$3.IsPtr())
+			{
+				mcc::PrintColored("Array subscript can't be non integer",mcc::TextColor::Error);
+			}
+		}
+		else
+		{
+			mcc::PrintColored("Cannot apply subscript operator to a non pointer value",mcc::TextColor::Error);
+		}
+	}
 	| postfix_expression "(" ")"
+	{mcc::PrintColored("Function call with no args",mcc::TextColor::Good);}
 	| postfix_expression "(" argument_expression_list ")"
+	{mcc::PrintColored("Function call with args",mcc::TextColor::Good);}
 	| postfix_expression "." "identifier"
+	{mcc::PrintColored("Non ptr struct or union field access",mcc::TextColor::Good);}
 	| postfix_expression "->" "identifier"
+	{mcc::PrintColored("Ptr struct or union field access",mcc::TextColor::Good);}
 	| postfix_expression "++"
+	{mcc::PrintColored("Postfix increment",mcc::TextColor::Good);}
 	| postfix_expression "--"
+	{mcc::PrintColored("Postfix decrement",mcc::TextColor::Good);}
 	;
 
 argument_expression_list
@@ -307,7 +345,6 @@ struct_or_union_specifier
 	| struct_or_union "{" struct_declaration_list "}"
 	| struct_or_union "identifier"
 	;
-
 struct_or_union
 	: "struct"
 	| "union"
@@ -378,7 +415,15 @@ direct_declarator
 	| "(" declarator ")"
 	{$$=$2;}
 	| direct_declarator  "[" constant_expression  "]"
+	{
+		mcc::PrintColored("Array def:",mcc::TextColor::Good);
+		drv.AddSymbol(drv.GetCurrentScope()+$1,{$1.GetType(),1,true,true,true});
+	}
 	| direct_declarator "[" "]"
+	{
+		mcc::PrintColored("Array def VLA:",mcc::TextColor::Good);
+	}
+
 	| direct_declarator "(" parameter_type_list ")"
 	| direct_declarator "(" identifier_list  ")"
 	{

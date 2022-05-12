@@ -1,7 +1,9 @@
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <iostream>
 #include <map>
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -30,17 +32,17 @@ inline auto PrintColored(const std::string &text, TextColor color) {
   case TextColor::Error:
     std::cout << "\033[31m"
               << "<<<"
-              << "Error: " << text << "\033[0m" << std::endl;
+              << "Error: " << text << "\033[0m";
     break;
   case TextColor::Warning:
     std::cout << "\033[33m"
               << "<<<"
-              << "Warning: " << text << "\033[0m" << std::endl;
+              << "Warning: " << text << "\033[0m";
     break;
   case TextColor::Good:
     std::cout << "\033[32m"
               << "<<<"
-              << "Debug: " << text << "\033[0m" << std::endl;
+              << "Debug: " << text << "\033[0m";
     break;
   }
 }
@@ -60,26 +62,52 @@ public:
   auto HasField(const std::string &field) {
     return types_.find(field) != types_.cend();
   }
+  auto IsTypedef() const { return kind_ == UsrTypeKind::Typedef; }
+  auto GetUnderlyingType() const {
+    auto &&[_, type] = *(types_.begin());
+    return type;
+  }
 };
+
 struct Func;
 using type_t = std::variant<Primitive, UserType, Func *>;
 struct Func {
   type_t return_type_;
   std::vector<type_t> args;
 };
+inline auto IsIntegerT(const type_t &t) {
+  std::array<std::string, 10> integer_types{
+      {"int", "unsigned int", "char", "unsigned char", "long", "long long",
+       "unsigned long", "unsigned long long", "short", "unsigned short"}};
+  if (std::holds_alternative<UserType>(t))
+    return std::find(integer_types.cbegin(), integer_types.cend(),
+                     std::get<UserType>(t).GetUnderlyingType()) !=
+           integer_types.cend();
+  if (std::holds_alternative<Primitive>(t)) {
+    const auto e_type = std::get<Primitive>(t);
+    return e_type != Primitive::Void && e_type != Primitive::Float &&
+           e_type != Primitive::Double && e_type != Primitive::LongDouble;
+  }
+  return false;
+}
 class Symbol {
-  type_t type_;
+  bool is_lvalue = true;
+  mcc::type_t type_;
   bool defined_ = false;
   std::size_t indirection_lvl_ = 0;
-  bool is_const_=false;
-  auto inline GetIndLevel() const { return indirection_lvl_; }
-  auto inline IsPtr() const { return indirection_lvl_ > 0; }
+  bool is_const_ = false;
 
 public:
+  auto inline GetIndLevel() const { return indirection_lvl_; }
+  auto inline IsPtr() const { return indirection_lvl_ > 0; }
+  auto inline IsLvalue() const { return is_lvalue; }
+
   Symbol(const type_t &type, const std::size_t indirection_lvl,
-         const bool is_const,bool defined)
-      : type_{type}, indirection_lvl_(indirection_lvl), is_const_(is_const),defined_{defined} {}
-  Symbol()=default;
+         const bool is_const, bool defined, bool is_lvalue)
+      : type_{type}, indirection_lvl_(indirection_lvl),
+        is_const_(is_const), defined_{defined} {}
+  Symbol() = default;
+  auto GetType() const { return type_; }
 };
 class SymbolTable {
 
@@ -94,6 +122,12 @@ public:
       return false;
     symbols_[symbol_name] = symbol;
     return true;
+  }
+  auto GetSymbol(const std::string &name) {
+    if (symbols_.find(name) != symbols_.cend()) {
+      return std::optional{symbols_[name]};
+    }
+    return std::optional<Symbol>{};
   }
 };
 class TypeTable {

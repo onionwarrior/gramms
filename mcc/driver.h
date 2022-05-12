@@ -4,6 +4,7 @@
 #include "mcc_c.tab.h"
 #include <deque>
 #include <numeric>
+#include <optional>
 #include <set>
 #include <string>
 #define YY_DECL yy::parser::symbol_type yylex(driver &drv)
@@ -47,6 +48,9 @@ public:
   }
   auto AddSymbol(const std::string &name, mcc::Symbol &&symbol) {
     symb_table_.DefineNewSymbol(GetCurrentScope() + name, symbol);
+  }
+  auto GetSymbol(const std::string &name) {
+    return symb_table_.GetSymbol(name);
   }
 };
 #endif

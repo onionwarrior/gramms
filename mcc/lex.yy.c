@@ -706,16 +706,16 @@ int yy_flex_debug = 1;
 
 static const flex_int16_t yy_rule_linenum[98] =
     {   0,
-       37,   38,   39,   40,   41,   42,   45,   46,   47,   48,
-       49,   50,   51,   52,   53,   54,   55,   56,   57,   58,
-       59,   60,   61,   62,   63,   64,   65,   66,   67,   68,
-       69,   70,   71,   72,   73,   74,   75,   76,   78,   80,
-       81,   82,   83,   85,   86,   87,   89,   91,   92,   93,
-       94,   95,   96,   97,   98,   99,  100,  101,  102,  103,
-      104,  105,  106,  107,  108,  109,  110,  111,  112,  113,
-      114,  115,  116,  117,  118,  119,  120,  121,  122,  123,
-      124,  125,  126,  127,  128,  129,  130,  131,  132,  133,
-      134,  135,  136,  137,  138,  139,  140
+       39,   40,   41,   42,   43,   44,   47,   48,   49,   50,
+       51,   52,   53,   54,   55,   56,   57,   58,   59,   60,
+       61,   62,   63,   64,   65,   66,   67,   68,   69,   70,
+       71,   72,   73,   74,   75,   76,   77,   78,   80,   82,
+       83,   84,   85,   86,   87,   88,   90,   92,   93,   94,
+       95,   96,   97,   98,   99,  100,  101,  102,  103,  104,
+      105,  106,  107,  108,  109,  110,  111,  112,  113,  114,
+      115,  116,  117,  118,  119,  120,  121,  122,  123,  124,
+      125,  126,  127,  128,  129,  130,  131,  132,  133,  134,
+      135,  136,  137,  138,  139,  140,  141
 
     } ;
 
@@ -745,8 +745,10 @@ char *yytext;
 void count();
 yy::parser::symbol_type check_type(const std::string & s,const yy::parser::location_type &loc);
 yy::parser::symbol_type make_IDENTIFIER(const std::string & s,const yy::parser::location_type &loc);
-#line 748 "lex.yy.c"
-#line 749 "lex.yy.c"
+yy::parser::symbol_type make_CONSTANT_FLOAT(const std::string &s,const yy::parser::location_type &loc);
+yy::parser::symbol_type make_CONSTANT_INT(const std::string &s,const yy::parser::location_type &loc);
+#line 750 "lex.yy.c"
+#line 751 "lex.yy.c"
 
 #define INITIAL 0
 #define IN_COMMENT 1
@@ -1028,16 +1030,16 @@ YY_DECL
 
 	{
 /* %% [7.0] user's declarations go here */
-#line 29 "mcc.lex"
+#line 31 "mcc.lex"
 
 
-#line 32 "mcc.lex"
+#line 34 "mcc.lex"
   // A handy shortcut to the location held by the driver.
   yy::location& loc = drv.location;
   // Code run each time yylex is called.
   loc.step ();
 
-#line 1040 "lex.yy.c"
+#line 1042 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1116,508 +1118,508 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 37 "mcc.lex"
+#line 39 "mcc.lex"
 
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 38 "mcc.lex"
+#line 40 "mcc.lex"
 BEGIN(IN_COMMENT);
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 39 "mcc.lex"
+#line 41 "mcc.lex"
 BEGIN(INITIAL);
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 40 "mcc.lex"
+#line 42 "mcc.lex"
 // eat comment in chunks
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 41 "mcc.lex"
+#line 43 "mcc.lex"
 // eat the lone star
 	YY_BREAK
 case 6:
 /* rule 6 can match eol */
 YY_RULE_SETUP
-#line 42 "mcc.lex"
+#line 44 "mcc.lex"
 loc.lines();
 	YY_BREAK
 case YY_STATE_EOF(IN_COMMENT):
-#line 43 "mcc.lex"
+#line 45 "mcc.lex"
 std::cerr<<"Warning: Could not match /* with */ at "<<loc<<std::endl; BEGIN(INITIAL);
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 45 "mcc.lex"
+#line 47 "mcc.lex"
 { count(); return yy::parser::make_AUTO(loc); }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 46 "mcc.lex"
+#line 48 "mcc.lex"
 { count(); return yy::parser::make_BREAK(loc); }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 47 "mcc.lex"
+#line 49 "mcc.lex"
 { count(); return yy::parser::make_CASE(loc); }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 48 "mcc.lex"
+#line 50 "mcc.lex"
 { count(); return yy::parser::make_CHAR(loc); }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 49 "mcc.lex"
+#line 51 "mcc.lex"
 { count(); return yy::parser::make_CONST(loc); }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 50 "mcc.lex"
+#line 52 "mcc.lex"
 { count(); return yy::parser::make_CONTINUE(loc); }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 51 "mcc.lex"
+#line 53 "mcc.lex"
 { count(); return yy::parser::make_DEFAULT(loc); }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 52 "mcc.lex"
+#line 54 "mcc.lex"
 { count(); return yy::parser::make_DO(loc);  }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 53 "mcc.lex"
+#line 55 "mcc.lex"
 { count(); return yy::parser::make_DOUBLE(loc); }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 54 "mcc.lex"
+#line 56 "mcc.lex"
 { count(); return yy::parser::make_ELSE(loc); }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 55 "mcc.lex"
+#line 57 "mcc.lex"
 { count(); return yy::parser::make_ENUM(loc); }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 56 "mcc.lex"
+#line 58 "mcc.lex"
 { count(); return yy::parser::make_EXTERN(loc); }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 57 "mcc.lex"
+#line 59 "mcc.lex"
 { count(); return yy::parser::make_FLOAT(loc);}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 58 "mcc.lex"
+#line 60 "mcc.lex"
 { count(); return yy::parser::make_FOR(loc); }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 59 "mcc.lex"
+#line 61 "mcc.lex"
 { count(); return yy::parser::make_GOTO(loc); }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 60 "mcc.lex"
+#line 62 "mcc.lex"
 { count(); return yy::parser::make_IF(loc); }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 61 "mcc.lex"
+#line 63 "mcc.lex"
 { count(); return yy::parser::make_INT(loc); }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 62 "mcc.lex"
+#line 64 "mcc.lex"
 { count(); return yy::parser::make_LONG(loc); }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 63 "mcc.lex"
+#line 65 "mcc.lex"
 { count(); return yy::parser::make_REGISTER(loc); }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 64 "mcc.lex"
+#line 66 "mcc.lex"
 { count(); return yy::parser::make_RETURN(loc); }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 65 "mcc.lex"
+#line 67 "mcc.lex"
 { count(); return yy::parser::make_SHORT(loc); }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 66 "mcc.lex"
+#line 68 "mcc.lex"
 { count(); return yy::parser::make_SIGNED(loc); }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 67 "mcc.lex"
+#line 69 "mcc.lex"
 { count(); return yy::parser::make_SIZEOF(loc); }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 68 "mcc.lex"
+#line 70 "mcc.lex"
 { count(); return yy::parser::make_STATIC(loc); }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 69 "mcc.lex"
+#line 71 "mcc.lex"
 { count(); return yy::parser::make_STRUCT(loc); }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 70 "mcc.lex"
+#line 72 "mcc.lex"
 { count(); return yy::parser::make_SWITCH(loc); }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 71 "mcc.lex"
+#line 73 "mcc.lex"
 { count(); return yy::parser::make_TYPEDEF(loc); }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 72 "mcc.lex"
+#line 74 "mcc.lex"
 { count(); return yy::parser::make_UNION(loc); }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 73 "mcc.lex"
+#line 75 "mcc.lex"
 { count(); return yy::parser::make_UNSIGNED(loc); }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 74 "mcc.lex"
+#line 76 "mcc.lex"
 { count(); return yy::parser::make_VOID(loc); }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 75 "mcc.lex"
+#line 77 "mcc.lex"
 { count(); return yy::parser::make_VOLATILE(loc); }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 76 "mcc.lex"
+#line 78 "mcc.lex"
 { count(); return yy::parser::make_WHILE(loc); }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 78 "mcc.lex"
+#line 80 "mcc.lex"
 { count(); return check_type(yytext,loc); }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 80 "mcc.lex"
-{ count(); return yy::parser::make_CONSTANT(loc); }
+#line 82 "mcc.lex"
+{ count(); return make_CONSTANT_INT(yytext,loc); }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 81 "mcc.lex"
-{ count(); return yy::parser::make_CONSTANT(loc); }
+#line 83 "mcc.lex"
+{ count(); return make_CONSTANT_INT(yytext,loc); }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 82 "mcc.lex"
-{ count(); return yy::parser::make_CONSTANT(loc); }
+#line 84 "mcc.lex"
+{ count(); return make_CONSTANT_INT(yytext,loc); }
 	YY_BREAK
 case 43:
 /* rule 43 can match eol */
 YY_RULE_SETUP
-#line 83 "mcc.lex"
-{ count(); return yy::parser::make_CONSTANT(loc); }
+#line 85 "mcc.lex"
+{ count(); return yy::parser::make_CONSTANT({mcc::Primitive::UChar,0,true,true,false},loc); }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 85 "mcc.lex"
-{ count(); return yy::parser::make_CONSTANT(loc); }
+#line 86 "mcc.lex"
+{ count(); return make_CONSTANT_FLOAT(yytext,loc); }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 86 "mcc.lex"
-{ count(); return yy::parser::make_CONSTANT(loc); }
+#line 87 "mcc.lex"
+{ count(); return make_CONSTANT_FLOAT(yytext,loc); }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 87 "mcc.lex"
-{ count(); return yy::parser::make_CONSTANT(loc); }
+#line 88 "mcc.lex"
+{ count(); return make_CONSTANT_FLOAT(yytext,loc); }
 	YY_BREAK
 case 47:
 /* rule 47 can match eol */
 YY_RULE_SETUP
-#line 89 "mcc.lex"
-{ count(); return yy::parser::make_STRING_LITERAL(loc); }
+#line 90 "mcc.lex"
+{ count(); return yy::parser::make_STRING_LITERAL({mcc::Primitive::Char,1,true,true,false},loc);}
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 91 "mcc.lex"
+#line 92 "mcc.lex"
 { count(); return yy::parser::make_ELLIPSIS(loc); }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 92 "mcc.lex"
+#line 93 "mcc.lex"
 { count(); return yy::parser::make_RIGHT_ASSIGN(loc); }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 93 "mcc.lex"
+#line 94 "mcc.lex"
 { count(); return yy::parser::make_LEFT_ASSIGN(loc); }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 94 "mcc.lex"
+#line 95 "mcc.lex"
 { count(); return yy::parser::make_ADD_ASSIGN(loc); }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 95 "mcc.lex"
+#line 96 "mcc.lex"
 { count(); return yy::parser::make_SUB_ASSIGN(loc); }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 96 "mcc.lex"
+#line 97 "mcc.lex"
 { count(); return yy::parser::make_MUL_ASSIGN(loc); }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 97 "mcc.lex"
+#line 98 "mcc.lex"
 loc = drv.location;
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 98 "mcc.lex"
+#line 99 "mcc.lex"
 { count(); return yy::parser::make_DIV_ASSIGN(loc); }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 99 "mcc.lex"
+#line 100 "mcc.lex"
 { count(); return yy::parser::make_MOD_ASSIGN(loc); }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 100 "mcc.lex"
+#line 101 "mcc.lex"
 { count(); return yy::parser::make_AND_ASSIGN(loc); }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 101 "mcc.lex"
+#line 102 "mcc.lex"
 { count(); return yy::parser::make_XOR_ASSIGN(loc); }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 102 "mcc.lex"
+#line 103 "mcc.lex"
 { count(); return yy::parser::make_OR_ASSIGN(loc); }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 103 "mcc.lex"
+#line 104 "mcc.lex"
 { count(); return yy::parser::make_SHR(loc); }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 104 "mcc.lex"
+#line 105 "mcc.lex"
 { count(); return yy::parser::make_SHL(loc); }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 105 "mcc.lex"
+#line 106 "mcc.lex"
 { count(); return yy::parser::make_INC(loc); }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 106 "mcc.lex"
+#line 107 "mcc.lex"
 { count(); return yy::parser::make_DEC(loc); }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 107 "mcc.lex"
+#line 108 "mcc.lex"
 { count(); return yy::parser::make_PTR(loc); }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 108 "mcc.lex"
+#line 109 "mcc.lex"
 { count(); return yy::parser::make_LAND(loc); }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 109 "mcc.lex"
+#line 110 "mcc.lex"
 { count(); return yy::parser::make_LOR(loc); }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 110 "mcc.lex"
+#line 111 "mcc.lex"
 { count(); return yy::parser::make_LEQ(loc); }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 111 "mcc.lex"
+#line 112 "mcc.lex"
 { count(); return yy::parser::make_GEQ(loc); }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 112 "mcc.lex"
+#line 113 "mcc.lex"
 { count(); return yy::parser::make_EQ(loc); }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 113 "mcc.lex"
+#line 114 "mcc.lex"
 { count(); return yy::parser::make_NEQ(loc); }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 114 "mcc.lex"
+#line 115 "mcc.lex"
 { count(); return yy::parser::make_SEMI(loc); }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 115 "mcc.lex"
+#line 116 "mcc.lex"
 { count(); return yy::parser::make_L_CURLY(loc); }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 116 "mcc.lex"
+#line 117 "mcc.lex"
 { count(); return yy::parser::make_R_CURLY(loc); }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 117 "mcc.lex"
+#line 118 "mcc.lex"
 { count(); return yy::parser::make_COMMA(loc); }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 118 "mcc.lex"
+#line 119 "mcc.lex"
 { count(); return yy::parser::make_COL(loc); }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 119 "mcc.lex"
+#line 120 "mcc.lex"
 { count(); return yy::parser::make_ASS(loc); }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 120 "mcc.lex"
+#line 121 "mcc.lex"
 { count(); return yy::parser::make_LEFT_PAR(loc); }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 121 "mcc.lex"
+#line 122 "mcc.lex"
 { count(); return yy::parser::make_RIGHT_PAR(loc); }
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 122 "mcc.lex"
+#line 123 "mcc.lex"
 { count(); return yy::parser::make_L_SQBR(loc); }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 123 "mcc.lex"
+#line 124 "mcc.lex"
 { count(); return yy::parser::make_R_SQBR(loc); }
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 124 "mcc.lex"
+#line 125 "mcc.lex"
 { count(); return yy::parser::make_DOT(loc); }
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 125 "mcc.lex"
+#line 126 "mcc.lex"
 { count(); return yy::parser::make_AND(loc); }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 126 "mcc.lex"
+#line 127 "mcc.lex"
 { count(); return yy::parser::make_NOT(loc); }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 127 "mcc.lex"
+#line 128 "mcc.lex"
 { count(); return yy::parser::make_FLIP(loc); }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 128 "mcc.lex"
+#line 129 "mcc.lex"
 { count(); return yy::parser::make_MINUS(loc); }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 129 "mcc.lex"
+#line 130 "mcc.lex"
 { count(); return yy::parser::make_PLUS(loc); }
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 130 "mcc.lex"
+#line 131 "mcc.lex"
 { count(); return yy::parser::make_MUL(loc); }
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 131 "mcc.lex"
+#line 132 "mcc.lex"
 { count(); return yy::parser::make_DIV(loc); }
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 132 "mcc.lex"
+#line 133 "mcc.lex"
 { count(); return yy::parser::make_MOD(loc); }
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 133 "mcc.lex"
+#line 134 "mcc.lex"
 { count(); return yy::parser::make_LE(loc); }
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 134 "mcc.lex"
+#line 135 "mcc.lex"
 { count(); return yy::parser::make_GE(loc); }
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 135 "mcc.lex"
+#line 136 "mcc.lex"
 { count(); return yy::parser::make_XOR(loc); }
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 136 "mcc.lex"
+#line 137 "mcc.lex"
 { count(); return yy::parser::make_OR(loc); }
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 137 "mcc.lex"
+#line 138 "mcc.lex"
 { count(); return yy::parser::make_Q_MARK(loc); }
 	YY_BREAK
 case 95:
 /* rule 95 can match eol */
 YY_RULE_SETUP
-#line 138 "mcc.lex"
+#line 139 "mcc.lex"
 { count();loc.lines(); }
 	YY_BREAK
 case 96:
 /* rule 96 can match eol */
 YY_RULE_SETUP
-#line 139 "mcc.lex"
+#line 140 "mcc.lex"
 { count(); }
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 140 "mcc.lex"
+#line 141 "mcc.lex"
 { /* ignore bad characters */ }
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 141 "mcc.lex"
+#line 142 "mcc.lex"
 return yy::parser::make_END(loc);
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 142 "mcc.lex"
+#line 143 "mcc.lex"
 ECHO;
 	YY_BREAK
-#line 1620 "lex.yy.c"
+#line 1622 "lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2724,7 +2726,7 @@ void yyfree (void * ptr )
 
 /* %ok-for-header */
 
-#line 142 "mcc.lex"
+#line 143 "mcc.lex"
 
 
 
@@ -2767,6 +2769,37 @@ yy::parser::symbol_type check_type(const std::string & s,const yy::parser::locat
 yy::parser::symbol_type make_IDENTIFIER(const std::string & s, const yy::parser::location_type &loc)
 {
   return yy::parser::make_IDENTIFIER(s,loc);
+}
+
+yy::parser::symbol_type make_CONSTANT_FLOAT(const std::string &s,const yy::parser::location_type &loc)
+{
+  mcc::Primitive type;
+  const auto last = std::tolower(s.back());
+  switch(last)
+  {
+    case 'f':    type = mcc::Primitive::Float; break;
+    case 'l': type =mcc::Primitive::LongDouble; break;
+    default: type = mcc::Primitive::Double; break;
+  }
+  return yy::parser::make_CONSTANT({type,0,true,true,false},loc);
+}
+yy::parser::symbol_type make_CONSTANT_INT(const std::string &s,const yy::parser::location_type &loc)
+{
+  if(s.find("u")!=std::string::npos&&s.find("ll")!=std::string::npos)
+    return yy::parser::make_CONSTANT({mcc::Primitive::ULongLong,0,true,true,false},loc);
+  if(s.find("u")!=std::string::npos&&s.find("l")!=std::string::npos)
+    return yy::parser::make_CONSTANT({mcc::Primitive::ULong,0,true,true,false},loc);
+  if(s.find("u")!=std::string::npos)
+    return yy::parser::make_CONSTANT({mcc::Primitive::UInt,0,true,true,false},loc);
+  if(s.find("ll")!=std::string::npos)
+    return yy::parser::make_CONSTANT({mcc::Primitive::LongLong,0,true,true,false},loc);
+  if(s.find("l")!=std::string::npos)
+    return yy::parser::make_CONSTANT({mcc::Primitive::Long,0,true,true,false},loc);
+
+  if(s.find("u")!=std::string::npos&&s.find("ll")!=std::string::npos)
+    return yy::parser::make_CONSTANT({mcc::Primitive::ULongLong,0,true,true,false},loc);
+
+  return yy::parser::make_CONSTANT({mcc::Primitive::Int,0,true,true,false},loc);
 }
 void
 driver::scan_begin ()

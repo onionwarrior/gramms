@@ -383,13 +383,20 @@ namespace yy {
     /// An auxiliary type to compute the largest semantic type.
     union union_type
     {
+      // "constant"
+      // "literal"
+      // primary_expression
+      // postfix_expression
+      // expression
+      char dummy1[sizeof (mcc::Symbol)];
+
       // "identifier"
       // declarator
       // direct_declarator
-      char dummy1[sizeof (std::string)];
+      char dummy2[sizeof (std::string)];
 
       // identifier_list
-      char dummy2[sizeof (std::vector<std::string>)];
+      char dummy3[sizeof (std::vector<std::string>)];
     };
 
     /// The size of the largest semantic type.
@@ -731,6 +738,14 @@ namespace yy {
       {
         switch (this->kind ())
     {
+      case symbol_kind::S_CONSTANT: // "constant"
+      case symbol_kind::S_STRING_LITERAL: // "literal"
+      case symbol_kind::S_primary_expression: // primary_expression
+      case symbol_kind::S_postfix_expression: // postfix_expression
+      case symbol_kind::S_expression: // expression
+        value.move< mcc::Symbol > (std::move (that.value));
+        break;
+
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_direct_declarator: // direct_declarator
@@ -760,6 +775,20 @@ namespace yy {
 #else
       basic_symbol (typename Base::kind_type t, const location_type& l)
         : Base (t)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, mcc::Symbol&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const mcc::Symbol& v, const location_type& l)
+        : Base (t)
+        , value (v)
         , location (l)
       {}
 #endif
@@ -816,6 +845,14 @@ namespace yy {
         // Value type destructor.
 switch (yykind)
     {
+      case symbol_kind::S_CONSTANT: // "constant"
+      case symbol_kind::S_STRING_LITERAL: // "literal"
+      case symbol_kind::S_primary_expression: // primary_expression
+      case symbol_kind::S_postfix_expression: // postfix_expression
+      case symbol_kind::S_expression: // expression
+        value.template destroy< mcc::Symbol > ();
+        break;
+
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_direct_declarator: // direct_declarator
@@ -920,6 +957,14 @@ switch (yykind)
 #else
       symbol_type (int tok, const location_type& l)
         : super_type (token_kind_type (tok), l)
+#endif
+      {}
+#if 201103L <= YY_CPLUSPLUS
+      symbol_type (int tok, mcc::Symbol v, location_type l)
+        : super_type (token_kind_type (tok), std::move (v), std::move (l))
+#else
+      symbol_type (int tok, const mcc::Symbol& v, const location_type& l)
+        : super_type (token_kind_type (tok), v, l)
 #endif
       {}
 #if 201103L <= YY_CPLUSPLUS
@@ -1041,31 +1086,31 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
-      make_CONSTANT (location_type l)
+      make_CONSTANT (mcc::Symbol v, location_type l)
       {
-        return symbol_type (token::TOK_CONSTANT, std::move (l));
+        return symbol_type (token::TOK_CONSTANT, std::move (v), std::move (l));
       }
 #else
       static
       symbol_type
-      make_CONSTANT (const location_type& l)
+      make_CONSTANT (const mcc::Symbol& v, const location_type& l)
       {
-        return symbol_type (token::TOK_CONSTANT, l);
+        return symbol_type (token::TOK_CONSTANT, v, l);
       }
 #endif
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
-      make_STRING_LITERAL (location_type l)
+      make_STRING_LITERAL (mcc::Symbol v, location_type l)
       {
-        return symbol_type (token::TOK_STRING_LITERAL, std::move (l));
+        return symbol_type (token::TOK_STRING_LITERAL, std::move (v), std::move (l));
       }
 #else
       static
       symbol_type
-      make_STRING_LITERAL (const location_type& l)
+      make_STRING_LITERAL (const mcc::Symbol& v, const location_type& l)
       {
-        return symbol_type (token::TOK_STRING_LITERAL, l);
+        return symbol_type (token::TOK_STRING_LITERAL, v, l);
       }
 #endif
 #if 201103L <= YY_CPLUSPLUS
@@ -2639,6 +2684,14 @@ switch (yykind)
   {
     switch (this->kind ())
     {
+      case symbol_kind::S_CONSTANT: // "constant"
+      case symbol_kind::S_STRING_LITERAL: // "literal"
+      case symbol_kind::S_primary_expression: // primary_expression
+      case symbol_kind::S_postfix_expression: // postfix_expression
+      case symbol_kind::S_expression: // expression
+        value.copy< mcc::Symbol > (YY_MOVE (that.value));
+        break;
+
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_direct_declarator: // direct_declarator
@@ -2680,6 +2733,14 @@ switch (yykind)
     super_type::move (s);
     switch (this->kind ())
     {
+      case symbol_kind::S_CONSTANT: // "constant"
+      case symbol_kind::S_STRING_LITERAL: // "literal"
+      case symbol_kind::S_primary_expression: // primary_expression
+      case symbol_kind::S_postfix_expression: // postfix_expression
+      case symbol_kind::S_expression: // expression
+        value.move< mcc::Symbol > (YY_MOVE (s.value));
+        break;
+
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_direct_declarator: // direct_declarator
@@ -2756,7 +2817,7 @@ switch (yykind)
 
 
 } // yy
-#line 2760 "mcc_c.tab.h"
+#line 2821 "mcc_c.tab.h"
 
 
 

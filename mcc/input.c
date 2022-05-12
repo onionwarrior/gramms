@@ -7,8 +7,12 @@ int undef(void);
 char sym = 's';
 int main()
 {
-	int (*fun) (int,char);
+	int (fun) (int,char);
 	int a = 10+3;
+	int arr[15];
+	int braces =(5);
+	int ccc = arr["zzzz"];
+	const static int;
 	float zzz=3,bbb=3;
 	{
 		int var =3;

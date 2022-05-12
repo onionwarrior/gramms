@@ -42,7 +42,7 @@
 
 
 // Unqualified %code blocks.
-#line 114 "mcc_c.y"
+#line 119 "mcc_c.y"
 
 # include "driver.h"
 
@@ -207,6 +207,14 @@ namespace yy {
   {
     switch (that.kind ())
     {
+      case symbol_kind::S_CONSTANT: // "constant"
+      case symbol_kind::S_STRING_LITERAL: // "literal"
+      case symbol_kind::S_primary_expression: // primary_expression
+      case symbol_kind::S_postfix_expression: // postfix_expression
+      case symbol_kind::S_expression: // expression
+        value.YY_MOVE_OR_COPY< mcc::Symbol > (YY_MOVE (that.value));
+        break;
+
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_direct_declarator: // direct_declarator
@@ -232,6 +240,14 @@ namespace yy {
   {
     switch (that.kind ())
     {
+      case symbol_kind::S_CONSTANT: // "constant"
+      case symbol_kind::S_STRING_LITERAL: // "literal"
+      case symbol_kind::S_primary_expression: // primary_expression
+      case symbol_kind::S_postfix_expression: // postfix_expression
+      case symbol_kind::S_expression: // expression
+        value.move< mcc::Symbol > (YY_MOVE (that.value));
+        break;
+
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_direct_declarator: // direct_declarator
@@ -257,6 +273,14 @@ namespace yy {
     state = that.state;
     switch (that.kind ())
     {
+      case symbol_kind::S_CONSTANT: // "constant"
+      case symbol_kind::S_STRING_LITERAL: // "literal"
+      case symbol_kind::S_primary_expression: // primary_expression
+      case symbol_kind::S_postfix_expression: // postfix_expression
+      case symbol_kind::S_expression: // expression
+        value.copy< mcc::Symbol > (that.value);
+        break;
+
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_direct_declarator: // direct_declarator
@@ -281,6 +305,14 @@ namespace yy {
     state = that.state;
     switch (that.kind ())
     {
+      case symbol_kind::S_CONSTANT: // "constant"
+      case symbol_kind::S_STRING_LITERAL: // "literal"
+      case symbol_kind::S_primary_expression: // primary_expression
+      case symbol_kind::S_postfix_expression: // postfix_expression
+      case symbol_kind::S_expression: // expression
+        value.move< mcc::Symbol > (that.value);
+        break;
+
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_direct_declarator: // direct_declarator
@@ -560,6 +592,14 @@ namespace yy {
          when using variants.  */
       switch (yyr1_[yyn])
     {
+      case symbol_kind::S_CONSTANT: // "constant"
+      case symbol_kind::S_STRING_LITERAL: // "literal"
+      case symbol_kind::S_primary_expression: // primary_expression
+      case symbol_kind::S_postfix_expression: // postfix_expression
+      case symbol_kind::S_expression: // expression
+        yylhs.value.emplace< mcc::Symbol > ();
+        break;
+
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_direct_declarator: // direct_declarator
@@ -590,84 +630,185 @@ namespace yy {
         {
           switch (yyn)
             {
+  case 2: // primary_expression: "identifier"
+#line 127 "mcc_c.y"
+        {
+		const auto sym = drv.GetSymbol(drv.GetCurrentScope()+yystack_[0].value.as < std::string > ());
+		if(sym)
+		{
+			yylhs.value.as < mcc::Symbol > ()=sym.value();
+		}
+		else
+		{
+			yylhs.value.as < mcc::Symbol > ()={};
+		}
+	}
+#line 647 "mcc_c.tab.c"
+    break;
+
+  case 3: // primary_expression: "constant"
+#line 138 "mcc_c.y"
+          { yylhs.value.as < mcc::Symbol > () = yystack_[0].value.as < mcc::Symbol > (); }
+#line 653 "mcc_c.tab.c"
+    break;
+
+  case 4: // primary_expression: "literal"
+#line 140 "mcc_c.y"
+        {mcc::PrintColored("String literal",mcc::TextColor::Good);}
+#line 659 "mcc_c.tab.c"
+    break;
+
+  case 6: // postfix_expression: primary_expression
+#line 145 "mcc_c.y"
+          { yylhs.value.as < mcc::Symbol > () = yystack_[0].value.as < mcc::Symbol > (); }
+#line 665 "mcc_c.tab.c"
+    break;
+
+  case 7: // postfix_expression: postfix_expression "[" expression "]"
+#line 147 "mcc_c.y"
+        {
+		mcc::PrintColored("Array or ptr subscript operation",mcc::TextColor::Good);
+		const auto is_sub_int = mcc::IsIntegerT(yystack_[1].value.as < mcc::Symbol > ().GetType());
+		if( yystack_[3].value.as < mcc::Symbol > ().IsPtr())
+		{
+			if(!is_sub_int && !yystack_[1].value.as < mcc::Symbol > ().IsPtr())
+			{
+				mcc::PrintColored("Array subscript can't be non integer",mcc::TextColor::Error);
+			}
+		}
+		else
+		{
+			mcc::PrintColored("Cannot apply subscript operator to a non pointer value",mcc::TextColor::Error);
+		}
+	}
+#line 685 "mcc_c.tab.c"
+    break;
+
+  case 8: // postfix_expression: postfix_expression "(" ")"
+#line 163 "mcc_c.y"
+        {mcc::PrintColored("Function call with no args",mcc::TextColor::Good);}
+#line 691 "mcc_c.tab.c"
+    break;
+
+  case 9: // postfix_expression: postfix_expression "(" argument_expression_list ")"
+#line 165 "mcc_c.y"
+        {mcc::PrintColored("Function call with args",mcc::TextColor::Good);}
+#line 697 "mcc_c.tab.c"
+    break;
+
+  case 10: // postfix_expression: postfix_expression "." "identifier"
+#line 167 "mcc_c.y"
+        {mcc::PrintColored("Non ptr struct or union field access",mcc::TextColor::Good);}
+#line 703 "mcc_c.tab.c"
+    break;
+
+  case 11: // postfix_expression: postfix_expression "->" "identifier"
+#line 169 "mcc_c.y"
+        {mcc::PrintColored("Ptr struct or union field access",mcc::TextColor::Good);}
+#line 709 "mcc_c.tab.c"
+    break;
+
+  case 12: // postfix_expression: postfix_expression "++"
+#line 171 "mcc_c.y"
+        {mcc::PrintColored("Postfix increment",mcc::TextColor::Good);}
+#line 715 "mcc_c.tab.c"
+    break;
+
+  case 13: // postfix_expression: postfix_expression "--"
+#line 173 "mcc_c.y"
+        {mcc::PrintColored("Postfix decrement",mcc::TextColor::Good);}
+#line 721 "mcc_c.tab.c"
+    break;
+
+  case 74: // expression: expression "," assignment_expression
+#line 288 "mcc_c.y"
+          { yylhs.value.as < mcc::Symbol > () = yystack_[2].value.as < mcc::Symbol > (); }
+#line 727 "mcc_c.tab.c"
+    break;
+
   case 76: // declaration: declaration_specifiers ";"
-#line 259 "mcc_c.y"
+#line 297 "mcc_c.y"
         {mcc::PrintColored("declaration does not declare anything",mcc::TextColor::Warning);}
-#line 597 "mcc_c.tab.c"
+#line 733 "mcc_c.tab.c"
     break;
 
   case 131: // declarator: pointer direct_declarator
-#line 366 "mcc_c.y"
+#line 403 "mcc_c.y"
         {
 		yylhs.value.as < std::string > ()=yystack_[0].value.as < std::string > ();
 	}
-#line 605 "mcc_c.tab.c"
+#line 741 "mcc_c.tab.c"
     break;
 
   case 132: // declarator: direct_declarator
-#line 370 "mcc_c.y"
+#line 407 "mcc_c.y"
         {
 		yylhs.value.as < std::string > ()=yystack_[0].value.as < std::string > ();
 	}
-#line 613 "mcc_c.tab.c"
+#line 749 "mcc_c.tab.c"
     break;
 
   case 133: // direct_declarator: "identifier"
-#line 377 "mcc_c.y"
+#line 414 "mcc_c.y"
         {yylhs.value.as < std::string > ()=yystack_[0].value.as < std::string > ();}
-#line 619 "mcc_c.tab.c"
+#line 755 "mcc_c.tab.c"
     break;
 
   case 134: // direct_declarator: "(" declarator ")"
-#line 379 "mcc_c.y"
+#line 416 "mcc_c.y"
         {yylhs.value.as < std::string > ()=yystack_[1].value.as < std::string > ();}
-#line 625 "mcc_c.tab.c"
+#line 761 "mcc_c.tab.c"
     break;
 
   case 135: // direct_declarator: direct_declarator "[" constant_expression "]"
-#line 380 "mcc_c.y"
-          { yylhs.value.as < std::string > () = yystack_[3].value.as < std::string > (); }
-#line 631 "mcc_c.tab.c"
+#line 418 "mcc_c.y"
+        {
+		mcc::PrintColored("Array def:",mcc::TextColor::Good);
+		drv.AddSymbol(drv.GetCurrentScope()+yystack_[3].value.as < std::string > (),{yystack_[3].value.as < std::string > ().GetType(),1,true,true,true});
+	}
+#line 770 "mcc_c.tab.c"
     break;
 
   case 136: // direct_declarator: direct_declarator "[" "]"
-#line 381 "mcc_c.y"
-          { yylhs.value.as < std::string > () = yystack_[2].value.as < std::string > (); }
-#line 637 "mcc_c.tab.c"
+#line 423 "mcc_c.y"
+        {
+		mcc::PrintColored("Array def VLA:",mcc::TextColor::Good);
+	}
+#line 778 "mcc_c.tab.c"
     break;
 
   case 137: // direct_declarator: direct_declarator "(" parameter_type_list ")"
-#line 382 "mcc_c.y"
+#line 427 "mcc_c.y"
           { yylhs.value.as < std::string > () = yystack_[3].value.as < std::string > (); }
-#line 643 "mcc_c.tab.c"
+#line 784 "mcc_c.tab.c"
     break;
 
   case 138: // direct_declarator: direct_declarator "(" identifier_list ")"
-#line 384 "mcc_c.y"
+#line 429 "mcc_c.y"
         {
 	mcc::PrintColored("Function call:" +yystack_[3].value.as < std::string > (),mcc::TextColor::Good);
 	}
-#line 651 "mcc_c.tab.c"
+#line 792 "mcc_c.tab.c"
     break;
 
   case 139: // direct_declarator: direct_declarator "(" ")"
-#line 387 "mcc_c.y"
+#line 432 "mcc_c.y"
           { yylhs.value.as < std::string > () = yystack_[2].value.as < std::string > (); }
-#line 657 "mcc_c.tab.c"
+#line 798 "mcc_c.tab.c"
     break;
 
   case 153: // identifier_list: "identifier"
-#line 421 "mcc_c.y"
+#line 466 "mcc_c.y"
         {
 		 yylhs.value.as < std::vector<std::string> > ()={};
 		 yylhs.value.as < std::vector<std::string> > ().push_back(yystack_[0].value.as < std::string > ());
 		 mcc::PrintColored("Id"+yystack_[0].value.as < std::string > (),mcc::TextColor::Good);
 	}
-#line 667 "mcc_c.tab.c"
+#line 808 "mcc_c.tab.c"
     break;
 
   case 154: // identifier_list: identifier_list "," "identifier"
-#line 427 "mcc_c.y"
+#line 472 "mcc_c.y"
         {
 		yystack_[2].value.as < std::vector<std::string> > ().emplace_back(yystack_[0].value.as < std::string > ());
 		yylhs.value.as < std::vector<std::string> > ()=std::move(yystack_[2].value.as < std::vector<std::string> > ());
@@ -676,53 +817,53 @@ namespace yy {
 			mcc::PrintColored("Id:"+id,mcc::TextColor::Good);
 		}
 	}
-#line 680 "mcc_c.tab.c"
+#line 821 "mcc_c.tab.c"
     break;
 
   case 175: // $@1: %empty
-#line 473 "mcc_c.y"
+#line 518 "mcc_c.y"
           {drv.EnterNewScope("");}
-#line 686 "mcc_c.tab.c"
+#line 827 "mcc_c.tab.c"
     break;
 
   case 176: // statement: $@1 compound_statement
-#line 475 "mcc_c.y"
+#line 520 "mcc_c.y"
                 {drv.LeaveScope();}
-#line 692 "mcc_c.tab.c"
+#line 833 "mcc_c.tab.c"
     break;
 
   case 208: // external_declaration: declaration
-#line 536 "mcc_c.y"
+#line 581 "mcc_c.y"
         {mcc::PrintColored("New global definition",mcc::TextColor::Good);}
-#line 698 "mcc_c.tab.c"
+#line 839 "mcc_c.tab.c"
     break;
 
   case 209: // $@2: %empty
-#line 540 "mcc_c.y"
+#line 585 "mcc_c.y"
                                                              {mcc::PrintColored("Entered new scope: "+ yystack_[1].value.as < std::string > (),mcc::TextColor::Good);}
-#line 704 "mcc_c.tab.c"
+#line 845 "mcc_c.tab.c"
     break;
 
   case 211: // $@3: %empty
-#line 541 "mcc_c.y"
+#line 586 "mcc_c.y"
                                             {mcc::PrintColored("Entered new scope: "+yystack_[0].value.as < std::string > (),mcc::TextColor::Good);}
-#line 710 "mcc_c.tab.c"
+#line 851 "mcc_c.tab.c"
     break;
 
   case 213: // $@4: %empty
-#line 542 "mcc_c.y"
+#line 587 "mcc_c.y"
                                       {mcc::PrintColored("Entered new scope: "+yystack_[1].value.as < std::string > (),mcc::TextColor::Good);}
-#line 716 "mcc_c.tab.c"
+#line 857 "mcc_c.tab.c"
     break;
 
   case 215: // $@5: %empty
-#line 543 "mcc_c.y"
+#line 588 "mcc_c.y"
                      {mcc::PrintColored("Entered new scope"+yystack_[0].value.as < std::string > (),mcc::TextColor::Good);}
-#line 722 "mcc_c.tab.c"
+#line 863 "mcc_c.tab.c"
     break;
 
 
-#line 726 "mcc_c.tab.c"
+#line 867 "mcc_c.tab.c"
 
             default:
               break;
@@ -1715,28 +1856,28 @@ namespace yy {
   const short
   parser::yyrline_[] =
   {
-       0,   121,   121,   122,   123,   124,   128,   129,   130,   131,
-     132,   133,   134,   135,   139,   140,   144,   145,   146,   147,
-     148,   149,   153,   154,   155,   156,   157,   158,   162,   163,
-     167,   168,   169,   170,   174,   175,   176,   180,   181,   182,
-     186,   187,   188,   189,   190,   194,   195,   196,   200,   201,
-     205,   206,   210,   211,   215,   216,   220,   221,   225,   226,
-     230,   231,   235,   236,   237,   238,   239,   240,   241,   242,
-     243,   244,   245,   249,   250,   254,   258,   260,   264,   265,
-     266,   267,   268,   269,   273,   274,   278,   279,   283,   284,
-     285,   286,   287,   291,   292,   293,   294,   295,   296,   297,
-     298,   299,   300,   301,   302,   306,   307,   308,   312,   313,
-     317,   318,   322,   326,   327,   328,   329,   333,   334,   338,
-     339,   340,   344,   345,   346,   350,   351,   355,   356,   360,
-     361,   365,   369,   376,   378,   380,   381,   382,   383,   387,
-     391,   392,   393,   394,   398,   399,   404,   405,   409,   410,
-     414,   415,   416,   420,   426,   438,   439,   443,   444,   445,
-     449,   450,   451,   452,   453,   454,   455,   456,   457,   461,
-     462,   463,   467,   468,   472,   473,   473,   476,   477,   478,
-     479,   480,   484,   485,   486,   490,   491,   495,   496,   499,
-     500,   503,   504,   508,   509,   510,   514,   515,   516,   517,
-     521,   522,   523,   524,   525,   529,   530,   534,   535,   540,
-     540,   541,   541,   542,   542,   543,   543
+       0,   126,   126,   138,   139,   141,   145,   146,   162,   164,
+     166,   168,   170,   172,   177,   178,   182,   183,   184,   185,
+     186,   187,   191,   192,   193,   194,   195,   196,   200,   201,
+     205,   206,   207,   208,   212,   213,   214,   218,   219,   220,
+     224,   225,   226,   227,   228,   232,   233,   234,   238,   239,
+     243,   244,   248,   249,   253,   254,   258,   259,   263,   264,
+     268,   269,   273,   274,   275,   276,   277,   278,   279,   280,
+     281,   282,   283,   287,   288,   292,   296,   298,   302,   303,
+     304,   305,   306,   307,   311,   312,   316,   317,   321,   322,
+     323,   324,   325,   329,   330,   331,   332,   333,   334,   335,
+     336,   337,   338,   339,   340,   344,   345,   346,   349,   350,
+     354,   355,   359,   363,   364,   365,   366,   370,   371,   375,
+     376,   377,   381,   382,   383,   387,   388,   392,   393,   397,
+     398,   402,   406,   413,   415,   417,   422,   427,   428,   432,
+     436,   437,   438,   439,   443,   444,   449,   450,   454,   455,
+     459,   460,   461,   465,   471,   483,   484,   488,   489,   490,
+     494,   495,   496,   497,   498,   499,   500,   501,   502,   506,
+     507,   508,   512,   513,   517,   518,   518,   521,   522,   523,
+     524,   525,   529,   530,   531,   535,   536,   540,   541,   544,
+     545,   548,   549,   553,   554,   555,   559,   560,   561,   562,
+     566,   567,   568,   569,   570,   574,   575,   579,   580,   585,
+     585,   586,   586,   587,   587,   588,   588
   };
 
   void
@@ -1768,9 +1909,9 @@ namespace yy {
 
 
 } // yy
-#line 1772 "mcc_c.tab.c"
+#line 1913 "mcc_c.tab.c"
 
-#line 546 "mcc_c.y"
+#line 591 "mcc_c.y"
 
 void
 yy::parser::error (const location_type& l, const std::string& m)
