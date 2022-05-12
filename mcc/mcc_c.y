@@ -106,6 +106,10 @@ class driver;
 %token END 0 "end of file"
 %nonassoc "if"
 %nonassoc "else"
+%type <std::string> direct_declarator;
+%type <std::string> "identifier";
+%type <std::vector<std::string>> identifier_list
+%type <std::string> declarator;
 %param { driver& drv }
 %code {
 # include "driver.h"
@@ -249,13 +253,13 @@ expression
 constant_expression
 	: conditional_expression
 	;
-
+// check current scope
 declaration
 	: declaration_specifiers ";"
 	{mcc::PrintColored("declaration does not declare anything",mcc::TextColor::Warning);}
 	| declaration_specifiers init_declarator_list ";"
 	;
-
+// must return a type
 declaration_specifiers
 	: storage_class_specifier
 	| storage_class_specifier declaration_specifiers
@@ -359,16 +363,27 @@ type_qualifier
 
 declarator
 	: pointer direct_declarator
+	{
+		$$=$2;
+	}
 	| direct_declarator
+	{
+		$$=$1;
+	}
 	;
 
 direct_declarator
 	: "identifier"
+	{$$=$1;}
 	| "(" declarator ")"
-	| direct_declarator "[" constant_expression "]"
+	{$$=$2;}
+	| direct_declarator  "[" constant_expression  "]"
 	| direct_declarator "[" "]"
 	| direct_declarator "(" parameter_type_list ")"
-	| direct_declarator "(" identifier_list ")"
+	| direct_declarator "(" identifier_list  ")"
+	{
+	mcc::PrintColored("Function call:" +$1,mcc::TextColor::Good);
+	}
 	| direct_declarator "(" ")"
 	;
 
@@ -403,7 +418,20 @@ parameter_declaration
 
 identifier_list
 	: "identifier"
+	{
+		 $$={};
+		 $$.push_back($1);
+		 mcc::PrintColored("Id"+$1,mcc::TextColor::Good);
+	}
 	| identifier_list "," "identifier"
+	{
+		$1.emplace_back($3);
+		$$=std::move($1);
+		for(auto && id : $$)
+		{
+			mcc::PrintColored("Id:"+id,mcc::TextColor::Good);
+		}
+	}
 	;
 
 type_name
@@ -442,7 +470,9 @@ initializer_list
 
 statement
 	: labeled_statement
-	| {mcc::PrintColored("Entered new scope",mcc::TextColor::Good);} compound_statement
+	| {drv.EnterNewScope("");}
+		compound_statement
+		{drv.LeaveScope();}
 	| expression_statement
 	| selection_statement
 	| iteration_statement
@@ -455,11 +485,10 @@ labeled_statement
 	| "case" constant_expression ":" statement
 	| "default" ":" statement
 	;
-
+// Anonymous scope if does not start with an identifier
 compound_statement
-	:  "{"  statement_list "}"
-	|
-	"{" "}"
+	:"{"  statement_list "}"
+	|"{" "}"
 	;
 
 statement_list
@@ -503,14 +532,15 @@ translation_unit
 
 external_declaration
 	: function_definition
-	| declaration
+	| declaration //Global var or function declaration
+	{mcc::PrintColored("New global definition",mcc::TextColor::Good);}
 	;
-
+//All kinds of functions definitions...
 function_definition
-	: declaration_specifiers declarator declaration_list {mcc::PrintColored("Entered new scope",mcc::TextColor::Good);} compound_statement
-	| declaration_specifiers declarator {mcc::PrintColored("Entered new scope",mcc::TextColor::Good);} compound_statement
-	| declarator declaration_list {mcc::PrintColored("Entered new scope",mcc::TextColor::Good);} compound_statement
-	| declarator {mcc::PrintColored("Entered new scope",mcc::TextColor::Good);} compound_statement
+	: declaration_specifiers declarator declaration_list {mcc::PrintColored("Entered new scope: "+ $2,mcc::TextColor::Good);} compound_statement
+	| declaration_specifiers declarator {mcc::PrintColored("Entered new scope: "+$2,mcc::TextColor::Good);} compound_statement
+	| declarator declaration_list {mcc::PrintColored("Entered new scope: "+$1,mcc::TextColor::Good);} compound_statement
+	| declarator {mcc::PrintColored("Entered new scope"+$1,mcc::TextColor::Good);} compound_statement
 	;
 
 %%

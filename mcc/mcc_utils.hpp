@@ -29,15 +29,18 @@ inline auto PrintColored(const std::string &text, TextColor color) {
   switch (color) {
   case TextColor::Error:
     std::cout << "\033[31m"
-              << "<<<" << "Error: " << text << "\033[0m" << std::endl;
+              << "<<<"
+              << "Error: " << text << "\033[0m" << std::endl;
     break;
   case TextColor::Warning:
     std::cout << "\033[33m"
-              << "<<<" << "Warning: " << text << "\033[0m" << std::endl;
+              << "<<<"
+              << "Warning: " << text << "\033[0m" << std::endl;
     break;
   case TextColor::Good:
-    std::cout <<"\033[32m"
-              << "<<<" << "Debug: " << text << "\033[0m" << std::endl;
+    std::cout << "\033[32m"
+              << "<<<"
+              << "Debug: " << text << "\033[0m" << std::endl;
     break;
   }
 }
@@ -64,44 +67,37 @@ struct Func {
   type_t return_type_;
   std::vector<type_t> args;
 };
-inline auto Mangle(const std::string &name, const std::string &ns_name) {
-  if (ns_name.empty())
-    return "::" + name;
-  return ns_name + "::" + name;
-}
 class Symbol {
-  type_t type;
-  bool is_const;
-private:
+  type_t type_;
+  bool defined_ = false;
+  std::size_t indirection_lvl_ = 0;
+  bool is_const_=false;
+  auto inline GetIndLevel() const { return indirection_lvl_; }
+  auto inline IsPtr() const { return indirection_lvl_ > 0; }
+
+public:
+  Symbol(const type_t &type, const std::size_t indirection_lvl,
+         const bool is_const,bool defined)
+      : type_{type}, indirection_lvl_(indirection_lvl), is_const_(is_const),defined_{defined} {}
+  Symbol()=default;
 };
 class SymbolTable {
 
-protected:
-  static SymbolTable *inst_;
-
 private:
   std::map<std::string, Symbol> symbols_;
-  SymbolTable() = default;
   // 0 -> inst, 1 -> pointer, 2 -> pointer to pointer etc.
-  std::size_t indirection_lvl_ = 0;
-
 public:
+  SymbolTable() = default;
+
   auto DefineNewSymbol(const std::string &symbol_name, const Symbol &symbol) {
     if (symbols_.find(symbol_name) != symbols_.cend())
       return false;
     symbols_[symbol_name] = symbol;
     return true;
   }
-  auto inline Init() { inst_ = new SymbolTable(); }
-  auto inline GetIndLevel() const { return indirection_lvl_; }
-  auto inline IsPtr() const { return indirection_lvl_ > 0; }
 };
 class TypeTable {
 private:
-  TypeTable() = default;
-
-protected:
-  static TypeTable *table_;
   std::map<std::string, type_t> types_ = {
       {"int", Primitive::Int},
       {"unsigned int", Primitive::UInt},
@@ -119,7 +115,7 @@ protected:
       {"void", Primitive::Void}};
 
 public:
-  static void Init() { table_ = new TypeTable(); }
+  TypeTable() = default;
   auto DefineNewType(const std::string &type_name, const UserType &type) {
     if (types_.find(type_name) != types_.cend())
       return false;

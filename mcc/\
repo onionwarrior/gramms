@@ -22,7 +22,7 @@ sgn			(u|U|l|L)*
 
 %{
 void count();
-yy::parser::symbol_type check_type(const std::string & s,const yy::parser::location_type &loc);
+yy::parser::symbol_type check_type(driver & drv);
 yy::parser::symbol_type make_IDENTIFIER(const std::string & s,const yy::parser::location_type &loc);
 %}
 
@@ -74,7 +74,7 @@ yy::parser::symbol_type make_IDENTIFIER(const std::string & s,const yy::parser::
 "volatile"		{ count(); return yy::parser::make_VOLATILE(loc); }
 "while"			{ count(); return yy::parser::make_WHILE(loc); }
 
-{letter}({letter}|{decimal})*		{ count(); return check_type(yytext,loc); }
+{letter}({letter}|{decimal})*		{ count(); return(check_type(drv)); }
 
 0[xX]{hex}+{sgn}?		{ count(); return yy::parser::make_CONSTANT(loc); }
 0{decimal}+{sgn}?		{ count(); return yy::parser::make_CONSTANT(loc); }
@@ -93,7 +93,6 @@ L?\"(\\.|[^\\"])*\"	{ count(); return yy::parser::make_STRING_LITERAL(loc); }
 "+="			{ count(); return yy::parser::make_ADD_ASSIGN(loc); }
 "-="			{ count(); return yy::parser::make_SUB_ASSIGN(loc); }
 "*="			{ count(); return yy::parser::make_MUL_ASSIGN(loc); }
-	yy::location& loc = drv.location;
 "/="			{ count(); return yy::parser::make_DIV_ASSIGN(loc); }
 "%="			{ count(); return yy::parser::make_MOD_ASSIGN(loc); }
 "&="			{ count(); return yy::parser::make_AND_ASSIGN(loc); }
@@ -161,7 +160,7 @@ void count()
 }
 
 
-yy::parser::symbol_type check_type(const std::string & s,const yy::parser::location_type  & loc)
+yy::parser::symbol_type check_type(driver & drv)
 {
 /*
 * pseudo code --- this is what it should check
@@ -171,15 +170,16 @@ yy::parser::symbol_type check_type(const std::string & s,const yy::parser::locat
 *
 *	retrn(IDENTIFIER);
 */
+yy::location& loc = drv.location;
 
 /*
 *	it actually will only return IDENTIFIER
 */
-	return make_IDENTIFIER(s,loc);
+	return yy::parser::make_IDENTIFIER(loc);
 }
-yy::parser::symbol_type make_IDENTIFIER(const std::string & s, const yy::parser::location_type &loc)
+yy::parser::symbol_type make_IDENTIFIER(const std::string & s, const yy::parser::location_type &loc,driver &drv)
 {
-  return yy::parser::make_IDENTIFIER(s,loc);
+  
 }
 void
 driver::scan_begin ()

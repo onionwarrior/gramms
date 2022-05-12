@@ -1,12 +1,14 @@
-int fun(const char *a,const char*b)
+int (fun)(const char *a,const char*b)
 {
 	return 1;
 }
+//fun will be def later
+int undef(void);
+char sym = 's';
 int main()
 {
+	int (*fun) (int,char);
 	int a = 10+3;
-	 z=3;
-	const auto static b=4;
 	float zzz=3,bbb=3;
 	{
 		int var =3;
@@ -15,9 +17,8 @@ int main()
 			float g=10;
 		}
 	}
-	static;
+	fun(a,sym);
 	fun("%s","hello");
-	int abcd=3;goto label;float z=3;float a=2;
 	fun(1,2);
 	return 0;
 }

@@ -382,7 +382,15 @@ namespace yy {
 
     /// An auxiliary type to compute the largest semantic type.
     union union_type
-    {    };
+    {
+      // "identifier"
+      // declarator
+      // direct_declarator
+      char dummy1[sizeof (std::string)];
+
+      // identifier_list
+      char dummy2[sizeof (std::vector<std::string>)];
+    };
 
     /// The size of the largest semantic type.
     enum { size = sizeof (union_type) };
@@ -723,6 +731,16 @@ namespace yy {
       {
         switch (this->kind ())
     {
+      case symbol_kind::S_IDENTIFIER: // "identifier"
+      case symbol_kind::S_declarator: // declarator
+      case symbol_kind::S_direct_declarator: // direct_declarator
+        value.move< std::string > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_identifier_list: // identifier_list
+        value.move< std::vector<std::string> > (std::move (that.value));
+        break;
+
       default:
         break;
     }
@@ -742,6 +760,34 @@ namespace yy {
 #else
       basic_symbol (typename Base::kind_type t, const location_type& l)
         : Base (t)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, std::string&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const std::string& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, std::vector<std::string>&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const std::vector<std::string>& v, const location_type& l)
+        : Base (t)
+        , value (v)
         , location (l)
       {}
 #endif
@@ -770,6 +816,16 @@ namespace yy {
         // Value type destructor.
 switch (yykind)
     {
+      case symbol_kind::S_IDENTIFIER: // "identifier"
+      case symbol_kind::S_declarator: // declarator
+      case symbol_kind::S_direct_declarator: // direct_declarator
+        value.template destroy< std::string > ();
+        break;
+
+      case symbol_kind::S_identifier_list: // identifier_list
+        value.template destroy< std::vector<std::string> > ();
+        break;
+
       default:
         break;
     }
@@ -864,6 +920,14 @@ switch (yykind)
 #else
       symbol_type (int tok, const location_type& l)
         : super_type (token_kind_type (tok), l)
+#endif
+      {}
+#if 201103L <= YY_CPLUSPLUS
+      symbol_type (int tok, std::string v, location_type l)
+        : super_type (token_kind_type (tok), std::move (v), std::move (l))
+#else
+      symbol_type (int tok, const std::string& v, const location_type& l)
+        : super_type (token_kind_type (tok), v, l)
 #endif
       {}
     };
@@ -962,16 +1026,16 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
-      make_IDENTIFIER (location_type l)
+      make_IDENTIFIER (std::string v, location_type l)
       {
-        return symbol_type (token::TOK_IDENTIFIER, std::move (l));
+        return symbol_type (token::TOK_IDENTIFIER, std::move (v), std::move (l));
       }
 #else
       static
       symbol_type
-      make_IDENTIFIER (const location_type& l)
+      make_IDENTIFIER (const std::string& v, const location_type& l)
       {
-        return symbol_type (token::TOK_IDENTIFIER, l);
+        return symbol_type (token::TOK_IDENTIFIER, v, l);
       }
 #endif
 #if 201103L <= YY_CPLUSPLUS
@@ -2575,6 +2639,16 @@ switch (yykind)
   {
     switch (this->kind ())
     {
+      case symbol_kind::S_IDENTIFIER: // "identifier"
+      case symbol_kind::S_declarator: // declarator
+      case symbol_kind::S_direct_declarator: // direct_declarator
+        value.copy< std::string > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_identifier_list: // identifier_list
+        value.copy< std::vector<std::string> > (YY_MOVE (that.value));
+        break;
+
       default:
         break;
     }
@@ -2606,6 +2680,16 @@ switch (yykind)
     super_type::move (s);
     switch (this->kind ())
     {
+      case symbol_kind::S_IDENTIFIER: // "identifier"
+      case symbol_kind::S_declarator: // declarator
+      case symbol_kind::S_direct_declarator: // direct_declarator
+        value.move< std::string > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_identifier_list: // identifier_list
+        value.move< std::vector<std::string> > (YY_MOVE (s.value));
+        break;
+
       default:
         break;
     }
@@ -2672,7 +2756,7 @@ switch (yykind)
 
 
 } // yy
-#line 2676 "mcc_c.tab.h"
+#line 2760 "mcc_c.tab.h"
 
 
 
