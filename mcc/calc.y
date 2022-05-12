@@ -121,8 +121,14 @@ polynomial:
 						if(br!=bl&&bl&&br)
 						{
 								std::stringstream cause{};
-								cause<<"'Cant div"<<$1<<" by "<<$3<<"' at "<<drv.location;
+								cause<<"'Cant divide "<<$1<<" by "<<$3<<"' at "<<drv.location;
 								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
+						}
+						if($3.degree()==0)
+						{
+								std::stringstream cause{};
+								cause<<"'Cant divide "<<$1<<" by "<<"zero"<<"' at "<<drv.location;
+								throw std::invalid_argument("Division by zero, caused by: "+cause.str());
 						}
 						$$ =$1/$3;
 						$$.SetBase((std::max)(br,bl));
