@@ -12,9 +12,8 @@
 class Monom {
   int64_t coef_ = 1;
   int64_t pow_ = 1;
-
 public:
-  Monom(int64_t coef, int64_t pow) : coef_{coef}, pow_{pow} {}
+  Monom(int64_t coef, int64_t pow) : coef_{coef}, pow_{pow}{}
   Monom() = default;
   Monom &operator=(const Monom &) = default;
   Monom &operator+=(const Monom &rhs) {
@@ -28,7 +27,7 @@ public:
     return *this;
   }
   inline int64_t get_pow() const { return pow_; };
-  std::string repr() const {
+  std::string repr(const char var) const {
     if (coef_ == 0)
       return {};
     if (pow_ == 0)
@@ -42,7 +41,7 @@ public:
 
     display_coef += std::abs(coef_) == 1 ? "" : std::to_string(coef_);
     auto display_pow = pow_ == 1 ? "" : "^" + std::to_string(pow_);
-    return display_coef + 'x' + display_pow;
+    return display_coef + var + display_pow;
   }
   inline int64_t coef() const { return coef_; }
   friend Monom operator+(Monom lhs, const Monom &rhs) {
@@ -69,15 +68,16 @@ public:
   }
   Monom operator-() const { return {-coef_, pow_}; }
   friend std::ostream &operator<<(std::ostream &stream, const Monom &mono) {
-    stream << mono.repr();
+    stream << mono.repr('x');
     return stream;
   }
 };
 class Polynomial {
   std::list<Monom> terms_;
-  char variable_ ;
+  char variable_ = '\0';
 public:
   inline auto GetBase() const {return variable_;}
+  inline auto SetBase(const char base) {variable_=base;}
   inline int64_t degree() const {
     return terms_.empty() ? 0 : terms_.front().get_pow();
   }
@@ -212,7 +212,7 @@ public:
   std::string to_string() const {
     std::string res{};
     for (auto &&term : terms_) {
-      res += term.repr();
+      res += term.repr(variable_);
     }
     return res.substr(res[0] == '+');
   }

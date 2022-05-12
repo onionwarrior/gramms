@@ -1,6 +1,5 @@
 @ya_pidoras := (10^3+32*783 +9)*x+7
 << @ya_pidoras
-@ya_pidoras := (@negr)^(-1)
 @my_pidorasy := 10z+3
 @vse_pidorasy := @ya_pidoras+@my_pidorasy
 @const := 10

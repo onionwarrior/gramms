@@ -75,45 +75,57 @@ polynomial:
 				{$$=-$2;}
 			| polynomial "+" polynomial
 				{
-						if($1.GetBase()!=$3.GetBase())
+						const auto br=$1.GetBase();
+						const auto bl=$3.GetBase();
+						if(br!=bl&&bl&&br)
 						{
 								std::stringstream cause{};
-								cause<<"'Cant add"<<$1<<"and"<<$3<<"' at "<<drv.location;
+								cause<<"'Cant add "<<$1<<" and "<<$3<<"' at "<<drv.location;
 								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
 						}
 						$$=$1+$3;
+						$$.SetBase((std::max)(br,bl));
 				}
 			| polynomial "-" polynomial
 				{
-						if($1.GetBase()!=$3.GetBase())
+						const auto br=$1.GetBase();
+						const auto bl=$3.GetBase();
+						if(br!=bl&&bl&&br)
 						{
 								std::stringstream cause{};
-								cause<<"'Cant add"<<$1<<"and"<<$3<<"' at "<<drv.location;
+								cause<<"'Cant sub "<<$3<<" from "<<$1<<"' at "<<drv.location;
 								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
 						}
 						$$=$1-$3;
+						$$.SetBase((std::max)(br,bl));
 				}
 			| polynomial "*" polynomial
 				{
-						if($1.GetBase()!=$3.GetBase())
+						const auto br=$1.GetBase();
+						const auto bl=$3.GetBase();
+						if(br!=bl&&bl&&br)
 						{
 								std::stringstream cause{};
-								cause<<"'Cant multiply"<<$1<<" by "<<$3<<"' at "<<drv.location;
+								cause<<"'Cant multiply "<<$1<<" by "<<$3<<"' at "<<drv.location;
 								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
 						}
 						$$ = $1*$3;
+						$$.SetBase((std::max)(br,bl));
 				}
 			|"(" polynomial ")" /*Brace support*/
 				{ $$ = $2; }
 			| polynomial "/" polynomial
 				{
-						if($1.GetBase()!=$3.GetBase())
+						const auto br=$1.GetBase();
+						const auto bl=$3.GetBase();
+						if(br!=bl&&bl&&br)
 						{
 								std::stringstream cause{};
 								cause<<"'Cant div"<<$1<<" by "<<$3<<"' at "<<drv.location;
 								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
 						}
 						$$ =$1/$3;
+						$$.SetBase((std::max)(br,bl));
 				}
 			| "(" polynomial ")" "^" integer_const
 				/*Raising a polynomial to a certain power

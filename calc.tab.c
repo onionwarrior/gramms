@@ -728,36 +728,80 @@ namespace yy {
 
   case 9: // polynomial: polynomial "+" polynomial
 #line 77 "calc.y"
-                                { yylhs.value.as < Polynomial > ()=yystack_[2].value.as < Polynomial > ()+yystack_[0].value.as < Polynomial > (); }
-#line 733 "calc.tab.c"
+                                {
+						const auto br=yystack_[2].value.as < Polynomial > ().GetBase();
+						const auto bl=yystack_[0].value.as < Polynomial > ().GetBase();
+						if(br!=bl&&bl&&br)
+						{
+								std::stringstream cause{};
+								cause<<"'Cant add "<<yystack_[2].value.as < Polynomial > ()<<" and "<<yystack_[0].value.as < Polynomial > ()<<"' at "<<drv.location;
+								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
+						}
+						yylhs.value.as < Polynomial > ()=yystack_[2].value.as < Polynomial > ()+yystack_[0].value.as < Polynomial > ();
+						yylhs.value.as < Polynomial > ().SetBase((std::max)(br,bl));
+				}
+#line 744 "calc.tab.c"
     break;
 
   case 10: // polynomial: polynomial "-" polynomial
-#line 79 "calc.y"
-                                { yylhs.value.as < Polynomial > ()=yystack_[2].value.as < Polynomial > ()-yystack_[0].value.as < Polynomial > (); }
-#line 739 "calc.tab.c"
+#line 90 "calc.y"
+                                {
+						const auto br=yystack_[2].value.as < Polynomial > ().GetBase();
+						const auto bl=yystack_[0].value.as < Polynomial > ().GetBase();
+						if(br!=bl&&bl&&br)
+						{
+								std::stringstream cause{};
+								cause<<"'Cant sub "<<yystack_[0].value.as < Polynomial > ()<<" from "<<yystack_[2].value.as < Polynomial > ()<<"' at "<<drv.location;
+								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
+						}
+						yylhs.value.as < Polynomial > ()=yystack_[2].value.as < Polynomial > ()-yystack_[0].value.as < Polynomial > ();
+						yylhs.value.as < Polynomial > ().SetBase((std::max)(br,bl));
+				}
+#line 761 "calc.tab.c"
     break;
 
   case 11: // polynomial: polynomial "*" polynomial
-#line 81 "calc.y"
-                                { yylhs.value.as < Polynomial > () = yystack_[2].value.as < Polynomial > ()*yystack_[0].value.as < Polynomial > (); }
-#line 745 "calc.tab.c"
+#line 103 "calc.y"
+                                {
+						const auto br=yystack_[2].value.as < Polynomial > ().GetBase();
+						const auto bl=yystack_[0].value.as < Polynomial > ().GetBase();
+						if(br!=bl&&bl&&br)
+						{
+								std::stringstream cause{};
+								cause<<"'Cant multiply "<<yystack_[2].value.as < Polynomial > ()<<" by "<<yystack_[0].value.as < Polynomial > ()<<"' at "<<drv.location;
+								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
+						}
+						yylhs.value.as < Polynomial > () = yystack_[2].value.as < Polynomial > ()*yystack_[0].value.as < Polynomial > ();
+						yylhs.value.as < Polynomial > ().SetBase((std::max)(br,bl));
+				}
+#line 778 "calc.tab.c"
     break;
 
   case 12: // polynomial: "(" polynomial ")"
-#line 83 "calc.y"
+#line 116 "calc.y"
                                 { yylhs.value.as < Polynomial > () = yystack_[1].value.as < Polynomial > (); }
-#line 751 "calc.tab.c"
+#line 784 "calc.tab.c"
     break;
 
   case 13: // polynomial: polynomial "/" polynomial
-#line 85 "calc.y"
-                                { yylhs.value.as < Polynomial > () =yystack_[2].value.as < Polynomial > ()/yystack_[0].value.as < Polynomial > ();}
-#line 757 "calc.tab.c"
+#line 118 "calc.y"
+                                {
+						const auto br=yystack_[2].value.as < Polynomial > ().GetBase();
+						const auto bl=yystack_[0].value.as < Polynomial > ().GetBase();
+						if(br!=bl&&bl&&br)
+						{
+								std::stringstream cause{};
+								cause<<"'Cant div"<<yystack_[2].value.as < Polynomial > ()<<" by "<<yystack_[0].value.as < Polynomial > ()<<"' at "<<drv.location;
+								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
+						}
+						yylhs.value.as < Polynomial > () =yystack_[2].value.as < Polynomial > ()/yystack_[0].value.as < Polynomial > ();
+						yylhs.value.as < Polynomial > ().SetBase((std::max)(br,bl));
+				}
+#line 801 "calc.tab.c"
     break;
 
   case 14: // polynomial: "(" polynomial ")" "^" integer_const
-#line 89 "calc.y"
+#line 133 "calc.y"
                                 {
 					if(yystack_[0].value.as < int64_t > ()<0)
 					{
@@ -767,47 +811,47 @@ namespace yy {
 					}
 					yylhs.value.as < Polynomial > ()=yystack_[3].value.as < Polynomial > ()^yystack_[0].value.as < int64_t > ();
 				}
-#line 771 "calc.tab.c"
+#line 815 "calc.tab.c"
     break;
 
   case 15: // monom: "int" "basic" "^" integer_const
-#line 102 "calc.y"
+#line 146 "calc.y"
                                 {yylhs.value.as < Polynomial > ()={yystack_[3].value.as < int64_t > (),yystack_[0].value.as < int64_t > (),yystack_[2].value.as < char > ()};}
-#line 777 "calc.tab.c"
+#line 821 "calc.tab.c"
     break;
 
   case 16: // monom: "basic" "^" integer_const
-#line 104 "calc.y"
+#line 148 "calc.y"
                                 {yylhs.value.as < Polynomial > ()={1,yystack_[0].value.as < int64_t > (),yystack_[2].value.as < char > ()};}
-#line 783 "calc.tab.c"
+#line 827 "calc.tab.c"
     break;
 
   case 17: // monom: "int" "basic"
-#line 106 "calc.y"
+#line 150 "calc.y"
                                 {yylhs.value.as < Polynomial > ()={yystack_[1].value.as < int64_t > (),1,yystack_[0].value.as < char > ()};}
-#line 789 "calc.tab.c"
+#line 833 "calc.tab.c"
     break;
 
   case 18: // monom: "basic"
-#line 108 "calc.y"
+#line 152 "calc.y"
                                 {yylhs.value.as < Polynomial > ()={1,1,yystack_[0].value.as < char > ()};}
-#line 795 "calc.tab.c"
+#line 839 "calc.tab.c"
     break;
 
   case 19: // monom: "int"
-#line 110 "calc.y"
+#line 154 "calc.y"
                                 {yylhs.value.as < Polynomial > ()={yystack_[0].value.as < int64_t > (),0,0};}
-#line 801 "calc.tab.c"
+#line 845 "calc.tab.c"
     break;
 
   case 20: // monom: "int" "^" integer_const
-#line 112 "calc.y"
+#line 156 "calc.y"
                                 {yylhs.value.as < Polynomial > ()={ipow64(yystack_[2].value.as < int64_t > (),yystack_[0].value.as < int64_t > ()),0,0};}
-#line 807 "calc.tab.c"
+#line 851 "calc.tab.c"
     break;
 
   case 21: // monom: "var"
-#line 114 "calc.y"
+#line 158 "calc.y"
                                 {
 					auto var = SymbolTable::GetInst()->ReadVar(yystack_[0].value.as < std::string > ());
 					if (!var)
@@ -818,77 +862,77 @@ namespace yy {
 					}
 				    yylhs.value.as < Polynomial > ()=var.value();
 				}
-#line 822 "calc.tab.c"
+#line 866 "calc.tab.c"
     break;
 
   case 22: // integer_const: "int"
-#line 128 "calc.y"
+#line 172 "calc.y"
                                 {yylhs.value.as < int64_t > ()=yystack_[0].value.as < int64_t > ();}
-#line 828 "calc.tab.c"
+#line 872 "calc.tab.c"
     break;
 
   case 23: // integer_const: "-" "int"
-#line 130 "calc.y"
+#line 174 "calc.y"
                                 {yylhs.value.as < int64_t > ()=-yystack_[0].value.as < int64_t > ();}
-#line 834 "calc.tab.c"
+#line 878 "calc.tab.c"
     break;
 
   case 24: // integer_const: "(" int_eval ")"
-#line 132 "calc.y"
+#line 176 "calc.y"
                                 {yylhs.value.as < int64_t > ()=yystack_[1].value.as < int64_t > ();}
-#line 840 "calc.tab.c"
+#line 884 "calc.tab.c"
     break;
 
   case 25: // int_eval: "int"
-#line 138 "calc.y"
+#line 182 "calc.y"
                                 {yylhs.value.as < int64_t > ()=yystack_[0].value.as < int64_t > ();}
-#line 846 "calc.tab.c"
+#line 890 "calc.tab.c"
     break;
 
   case 26: // int_eval: "-" "int"
-#line 140 "calc.y"
+#line 184 "calc.y"
                                 {yylhs.value.as < int64_t > ()=-yystack_[0].value.as < int64_t > ();}
-#line 852 "calc.tab.c"
+#line 896 "calc.tab.c"
     break;
 
   case 27: // int_eval: "(" int_eval ")"
-#line 142 "calc.y"
+#line 186 "calc.y"
                                 {yylhs.value.as < int64_t > ()=yystack_[1].value.as < int64_t > ();}
-#line 858 "calc.tab.c"
+#line 902 "calc.tab.c"
     break;
 
   case 28: // int_eval: int_eval "*" int_eval
-#line 144 "calc.y"
+#line 188 "calc.y"
                                 {yylhs.value.as < int64_t > ()=yystack_[2].value.as < int64_t > ()*yystack_[0].value.as < int64_t > ();}
-#line 864 "calc.tab.c"
+#line 908 "calc.tab.c"
     break;
 
   case 29: // int_eval: int_eval "/" int_eval
-#line 146 "calc.y"
+#line 190 "calc.y"
                                 {yylhs.value.as < int64_t > ()=yystack_[2].value.as < int64_t > ()/yystack_[0].value.as < int64_t > ();}
-#line 870 "calc.tab.c"
+#line 914 "calc.tab.c"
     break;
 
   case 30: // int_eval: int_eval "+" int_eval
-#line 148 "calc.y"
+#line 192 "calc.y"
                                 {yylhs.value.as < int64_t > ()=yystack_[2].value.as < int64_t > ()+yystack_[0].value.as < int64_t > ();}
-#line 876 "calc.tab.c"
+#line 920 "calc.tab.c"
     break;
 
   case 31: // int_eval: int_eval "-" int_eval
-#line 150 "calc.y"
+#line 194 "calc.y"
                                 {yylhs.value.as < int64_t > ()=yystack_[2].value.as < int64_t > ()-yystack_[0].value.as < int64_t > ();}
-#line 882 "calc.tab.c"
+#line 926 "calc.tab.c"
     break;
 
   case 32: // int_eval: int_eval "^" int_eval
-#line 152 "calc.y"
+#line 196 "calc.y"
                                 {yylhs.value.as < int64_t > ()=ipow64(yystack_[2].value.as < int64_t > (),yystack_[0].value.as < int64_t > ());}
-#line 888 "calc.tab.c"
+#line 932 "calc.tab.c"
     break;
 
 
-#line 892 "calc.tab.c"
+#line 936 "calc.tab.c"
 
             default:
               break;
@@ -1448,9 +1492,9 @@ namespace yy {
   parser::yyrline_[] =
   {
        0,    53,    53,    54,    57,    59,    70,    72,    74,    76,
-      78,    80,    82,    84,    86,   101,   103,   105,   107,   109,
-     111,   113,   127,   129,   131,   137,   139,   141,   143,   145,
-     147,   149,   151
+      89,   102,   115,   117,   130,   145,   147,   149,   151,   153,
+     155,   157,   171,   173,   175,   181,   183,   185,   187,   189,
+     191,   193,   195
   };
 
   void
@@ -1482,9 +1526,9 @@ namespace yy {
 
 
 } // yy
-#line 1486 "calc.tab.c"
+#line 1530 "calc.tab.c"
 
-#line 153 "calc.y"
+#line 197 "calc.y"
 
 void
 yy::parser::error (const location_type& l, const std::string& m)
