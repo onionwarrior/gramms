@@ -76,16 +76,16 @@ yy::parser::symbol_type make_IDENTIFIER(const std::string & s,const yy::parser::
 
 {letter}({letter}|{decimal})*		{ count(); return check_type(yytext,loc); }
 
-0[xX]{hex}+{sgn}?		{ count(); return yy::parser::make_CONSTANT(loc); }
-0{decimal}+{sgn}?		{ count(); return yy::parser::make_CONSTANT(loc); }
-{decimal}+{sgn}?		{ count(); return yy::parser::make_CONSTANT(loc); }
-L?'(\\.|[^\\'])+'	{ count(); return yy::parser::make_CONSTANT(loc); }
+0[xX]{hex}+{sgn}?		{ count(); return yy::parser::make_CONSTANT({},loc); }
+0{decimal}+{sgn}?		{ count(); return yy::parser::make_CONSTANT({},loc); }
+{decimal}+{sgn}?		{ count(); return yy::parser::make_CONSTANT({},loc); }
+L?'(\\.|[^\\'])+'	{ count(); return yy::parser::make_CONSTANT({},loc); }
 
-{decimal}+{exp}{fs}?		{ count(); return yy::parser::make_CONSTANT(loc); }
-{decimal}*"."{decimal}+({exp})?{fs}?	{ count(); return yy::parser::make_CONSTANT(loc); }
-{decimal}+"."{decimal}*({exp})?{fs}?	{ count(); return yy::parser::make_CONSTANT(loc); }
+{decimal}+{exp}{fs}?		{ count(); return yy::parser::make_CONSTANT({},loc); }
+{decimal}*"."{decimal}+({exp})?{fs}?	{ count(); return yy::parser::make_CONSTANT({},loc); }
+{decimal}+"."{decimal}*({exp})?{fs}?	{ count(); return yy::parser::make_CONSTANT({},loc); }
 
-L?\"(\\.|[^\\"])*\"	{ count(); return yy::parser::make_STRING_LITERAL(loc); }
+L?\"(\\.|[^\\"])*\"	{ count(); return yy::parser::make_STRING_LITERAL({},loc); }
 
 "..."			{ count(); return yy::parser::make_ELLIPSIS(loc); }
 ">>="			{ count(); return yy::parser::make_RIGHT_ASSIGN(loc); }

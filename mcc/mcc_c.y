@@ -107,6 +107,8 @@ class driver;
 %nonassoc "if"
 %nonassoc "else"
 %type <std::string> direct_declarator;
+%type <mcc::Symbol> init_declarator;
+%type <std::vector<mcc::Symbol>> init_declarator_list;
 %type <std::string> "identifier";
 %type <std::vector<std::string>> identifier_list
 %type <std::string> declarator;
@@ -115,6 +117,8 @@ class driver;
 %type <mcc::Symbol> expression
 %type <mcc::Symbol> "literal"
 %type <mcc::Symbol> "constant"
+%type <mcc::type_t> declaration_specifiers;
+%type <mcc::type_t> type_specifier;
 %param { driver& drv }
 %code {
 # include "driver.h"
@@ -132,13 +136,33 @@ primary_expression
 		}
 		else
 		{
-			$$={};
+			const auto global_lookup = drv.GetSymbol("@::"+$1);
+			if(global_lookup)
+			{
+
+			}
+			else
+			{
+				$$={};
+			mcc::PrintColored("No such identifier: "+drv.GetCurrentScope()+$1,mcc::TextColor::Error);
+			drv.DumpSymbols();
+			}
 		}
 	}
 	| "constant"
+	{
+		mcc::PrintColored("Numeric const",mcc::TextColor::Good);
+		$$={mcc::Primitive::Int,0,true,true,true};
+	}
 	| "literal"
-	{mcc::PrintColored("String literal",mcc::TextColor::Good);}
+	{
+		mcc::PrintColored("String literal",mcc::TextColor::Good);
+		$$={mcc::Primitive::Char,1,true,true,true};
+	}
 	| "(" expression ")"
+	{
+	$$=$1;
+	}
 	;
 
 postfix_expression
@@ -147,6 +171,8 @@ postfix_expression
 	{
 		mcc::PrintColored("Array or ptr subscript operation",mcc::TextColor::Good);
 		const auto is_sub_int = mcc::IsIntegerT($3.GetType());
+		const auto ind = $3.GetType().index();
+		mcc::PrintColored(std::to_string(ind),mcc::TextColor::Error);
 		if( $1.IsPtr())
 		{
 			if(!is_sub_int && !$3.IsPtr())
@@ -295,19 +321,26 @@ constant_expression
 declaration
 	: declaration_specifiers ";"
 	{mcc::PrintColored("declaration does not declare anything",mcc::TextColor::Warning);}
-	| declaration_specifiers {drv.SetCurrentType($1);} init_declarator_list ";"
-	{drv.UnsetCurrentType();}
+	| declaration_specifiers init_declarator_list ";"
+	{
+		const auto t = $1;
+		drv.UnsetCurrentType();
+	}
 	;
 // must return a type
 declaration_specifiers
 	: storage_class_specifier
-	{}
+	{$$=mcc::Primitive::Int;drv.SetCurrentType($$);}
 	| storage_class_specifier declaration_specifiers
-	{}
+	{$$=$2;drv.SetCurrentType($$);}
 	| type_specifier
+	{$$=$1;drv.SetCurrentType($$);}
 	| type_specifier declaration_specifiers
+	{$$=$1;drv.SetCurrentType($$);}
 	| type_qualifier
+	{$$=mcc::Primitive::Int;drv.SetCurrentType($$);}
 	| type_qualifier declaration_specifiers
+	{ $$=$2;drv.SetCurrentType($$);}
 	;
 
 init_declarator_list
@@ -317,7 +350,19 @@ init_declarator_list
 
 init_declarator
 	: declarator
+	{
+		mcc::PrintColored("New decl "+$1,mcc::TextColor::Good);
+		mcc::PrintColored("Type "+std::string(std::holds_alternative<mcc::Primitive>(drv.GetCurrentType())?"primitive":"amogus"),mcc::TextColor::Good);
+		auto sym = mcc::Symbol{drv.GetCurrentType(),0,false,true,true};
+		drv.AddSymbol($1,std::move(sym));
+	}
 	| declarator "=" initializer
+	{
+		mcc::PrintColored("Type "+std::string(std::holds_alternative<mcc::Primitive>(drv.GetCurrentType())?"primitive":"amogus"),mcc::TextColor::Good);
+		mcc::PrintColored("New decl "+$1,mcc::TextColor::Good);
+		auto sym=mcc::Symbol{drv.GetCurrentType(),0,false,true,true};
+		drv.AddSymbol($1,std::move(sym));
+	}
 	;
 
 storage_class_specifier
@@ -330,17 +375,19 @@ storage_class_specifier
 
 type_specifier
 	: "void"
-	| "char"
-	| "short"
-	| "int"
-	| "long"
-	| "float"
-	| "double"
+	{$$=mcc::Primitive::Void;}
+	| "char"{$$=mcc::Primitive::Char;}
+	| "short"{$$=mcc::Primitive::Short;}
+	| "int"{$$=mcc::Primitive::Int;}
+	| "long"{$$=mcc::Primitive::Long;}
+	| "float"{$$=mcc::Primitive::Float;}
+	| "double"{$$=mcc::Primitive::Double;}
 	| "signed"
-	| "unsigned"
-	| struct_or_union_specifier
-	| enum_specifier
-	| "typename"
+	{}
+	| "unsigned"{}
+	| struct_or_union_specifier{}
+	| enum_specifier{}
+	| "typename"{}
 	;
 
 struct_or_union_specifier
@@ -397,8 +444,8 @@ enumerator
 	;
 
 type_qualifier
-	: "const"
-	| "volatile"
+	: "const"{drv.SetInConst(true);}
+	| "volatile"{}
 	;
 
 declarator
@@ -420,7 +467,7 @@ direct_declarator
 	| direct_declarator  "[" constant_expression  "]"
 	{
 		mcc::PrintColored("Array def:",mcc::TextColor::Good);
-		drv.AddSymbol(drv.GetCurrentScope()+$1,mcc::Symbol{$1.GetType(),1,true,true,true});
+		drv.AddSymbol($1,mcc::Symbol{drv.GetCurrentType(),1,true,true,true});
 	}
 	| direct_declarator "[" "]"
 	{
@@ -585,10 +632,14 @@ external_declaration
 	;
 //All kinds of functions definitions...
 function_definition
-	: declaration_specifiers declarator declaration_list {mcc::PrintColored("Entered new scope: "+ $2,mcc::TextColor::Good);} compound_statement
-	| declaration_specifiers declarator {mcc::PrintColored("Entered new scope: "+$2,mcc::TextColor::Good);} compound_statement
-	| declarator declaration_list {mcc::PrintColored("Entered new scope: "+$1,mcc::TextColor::Good);} compound_statement
-	| declarator {mcc::PrintColored("Entered new scope"+$1,mcc::TextColor::Good);} compound_statement
+	: declaration_specifiers declarator declaration_list {mcc::PrintColored("Entered new scope: "+ $2,mcc::TextColor::Good);drv.EnterNewScope($2);} compound_statement
+		{drv.LeaveScope();}
+	| declaration_specifiers declarator {mcc::PrintColored("Entered new scope: "+$2,mcc::TextColor::Good);drv.EnterNewScope($2);} compound_statement
+		{drv.LeaveScope();}
+	| declarator declaration_list {mcc::PrintColored("Entered new scope: "+$1,mcc::TextColor::Good);drv.EnterNewScope($1);} compound_statement
+		{drv.LeaveScope();}
+	| declarator {mcc::PrintColored("Entered new scope"+$1,mcc::TextColor::Good);drv.EnterNewScope($1);} compound_statement
+	{drv.LeaveScope();}
 	;
 
 %%

@@ -1317,44 +1317,44 @@ YY_RULE_SETUP
 case 40:
 YY_RULE_SETUP
 #line 80 "mcc.lex"
-{ count(); return yy::parser::make_CONSTANT(loc); }
+{ count(); return yy::parser::make_CONSTANT({},loc); }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
 #line 81 "mcc.lex"
-{ count(); return yy::parser::make_CONSTANT(loc); }
+{ count(); return yy::parser::make_CONSTANT({},loc); }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
 #line 82 "mcc.lex"
-{ count(); return yy::parser::make_CONSTANT(loc); }
+{ count(); return yy::parser::make_CONSTANT({},loc); }
 	YY_BREAK
 case 43:
 /* rule 43 can match eol */
 YY_RULE_SETUP
 #line 83 "mcc.lex"
-{ count(); return yy::parser::make_CONSTANT(loc); }
+{ count(); return yy::parser::make_CONSTANT({},loc); }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
 #line 85 "mcc.lex"
-{ count(); return yy::parser::make_CONSTANT(loc); }
+{ count(); return yy::parser::make_CONSTANT({},loc); }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
 #line 86 "mcc.lex"
-{ count(); return yy::parser::make_CONSTANT(loc); }
+{ count(); return yy::parser::make_CONSTANT({},loc); }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
 #line 87 "mcc.lex"
-{ count(); return yy::parser::make_CONSTANT(loc); }
+{ count(); return yy::parser::make_CONSTANT({},loc); }
 	YY_BREAK
 case 47:
 /* rule 47 can match eol */
 YY_RULE_SETUP
 #line 89 "mcc.lex"
-{ count(); return yy::parser::make_STRING_LITERAL(loc); }
+{ count(); return yy::parser::make_STRING_LITERAL({},loc); }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP

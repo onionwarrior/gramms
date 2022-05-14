@@ -388,15 +388,23 @@ namespace yy {
       // primary_expression
       // postfix_expression
       // expression
+      // init_declarator
       char dummy1[sizeof (mcc::Symbol)];
+
+      // declaration_specifiers
+      // type_specifier
+      char dummy2[sizeof (mcc::type_t)];
 
       // "identifier"
       // declarator
       // direct_declarator
-      char dummy2[sizeof (std::string)];
+      char dummy3[sizeof (std::string)];
+
+      // init_declarator_list
+      char dummy4[sizeof (std::vector<mcc::Symbol>)];
 
       // identifier_list
-      char dummy3[sizeof (std::vector<std::string>)];
+      char dummy5[sizeof (std::vector<std::string>)];
     };
 
     /// The size of the largest semantic type.
@@ -743,13 +751,23 @@ namespace yy {
       case symbol_kind::S_primary_expression: // primary_expression
       case symbol_kind::S_postfix_expression: // postfix_expression
       case symbol_kind::S_expression: // expression
+      case symbol_kind::S_init_declarator: // init_declarator
         value.move< mcc::Symbol > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_declaration_specifiers: // declaration_specifiers
+      case symbol_kind::S_type_specifier: // type_specifier
+        value.move< mcc::type_t > (std::move (that.value));
         break;
 
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_direct_declarator: // direct_declarator
         value.move< std::string > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_init_declarator_list: // init_declarator_list
+        value.move< std::vector<mcc::Symbol> > (std::move (that.value));
         break;
 
       case symbol_kind::S_identifier_list: // identifier_list
@@ -794,6 +812,20 @@ namespace yy {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, mcc::type_t&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const mcc::type_t& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
       basic_symbol (typename Base::kind_type t, std::string&& v, location_type&& l)
         : Base (t)
         , value (std::move (v))
@@ -801,6 +833,20 @@ namespace yy {
       {}
 #else
       basic_symbol (typename Base::kind_type t, const std::string& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, std::vector<mcc::Symbol>&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const std::vector<mcc::Symbol>& v, const location_type& l)
         : Base (t)
         , value (v)
         , location (l)
@@ -850,13 +896,23 @@ switch (yykind)
       case symbol_kind::S_primary_expression: // primary_expression
       case symbol_kind::S_postfix_expression: // postfix_expression
       case symbol_kind::S_expression: // expression
+      case symbol_kind::S_init_declarator: // init_declarator
         value.template destroy< mcc::Symbol > ();
+        break;
+
+      case symbol_kind::S_declaration_specifiers: // declaration_specifiers
+      case symbol_kind::S_type_specifier: // type_specifier
+        value.template destroy< mcc::type_t > ();
         break;
 
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_direct_declarator: // direct_declarator
         value.template destroy< std::string > ();
+        break;
+
+      case symbol_kind::S_init_declarator_list: // init_declarator_list
+        value.template destroy< std::vector<mcc::Symbol> > ();
         break;
 
       case symbol_kind::S_identifier_list: // identifier_list
@@ -2689,13 +2745,23 @@ switch (yykind)
       case symbol_kind::S_primary_expression: // primary_expression
       case symbol_kind::S_postfix_expression: // postfix_expression
       case symbol_kind::S_expression: // expression
+      case symbol_kind::S_init_declarator: // init_declarator
         value.copy< mcc::Symbol > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_declaration_specifiers: // declaration_specifiers
+      case symbol_kind::S_type_specifier: // type_specifier
+        value.copy< mcc::type_t > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_direct_declarator: // direct_declarator
         value.copy< std::string > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_init_declarator_list: // init_declarator_list
+        value.copy< std::vector<mcc::Symbol> > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_identifier_list: // identifier_list
@@ -2738,13 +2804,23 @@ switch (yykind)
       case symbol_kind::S_primary_expression: // primary_expression
       case symbol_kind::S_postfix_expression: // postfix_expression
       case symbol_kind::S_expression: // expression
+      case symbol_kind::S_init_declarator: // init_declarator
         value.move< mcc::Symbol > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_declaration_specifiers: // declaration_specifiers
+      case symbol_kind::S_type_specifier: // type_specifier
+        value.move< mcc::type_t > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_direct_declarator: // direct_declarator
         value.move< std::string > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_init_declarator_list: // init_declarator_list
+        value.move< std::vector<mcc::Symbol> > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_identifier_list: // identifier_list
@@ -2817,7 +2893,7 @@ switch (yykind)
 
 
 } // yy
-#line 2821 "mcc_c.tab.h"
+#line 2897 "mcc_c.tab.h"
 
 
 

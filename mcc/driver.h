@@ -12,7 +12,7 @@ YY_DECL;
 class driver {
 private:
   std::deque<std::string> scopes_;
-  std::size_t anon_scope_cnt_;
+  std::size_t anon_scope_cnt_=0;
   mcc::SymbolTable symb_table_;
   mcc::TypeTable type_table_;
   std::set<std::string> labels_;
@@ -31,12 +31,13 @@ public:
   yy::location location;
   auto EnterNewScope(const std::string &scope) {
     if (!scope.empty()) {
-      scopes_.push_back(scope);
+      scopes_.push_back(scope+"::");
     } else {
       anon_scope_cnt_++;
       scopes_.push_back("@" + std::to_string(anon_scope_cnt_) + "::");
     }
   }
+  auto GetCurrentType() const {return cur_type_;}
   auto SetCurrentType(const mcc::type_t &t) { cur_type_ = t; }
   auto UnsetCurrentType() { cur_type_ = {}; }
   auto LeaveScope() {
@@ -55,6 +56,10 @@ public:
   }
   auto GetSymbol(const std::string &name) {
     return symb_table_.GetSymbol(name);
+  }
+  auto DumpSymbols() const
+  {
+    symb_table_.Dump();
   }
 };
 #endif

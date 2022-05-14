@@ -70,7 +70,7 @@ public:
 };
 
 struct Func;
-typedef std::variant<Primitive, UserType, Func *> type_t;
+typedef std::variant<bool,Primitive, UserType, Func *> type_t;
 struct Func {
   type_t return_type_;
   std::vector<type_t> args;
@@ -115,6 +115,13 @@ private:
   std::map<std::string, Symbol> symbols_;
   // 0 -> inst, 1 -> pointer, 2 -> pointer to pointer etc.
 public:
+  auto Dump() const
+  {
+    for(auto && [k,v]:symbols_)
+    {
+      mcc::PrintColored("\n|"+k+"|\n", TextColor::Warning);
+    }
+  }
   SymbolTable() = default;
 
   auto DefineNewSymbol(const std::string &symbol_name, const Symbol &symbol) {

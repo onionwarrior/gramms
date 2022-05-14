@@ -3,15 +3,15 @@ int (fun)(const char *a,const char*b)
 	return 1;
 }
 //fun will be def later
-int undef(void);
+//int undef(void);
 char sym = 's';
 int main()
 {
 	int (fun) (int,char);
-	int a = 10+3;
+	int int a = 10+3;
 	int arr[15];
 	int braces =(5);
-	int ccc = arr["zzzz"];
+	int ccc = arr[4];
 	const static int;
 	float zzz=3,bbb=3;
 	{
