@@ -107,7 +107,7 @@ public:
       : type_{type}, indirection_lvl_(indirection_lvl),
         is_const_(is_const), defined_{defined},is_lvalue_(is_lvalue) {}
   Symbol() = default;
-  auto GetType() const { return type_; }
+  auto GetType() const { mcc::PrintColored(std::to_string(type_.index()), TextColor::Warning);return type_; }
 };
 class SymbolTable {
 

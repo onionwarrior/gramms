@@ -747,7 +747,7 @@ namespace yy {
 		mcc::PrintColored(std::to_string(ind),mcc::TextColor::Error);
 		if( yystack_[3].value.as < mcc::Symbol > ().IsPtr())
 		{
-			if(!is_sub_int && !yystack_[1].value.as < mcc::Symbol > ().IsPtr())
+			if(!is_sub_int || yystack_[1].value.as < mcc::Symbol > ().IsPtr())
 			{
 				mcc::PrintColored("Array subscript can't be non integer",mcc::TextColor::Error);
 			}

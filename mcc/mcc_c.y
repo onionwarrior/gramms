@@ -175,7 +175,7 @@ postfix_expression
 		mcc::PrintColored(std::to_string(ind),mcc::TextColor::Error);
 		if( $1.IsPtr())
 		{
-			if(!is_sub_int && !$3.IsPtr())
+			if(!is_sub_int || $3.IsPtr())
 			{
 				mcc::PrintColored("Array subscript can't be non integer",mcc::TextColor::Error);
 			}
