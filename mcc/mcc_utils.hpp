@@ -112,7 +112,7 @@ public:
   auto inline GetIndLevel() const { return indirection_lvl_; }
   auto inline IsPtr() const { return indirection_lvl_ > 0; }
   auto inline IsLvalue() const { return is_lvalue_; }
-
+  auto inline IsConst() const {return is_const_;}
   Symbol(const type_t &type, const std::size_t indirection_lvl,
          const bool is_const, bool defined, bool is_lvalue)
       : type_{type}, indirection_lvl_(indirection_lvl),

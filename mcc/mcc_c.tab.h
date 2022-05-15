@@ -683,58 +683,59 @@ namespace yy {
         S_conditional_expression = 103,          // conditional_expression
         S_104_1 = 104,                           // $@1
         S_assignment_expression = 105,           // assignment_expression
-        S_assignment_operator = 106,             // assignment_operator
-        S_expression = 107,                      // expression
-        S_constant_expression = 108,             // constant_expression
-        S_declaration = 109,                     // declaration
-        S_declaration_specifiers = 110,          // declaration_specifiers
-        S_init_declarator_list = 111,            // init_declarator_list
-        S_init_declarator = 112,                 // init_declarator
-        S_storage_class_specifier = 113,         // storage_class_specifier
-        S_type_specifier = 114,                  // type_specifier
-        S_struct_or_union_specifier = 115,       // struct_or_union_specifier
-        S_struct_or_union = 116,                 // struct_or_union
-        S_struct_declaration_list = 117,         // struct_declaration_list
-        S_struct_declaration = 118,              // struct_declaration
-        S_specifier_qualifier_list = 119,        // specifier_qualifier_list
-        S_struct_declarator_list = 120,          // struct_declarator_list
-        S_struct_declarator = 121,               // struct_declarator
-        S_enum_specifier = 122,                  // enum_specifier
-        S_enumerator_list = 123,                 // enumerator_list
-        S_enumerator = 124,                      // enumerator
-        S_type_qualifier = 125,                  // type_qualifier
-        S_declarator = 126,                      // declarator
-        S_direct_declarator = 127,               // direct_declarator
-        S_pointer = 128,                         // pointer
-        S_type_qualifier_list = 129,             // type_qualifier_list
-        S_parameter_type_list = 130,             // parameter_type_list
-        S_parameter_list = 131,                  // parameter_list
-        S_parameter_declaration = 132,           // parameter_declaration
-        S_identifier_list = 133,                 // identifier_list
-        S_type_name = 134,                       // type_name
-        S_abstract_declarator = 135,             // abstract_declarator
-        S_direct_abstract_declarator = 136,      // direct_abstract_declarator
-        S_initializer = 137,                     // initializer
-        S_initializer_list = 138,                // initializer_list
-        S_statement = 139,                       // statement
-        S_140_2 = 140,                           // $@2
-        S_labeled_statement = 141,               // labeled_statement
-        S_compound_statement = 142,              // compound_statement
-        S_statement_list = 143,                  // statement_list
-        S_declaration_list = 144,                // declaration_list
-        S_expression_statement = 145,            // expression_statement
-        S_selection_statement = 146,             // selection_statement
-        S_iteration_statement = 147,             // iteration_statement
-        S_148_3 = 148,                           // $@3
+        S_106_2 = 106,                           // $@2
+        S_assignment_operator = 107,             // assignment_operator
+        S_expression = 108,                      // expression
+        S_constant_expression = 109,             // constant_expression
+        S_declaration = 110,                     // declaration
+        S_declaration_specifiers = 111,          // declaration_specifiers
+        S_init_declarator_list = 112,            // init_declarator_list
+        S_init_declarator = 113,                 // init_declarator
+        S_storage_class_specifier = 114,         // storage_class_specifier
+        S_type_specifier = 115,                  // type_specifier
+        S_struct_or_union_specifier = 116,       // struct_or_union_specifier
+        S_struct_or_union = 117,                 // struct_or_union
+        S_struct_declaration_list = 118,         // struct_declaration_list
+        S_struct_declaration = 119,              // struct_declaration
+        S_specifier_qualifier_list = 120,        // specifier_qualifier_list
+        S_struct_declarator_list = 121,          // struct_declarator_list
+        S_struct_declarator = 122,               // struct_declarator
+        S_enum_specifier = 123,                  // enum_specifier
+        S_enumerator_list = 124,                 // enumerator_list
+        S_enumerator = 125,                      // enumerator
+        S_type_qualifier = 126,                  // type_qualifier
+        S_declarator = 127,                      // declarator
+        S_direct_declarator = 128,               // direct_declarator
+        S_pointer = 129,                         // pointer
+        S_type_qualifier_list = 130,             // type_qualifier_list
+        S_parameter_type_list = 131,             // parameter_type_list
+        S_parameter_list = 132,                  // parameter_list
+        S_parameter_declaration = 133,           // parameter_declaration
+        S_identifier_list = 134,                 // identifier_list
+        S_type_name = 135,                       // type_name
+        S_abstract_declarator = 136,             // abstract_declarator
+        S_direct_abstract_declarator = 137,      // direct_abstract_declarator
+        S_initializer = 138,                     // initializer
+        S_initializer_list = 139,                // initializer_list
+        S_statement = 140,                       // statement
+        S_141_3 = 141,                           // $@3
+        S_labeled_statement = 142,               // labeled_statement
+        S_compound_statement = 143,              // compound_statement
+        S_statement_list = 144,                  // statement_list
+        S_declaration_list = 145,                // declaration_list
+        S_expression_statement = 146,            // expression_statement
+        S_selection_statement = 147,             // selection_statement
+        S_iteration_statement = 148,             // iteration_statement
         S_149_4 = 149,                           // $@4
-        S_jump_statement = 150,                  // jump_statement
-        S_translation_unit = 151,                // translation_unit
-        S_external_declaration = 152,            // external_declaration
-        S_function_definition = 153,             // function_definition
-        S_154_5 = 154,                           // $@5
+        S_150_5 = 150,                           // $@5
+        S_jump_statement = 151,                  // jump_statement
+        S_translation_unit = 152,                // translation_unit
+        S_external_declaration = 153,            // external_declaration
+        S_function_definition = 154,             // function_definition
         S_155_6 = 155,                           // $@6
         S_156_7 = 156,                           // $@7
-        S_157_8 = 157                            // $@8
+        S_157_8 = 157,                           // $@8
+        S_158_9 = 158                            // $@9
       };
     };
 
@@ -2799,7 +2800,7 @@ switch (yykind)
     enum
     {
       yylast_ = 1468,     ///< Last index in yytable_.
-      yynnts_ = 72,  ///< Number of nonterminal symbols.
+      yynnts_ = 73,  ///< Number of nonterminal symbols.
       yyfinal_ = 60 ///< Termination state number.
     };
 
@@ -3024,7 +3025,7 @@ switch (yykind)
 
 
 } // yy
-#line 3028 "mcc_c.tab.h"
+#line 3029 "mcc_c.tab.h"
 
 
 

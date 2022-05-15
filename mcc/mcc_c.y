@@ -338,7 +338,18 @@ conditional_expression
 assignment_expression
 	: conditional_expression
 	{$$=$1;}
-	| unary_expression assignment_operator assignment_expression
+	| unary_expression
+	{
+		if(!$1.IsLvalue()||$1.IsConst())
+		{mcc::PrintColored("Can only assign to a non-const lvalue",mcc::TextColor::Error);}
+	}
+	assignment_operator assignment_expression
+	{
+		if($1.GetType().index()!=$4.GetType().index())
+		{
+			mcc::PrintColored("Cant assign a non primitive to a primitive or vise-versa",mcc::TextColor::Error);
+		}
+	}
 	;
 
 assignment_operator
@@ -370,7 +381,6 @@ declaration
 	{mcc::PrintColored("declaration does not declare anything",mcc::TextColor::Warning);}
 	| declaration_specifiers init_declarator_list ";"
 	{
-		const auto t = $1;
 		drv.UnsetCurrentType();
 	}
 	;
@@ -392,18 +402,19 @@ declaration_specifiers
 
 init_declarator_list
 	: init_declarator
+	{drv.SetInConst(false);}
 	| init_declarator_list "," init_declarator
 	;
 
 init_declarator
 	: declarator
 	{
-		auto sym = mcc::Symbol{drv.GetCurrentType(),0,false,true,true};
+		auto sym = mcc::Symbol{drv.GetCurrentType(),0,drv.GetInConst(),true,true};
 		drv.AddSymbol($1,std::move(sym));
 	}
 	| declarator "=" initializer
 	{
-		auto sym=mcc::Symbol{drv.GetCurrentType(),0,false,true,true};
+		auto sym=mcc::Symbol{drv.GetCurrentType(),0,drv.GetInConst(),true,true};
 		drv.AddSymbol($1,std::move(sym));
 	}
 	;
@@ -455,9 +466,17 @@ struct_declaration
 
 specifier_qualifier_list
 	: type_specifier specifier_qualifier_list
-	{$$=$1;}
+	{
+		if(std::holds_alternative<bool>($1)^std::holds_alternative<bool>($2.first))
+		{$$={$1,{}};}
+		else
+		{
+			mcc::PrintColored("Invalid type",mcc::TextColor::Error);
+			$$={};
+		}
+	}
 	| type_specifier
-	{$$=$1;}
+	{$$={$1,{}};}
 	| type_qualifier specifier_qualifier_list
 	{$$=$2;}
 	| type_qualifier
@@ -490,9 +509,8 @@ enumerator
 	: "identifier"
 	| "identifier" "=" constant_expression
 	;
-
 type_qualifier
-	: "const"{$$="const";}
+	: "const"{$$="const";drv.SetInConst(true);}
 	| "volatile"{$$="";}
 	;
 

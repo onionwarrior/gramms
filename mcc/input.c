@@ -16,6 +16,9 @@ int main()
 	int func()();
 	int  z = (struct s*)sym;
 	double func(void);
+	const int constint=3;
+	constint=55;
+	
 	int arr[15];
 	blah blah_val;
 	const int gggg = ((int)0)?1:2;
@@ -23,6 +26,8 @@ int main()
 	int braces =(5);
 	int ccc = arr[4];
 	const static int;
+	int cast = (blah)ccc;
+	int int var;
 	float zzz=3,bbb=3;
 	{
 		int var =3;
