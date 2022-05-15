@@ -91,7 +91,7 @@ inline auto IsIntegerT(const type_t &t) {
   return false;
 }
 class Symbol {
-  bool is_lvalue = true;
+  bool is_lvalue_ = true;
   mcc::type_t type_;
   bool defined_ = false;
   std::size_t indirection_lvl_ = 0;
@@ -100,12 +100,12 @@ class Symbol {
 public:
   auto inline GetIndLevel() const { return indirection_lvl_; }
   auto inline IsPtr() const { return indirection_lvl_ > 0; }
-  auto inline IsLvalue() const { return is_lvalue; }
+  auto inline IsLvalue() const { return is_lvalue_; }
 
   Symbol(const type_t &type, const std::size_t indirection_lvl,
          const bool is_const, bool defined, bool is_lvalue)
       : type_{type}, indirection_lvl_(indirection_lvl),
-        is_const_(is_const), defined_{defined} {}
+        is_const_(is_const), defined_{defined},is_lvalue_(is_lvalue) {}
   Symbol() = default;
   auto GetType() const { return type_; }
 };

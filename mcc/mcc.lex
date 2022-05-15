@@ -24,6 +24,9 @@ sgn			(u|U|l|L)*
 void count();
 yy::parser::symbol_type check_type(const std::string & s,const yy::parser::location_type &loc);
 yy::parser::symbol_type make_IDENTIFIER(const std::string & s,const yy::parser::location_type &loc);
+yy::parser::symbol_type make_STRING_LITERAL(const std::string &s,const yy::parser::location_type&loc);
+yy::parser::symbol_type make_CINT(const std::string &s,const yy::parser::location_type&loc);
+yy::parser::symbol_type make_CFLOAT(const std::string &s,const yy::parser::location_type&loc);
 %}
 
 %%
@@ -181,6 +184,19 @@ yy::parser::symbol_type make_IDENTIFIER(const std::string & s, const yy::parser:
 {
   return yy::parser::make_IDENTIFIER(s,loc);
 }
+yy::parser::symbol_type make_STRING_LITERAL(const std::string &s,const yy::parser::location_type&loc);
+{
+  return yy::parser::make_STRING_LITERAL({mcc::Primitive::Char,1,true,true,false},s,loc);
+}
+yy::parser::symbol_type make_CINT(const std::string &s,const yy::parser::location_type&loc)
+{
+
+}
+yy::parser::symbol_type make_CFLOAT(const std::string &s,const yy::parser::location_type&loc)
+{
+
+}
+
 void
 driver::scan_begin ()
 {

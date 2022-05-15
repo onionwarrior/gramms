@@ -111,10 +111,10 @@ class driver;
 %type <std::vector<mcc::Symbol>> init_declarator_list;
 %type <std::string> "identifier";
 %type <std::vector<std::string>> identifier_list
-%type <std::string> declarator;
+%type <std::string> declarator
 %type <mcc::Symbol> primary_expression;
 %type <mcc::Symbol> postfix_expression
-%type <mcc::Symbol> expression
+%type <mcc::Symbol> expression;
 %type <mcc::Symbol> "literal"
 %type <mcc::Symbol> "constant"
 %type <mcc::type_t> declaration_specifiers;
@@ -161,7 +161,7 @@ primary_expression
 	}
 	| "(" expression ")"
 	{
-	$$=$1;
+	$$=$2;
 	}
 	;
 
