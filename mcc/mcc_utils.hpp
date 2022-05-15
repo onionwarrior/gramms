@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <bitset>
 #include <cstddef>
 #include <iostream>
 #include <map>
@@ -26,6 +27,15 @@ enum class Primitive {
   LongDouble,
   Void
 };
+class PtrBits {
+  // if a bit is set - ptr is const;
+  std::bitset<64> ptrs_;
+  std::size_t counter_ = 0;
+public:
+  auto AddIndirection(const bool is_const) { ptrs_[counter_++] = is_const; }
+  auto GetIndirection() const { return counter_; }
+  auto GetBit(const size_t b) { return ptrs_[b]; }
+};
 enum class TextColor { Error, Warning, Good };
 inline auto PrintColored(const std::string &text, TextColor color) {
   switch (color) {
@@ -46,7 +56,8 @@ inline auto PrintColored(const std::string &text, TextColor color) {
     break;
   }
 }
-enum class UsrTypeKind { Struct, Union, Typedef };
+typedef std::vector<std::string> Enum;
+enum class UsrTypeKind { Struct, Union };
 class UserType {
 private:
   UsrTypeKind kind_;
@@ -58,11 +69,9 @@ private:
 public:
   UserType(UsrTypeKind kind, const std::map<std::string, std::string> &types)
       : kind_{kind}, types_{types} {}
-  auto IsTypeSum() const { return kind_ != UsrTypeKind::Typedef; }
   auto HasField(const std::string &field) {
     return types_.find(field) != types_.cend();
   }
-  auto IsTypedef() const { return kind_ == UsrTypeKind::Typedef; }
   auto GetUnderlyingType() const {
     auto &&[_, type] = *(types_.begin());
     return type;
@@ -70,7 +79,7 @@ public:
 };
 
 struct Func;
-typedef std::variant<bool,Primitive, UserType, Func *> type_t;
+typedef std::variant<bool, Primitive, UserType, Func *, Enum> type_t;
 struct Func {
   type_t return_type_;
   std::vector<type_t> args;
@@ -98,6 +107,8 @@ class Symbol {
   bool is_const_ = false;
 
 public:
+  bool is_default = true;
+
   auto inline GetIndLevel() const { return indirection_lvl_; }
   auto inline IsPtr() const { return indirection_lvl_ > 0; }
   auto inline IsLvalue() const { return is_lvalue_; }
@@ -105,9 +116,12 @@ public:
   Symbol(const type_t &type, const std::size_t indirection_lvl,
          const bool is_const, bool defined, bool is_lvalue)
       : type_{type}, indirection_lvl_(indirection_lvl),
-        is_const_(is_const), defined_{defined},is_lvalue_(is_lvalue) {}
+        is_const_(is_const), defined_{defined}, is_lvalue_(is_lvalue) {
+    is_default = false;
+  }
   Symbol() = default;
-  auto GetType() const { mcc::PrintColored(std::to_string(type_.index()), TextColor::Warning);return type_; }
+  Symbol(const Symbol &) = default;
+  auto GetType() const { return type_; }
 };
 class SymbolTable {
 
@@ -115,11 +129,9 @@ private:
   std::map<std::string, Symbol> symbols_;
   // 0 -> inst, 1 -> pointer, 2 -> pointer to pointer etc.
 public:
-  auto Dump() const
-  {
-    for(auto && [k,v]:symbols_)
-    {
-      mcc::PrintColored("\n|"+k+"|\n", TextColor::Warning);
+  auto Dump() const {
+    for (auto &&[k, v] : symbols_) {
+      mcc::PrintColored("\n|" + k + "|\n", TextColor::Warning);
     }
   }
   SymbolTable() = default;
@@ -153,6 +165,7 @@ private:
       {"float", Primitive::Float},
       {"double", Primitive::Double},
       {"long double", Primitive::LongDouble},
+      {"blah",Primitive::Int},
       {"void", Primitive::Void}};
 
 public:
@@ -164,6 +177,33 @@ public:
     return true;
   }
 
+  auto TypeDefined(const std::string &name) const {
+    return types_.find(name) != types_.cend();
+  }
+  auto GetTypeByName(const std::string & name) const
+  {
+    if(TypeDefined(name)) return std::optional<type_t>(types_.at(name));
+    return std::optional<type_t>{};
+  }
+  auto DefineNewTypedef(const std::string &type_name,
+                        const std::string &alias) {
+    types_[alias] = types_[type_name];
+  }
+
 }; // namespace mcc
+inline auto EvalsToBool(const Symbol & sym)
+{
+    const auto is_primitive = std::holds_alternative<mcc::Primitive>(sym.GetType());
+		const auto is_ptr = sym.IsPtr();
+		if(!is_primitive && !is_ptr)
+		{
+			mcc::PrintColored("Could not evaluate as pointer or arithmetic type",mcc::TextColor::Error);
+		}
+		else if(std::get<mcc::Primitive>(sym.GetType())==mcc::Primitive::Void)
+		{
+			mcc::PrintColored("Void where pointer or arithmetic type is required",mcc::TextColor::Error);
+		}
+
+}
 } // namespace mcc
 #endif

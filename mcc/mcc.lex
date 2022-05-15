@@ -22,7 +22,7 @@ sgn			(u|U|l|L)*
 
 %{
 void count();
-yy::parser::symbol_type check_type(const std::string & s,const yy::parser::location_type &loc);
+yy::parser::symbol_type check_type(driver & drv,const std::string & s,const yy::parser::location_type &loc);
 yy::parser::symbol_type make_IDENTIFIER(const std::string & s,const yy::parser::location_type &loc);
 yy::parser::symbol_type make_STRING_LITERAL(const std::string &s,const yy::parser::location_type&loc);
 yy::parser::symbol_type make_CINT(const std::string &s,const yy::parser::location_type&loc);
@@ -77,7 +77,7 @@ yy::parser::symbol_type make_CFLOAT(const std::string &s,const yy::parser::locat
 "volatile"		{ count(); return yy::parser::make_VOLATILE(loc); }
 "while"			{ count(); return yy::parser::make_WHILE(loc); }
 
-{letter}({letter}|{decimal})*		{ count(); return check_type(yytext,loc); }
+{letter}({letter}|{decimal})*		{ count(); return check_type(drv,yytext,loc); }
 
 0[xX]{hex}+{sgn}?		{ count(); return make_CINT(yytext,loc); }
 0{decimal}+{sgn}?		{ count(); return make_CINT(yytext,loc); }
@@ -164,7 +164,7 @@ void count()
 }
 
 
-yy::parser::symbol_type check_type(const std::string & s,const yy::parser::location_type  & loc)
+yy::parser::symbol_type check_type(driver & drv,const std::string & s,const yy::parser::location_type  & loc)
 {
 /*
 * pseudo code --- this is what it should check
@@ -174,7 +174,9 @@ yy::parser::symbol_type check_type(const std::string & s,const yy::parser::locat
 *
 *	retrn(IDENTIFIER);
 */
-
+	auto type_val = drv.GetType(s);
+	if(type_val)
+	  return yy::parser::make_TYPE_NAME(s,loc);
 /*
 *	it actually will only return IDENTIFIER
 */
@@ -203,7 +205,6 @@ yy::parser::symbol_type make_CINT(const std::string &s,const yy::parser::locatio
     return yy::parser::make_CONSTANT({mcc::Primitive::UInt,0,true,true,false},loc);
   if(lower.find('l')!=std::string::npos)
     return yy::parser::make_CONSTANT({mcc::Primitive::Long,0,true,true,false},loc);
-    mcc::PrintColored("Returing int const",mcc::TextColor::Warning);
   return yy::parser::make_CONSTANT({mcc::Primitive::Int,0,true,true,false},loc);
 }
 yy::parser::symbol_type make_CFLOAT(const std::string &s,const yy::parser::location_type&loc)

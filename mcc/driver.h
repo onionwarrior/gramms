@@ -20,6 +20,7 @@ private:
   bool is_in_const_;
 public:
   auto SetInConst(bool c) {is_in_const_=c;}
+  auto GetInConst() const {return is_in_const_;}
   driver();
   int64_t result = 0;
   int parse(const std::string &f);
@@ -54,12 +55,17 @@ public:
   auto AddSymbol(const std::string &name, mcc::Symbol &&symbol) {
     symb_table_.DefineNewSymbol(GetCurrentScope() + name, symbol);
   }
+  auto GetType(const std::string & name) const {return type_table_.GetTypeByName(name);}
   auto GetSymbol(const std::string &name) {
     return symb_table_.GetSymbol(name);
   }
   auto DumpSymbols() const
   {
     symb_table_.Dump();
+  }
+  auto AddTypeAlias(const std::string & type_name,const std::string & alias)
+  {
+    type_table_.DefineNewTypedef(type_name, alias);
   }
 };
 #endif

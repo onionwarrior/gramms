@@ -743,7 +743,7 @@ char *yytext;
 
 #line 24 "mcc.lex"
 void count();
-yy::parser::symbol_type check_type(const std::string & s,const yy::parser::location_type &loc);
+yy::parser::symbol_type check_type(driver & drv,const std::string & s,const yy::parser::location_type &loc);
 yy::parser::symbol_type make_IDENTIFIER(const std::string & s,const yy::parser::location_type &loc);
 yy::parser::symbol_type make_STRING_LITERAL(const std::string &s,const yy::parser::location_type&loc);
 yy::parser::symbol_type make_CINT(const std::string &s,const yy::parser::location_type&loc);
@@ -1315,7 +1315,7 @@ YY_RULE_SETUP
 case 39:
 YY_RULE_SETUP
 #line 81 "mcc.lex"
-{ count(); return check_type(yytext,loc); }
+{ count(); return check_type(drv,yytext,loc); }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
@@ -2751,7 +2751,7 @@ void count()
 }
 
 
-yy::parser::symbol_type check_type(const std::string & s,const yy::parser::location_type  & loc)
+yy::parser::symbol_type check_type(driver & drv,const std::string & s,const yy::parser::location_type  & loc)
 {
 /*
 * pseudo code --- this is what it should check
@@ -2761,7 +2761,9 @@ yy::parser::symbol_type check_type(const std::string & s,const yy::parser::locat
 *
 *	retrn(IDENTIFIER);
 */
-
+	auto type_val = drv.GetType(s);
+	if(type_val)
+	  return yy::parser::make_TYPE_NAME(s,loc);
 /*
 *	it actually will only return IDENTIFIER
 */
@@ -2790,7 +2792,6 @@ yy::parser::symbol_type make_CINT(const std::string &s,const yy::parser::locatio
     return yy::parser::make_CONSTANT({mcc::Primitive::UInt,0,true,true,false},loc);
   if(lower.find('l')!=std::string::npos)
     return yy::parser::make_CONSTANT({mcc::Primitive::Long,0,true,true,false},loc);
-    mcc::PrintColored("Returing int const",mcc::TextColor::Warning);
   return yy::parser::make_CONSTANT({mcc::Primitive::Int,0,true,true,false},loc);
 }
 yy::parser::symbol_type make_CFLOAT(const std::string &s,const yy::parser::location_type&loc)

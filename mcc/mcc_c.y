@@ -1,7 +1,7 @@
 %skeleton "lalr1.cc"
 %require "3.8.1"
 %code requires{
-#include <stdio.h>
+#include <utility>
 #include "mcc_utils.hpp"
 void yyerror(char *s);
 class driver;
@@ -110,7 +110,6 @@ class driver;
 %type <mcc::Symbol> init_declarator;
 %type <std::vector<mcc::Symbol>> init_declarator_list;
 %type <std::string> "identifier";
-%type <std::vector<std::string>> identifier_list
 %type <std::string> declarator
 %type <mcc::Symbol> primary_expression;
 %type <mcc::Symbol> postfix_expression
@@ -119,6 +118,17 @@ class driver;
 %type <mcc::Symbol> "constant"
 %type <mcc::type_t> declaration_specifiers;
 %type <mcc::type_t> type_specifier;
+%type <mcc::Symbol> cast_expression multiplicative_expression additive_expression;
+%type <mcc::Symbol> shift_expression relational_expression equality_expression;
+%type <mcc::Symbol> and_expression exclusive_or_expression inclusive_or_expression
+%type <mcc::Symbol> logical_and_expression logical_or_expression constant_expression
+%type <mcc::Symbol> conditional_expression assignment_expression unary_expression
+%type <mcc::PtrBits> pointer;
+%type <std::string> "typename";
+%type <std::string> type_qualifier;
+%type <std::string> type_qualifier_list;
+%type <std::pair<mcc::type_t,mcc::PtrBits>> type_name;
+%type <std::pair<mcc::type_t,mcc::PtrBits>> specifier_qualifier_list;
 %param { driver& drv }
 %code {
 # include "driver.h"
@@ -139,25 +149,21 @@ primary_expression
 			const auto global_lookup = drv.GetSymbol("@::"+$1);
 			if(global_lookup)
 			{
-
+				$$=global_lookup.value();
 			}
 			else
 			{
 				$$={};
-			mcc::PrintColored("No such identifier: "+drv.GetCurrentScope()+$1,mcc::TextColor::Error);
-			drv.DumpSymbols();
 			}
 		}
 	}
 	| "constant"
 	{
-		mcc::PrintColored("Numeric const",mcc::TextColor::Good);
-		$$={mcc::Primitive::Int,0,true,true,true};
+		$$=$1;
 	}
 	| "literal"
 	{
-		mcc::PrintColored("String literal",mcc::TextColor::Good);
-		$$={mcc::Primitive::Char,1,true,true,true};
+		$$=$1;
 	}
 	| "(" expression ")"
 	{
@@ -169,10 +175,8 @@ postfix_expression
 	: primary_expression
 	| postfix_expression "[" expression "]"
 	{
-		mcc::PrintColored("Array or ptr subscript operation",mcc::TextColor::Good);
 		const auto is_sub_int = mcc::IsIntegerT($3.GetType());
 		const auto ind = $3.GetType().index();
-		mcc::PrintColored(std::to_string(ind),mcc::TextColor::Error);
 		if( $1.IsPtr())
 		{
 			if(!is_sub_int || $3.IsPtr())
@@ -206,11 +210,18 @@ argument_expression_list
 
 unary_expression
 	: postfix_expression
+	{$$=$1;}
 	| "++" unary_expression
+	{$$=$2;}
 	| "--" unary_expression
+	{$$=$2;}
 	| unary_operator cast_expression
+	{$$=$2;}
 	| "sizeof" unary_expression
+	{$$=mcc::Symbol(mcc::Primitive::ULongLong,0,true,true,false);}
 	| "sizeof" "(" type_name ")"
+	{$$=mcc::Symbol(mcc::Primitive::ULongLong,0,true,true,false);}
+
 	;
 
 unary_operator
@@ -224,11 +235,14 @@ unary_operator
 
 cast_expression
 	: unary_expression
+	{$$=$1;}
 	| "(" type_name ")" cast_expression
+	{$$=mcc::Symbol{$2.first,$2.second.GetIndirection(),true,true,false};}
 	;
 
 multiplicative_expression
 	: cast_expression
+	{$$=$1;}
 	| multiplicative_expression "*" cast_expression
 	| multiplicative_expression "/" cast_expression
 	| multiplicative_expression "%" cast_expression
@@ -236,18 +250,24 @@ multiplicative_expression
 
 additive_expression
 	: multiplicative_expression
+	{$$=$1;}
+
 	| additive_expression "+" multiplicative_expression
 	| additive_expression "-" multiplicative_expression
 	;
 
 shift_expression
 	: additive_expression
+	{$$=$1;}
+
 	| shift_expression "<<" additive_expression
 	| shift_expression ">>" additive_expression
 	;
 
 relational_expression
 	: shift_expression
+	{$$=$1;}
+
 	| relational_expression "<=" shift_expression
 	| relational_expression ">=" shift_expression
 	| relational_expression "<" shift_expression
@@ -256,42 +276,68 @@ relational_expression
 
 equality_expression
 	: relational_expression
+	{$$=$1;}
+
 	| equality_expression "==" relational_expression
 	| equality_expression "!=" relational_expression
 	;
 
 and_expression
 	: equality_expression
+	{$$=$1;}
+
 	| and_expression "&" equality_expression
 	;
 
 exclusive_or_expression
 	: and_expression
+	{$$=$1;}
+
 	| exclusive_or_expression "^" and_expression
 	;
 
 inclusive_or_expression
 	: exclusive_or_expression
+	{$$=$1;}
+
 	| inclusive_or_expression "|" exclusive_or_expression
 	;
 
 logical_and_expression
 	: inclusive_or_expression
+	{$$=$1;}
+
 	| logical_and_expression "||" inclusive_or_expression
 	;
 
 logical_or_expression
 	: logical_and_expression
+	{$$=$1;}
+
 	| logical_or_expression "&&" logical_and_expression
 	;
 
 conditional_expression
 	: logical_or_expression
-	| logical_or_expression "?" expression ":" conditional_expression
-	;
+	{$$=$1;}
+	| logical_or_expression {
+		const auto is_primitive = std::holds_alternative<mcc::Primitive>($1.GetType());
+		const auto is_ptr = $1.IsPtr();
+		if(!is_primitive && !is_ptr)
+		{
+			mcc::PrintColored("Could not evaluate as pointer or arithmetic type",mcc::TextColor::Error);
+		}
+		else if(std::get<mcc::Primitive>($1.GetType())==mcc::Primitive::Void)
+		{
+			mcc::PrintColored("Void where pointer or arithmetic type is required",mcc::TextColor::Error);
+		}
+	}
+	"?" expression ":" conditional_expression
+		;
 
 assignment_expression
 	: conditional_expression
+	{$$=$1;}
 	| unary_expression assignment_operator assignment_expression
 	;
 
@@ -311,6 +357,7 @@ assignment_operator
 
 expression
 	: assignment_expression
+	{$$=mcc::Symbol($1.GetType(),$1.GetIndLevel(),false,true,true);}
 	| expression "," assignment_expression
 	;
 
@@ -351,15 +398,11 @@ init_declarator_list
 init_declarator
 	: declarator
 	{
-		mcc::PrintColored("New decl "+$1,mcc::TextColor::Good);
-		mcc::PrintColored("Type "+std::string(std::holds_alternative<mcc::Primitive>(drv.GetCurrentType())?"primitive":"amogus"),mcc::TextColor::Good);
 		auto sym = mcc::Symbol{drv.GetCurrentType(),0,false,true,true};
 		drv.AddSymbol($1,std::move(sym));
 	}
 	| declarator "=" initializer
 	{
-		mcc::PrintColored("Type "+std::string(std::holds_alternative<mcc::Primitive>(drv.GetCurrentType())?"primitive":"amogus"),mcc::TextColor::Good);
-		mcc::PrintColored("New decl "+$1,mcc::TextColor::Good);
 		auto sym=mcc::Symbol{drv.GetCurrentType(),0,false,true,true};
 		drv.AddSymbol($1,std::move(sym));
 	}
@@ -374,8 +417,7 @@ storage_class_specifier
 	;
 
 type_specifier
-	: "void"
-	{$$=mcc::Primitive::Void;}
+	: "void"{$$=mcc::Primitive::Void;}
 	| "char"{$$=mcc::Primitive::Char;}
 	| "short"{$$=mcc::Primitive::Short;}
 	| "int"{$$=mcc::Primitive::Int;}
@@ -387,8 +429,10 @@ type_specifier
 	| "unsigned"{}
 	| struct_or_union_specifier{}
 	| enum_specifier{}
-	| "typename"{}
-	;
+	| "typename"
+		{
+			$$ = drv.GetType($1).value();
+		}
 
 struct_or_union_specifier
 	: struct_or_union "identifier" "{" struct_declaration_list "}"
@@ -411,9 +455,13 @@ struct_declaration
 
 specifier_qualifier_list
 	: type_specifier specifier_qualifier_list
+	{$$=$1;}
 	| type_specifier
+	{$$=$1;}
 	| type_qualifier specifier_qualifier_list
+	{$$=$2;}
 	| type_qualifier
+	{$$={};}
 	;
 
 struct_declarator_list
@@ -444,8 +492,8 @@ enumerator
 	;
 
 type_qualifier
-	: "const"{drv.SetInConst(true);}
-	| "volatile"{}
+	: "const"{$$="const";}
+	| "volatile"{$$="";}
 	;
 
 declarator
@@ -472,26 +520,46 @@ direct_declarator
 	| direct_declarator "[" "]"
 	{
 		mcc::PrintColored("Array def VLA:",mcc::TextColor::Good);
+		drv.AddSymbol($1,mcc::Symbol{drv.GetCurrentType(),1,true,true,true});
 	}
-
 	| direct_declarator "(" parameter_type_list ")"
+	{ mcc::PrintColored("Function ptr only type proto",mcc::TextColor::Good);}
 	| direct_declarator "(" identifier_list  ")"
 	{
-	mcc::PrintColored("Function call:" +$1,mcc::TextColor::Good);
+		mcc::PrintColored("Func argnames",mcc::TextColor::Good);
 	}
 	| direct_declarator "(" ")"
 	;
 
 pointer
 	: "*"
+	{
+		$$={};
+		$$.AddIndirection(false);
+	}
 	| "*" type_qualifier_list
+	{
+		$$={};
+		$$.AddIndirection($2=="const");
+	}
 	| "*" pointer
+	{
+		$$=$2;
+		$$.AddIndirection(false);
+	}
 	| "*" type_qualifier_list pointer
+	{
+		$$=$3;
+		$$.AddIndirection($2=="const");
+	}
+
 	;
 
 type_qualifier_list
 	: type_qualifier
+	{$$=$1;}
 	| type_qualifier_list type_qualifier
+	{$$=$1+$2;}
 	;
 
 
@@ -513,20 +581,7 @@ parameter_declaration
 
 identifier_list
 	: "identifier"
-	{
-		 $$={};
-		 $$.push_back($1);
-		 mcc::PrintColored("Id"+$1,mcc::TextColor::Good);
-	}
 	| identifier_list "," "identifier"
-	{
-		$1.emplace_back($3);
-		$$=std::move($1);
-		for(auto && id : $$)
-		{
-			mcc::PrintColored("Id:"+id,mcc::TextColor::Good);
-		}
-	}
 	;
 
 type_name
@@ -606,9 +661,10 @@ selection_statement
 	;
 
 iteration_statement
-	: "while" "(" expression ")" statement
-	| "do" statement "while" "(" expression ")" ";"
+	: "while" "(" expression {mcc::EvalsToBool($3);} ")" statement
+	| "do" statement "while" "(" expression {mcc::EvalsToBool($5);} ")" ";"
 	| "for" "(" expression_statement expression_statement ")" statement
+
 	| "for" "(" expression_statement expression_statement expression ")" statement
 	;
 
@@ -632,14 +688,14 @@ external_declaration
 	;
 //All kinds of functions definitions...
 function_definition
-	: declaration_specifiers declarator declaration_list {mcc::PrintColored("Entered new scope: "+ $2,mcc::TextColor::Good);drv.EnterNewScope($2);} compound_statement
+	: declaration_specifiers declarator declaration_list {drv.EnterNewScope($2);} compound_statement
 		{drv.LeaveScope();}
-	| declaration_specifiers declarator {mcc::PrintColored("Entered new scope: "+$2,mcc::TextColor::Good);drv.EnterNewScope($2);} compound_statement
+	| declaration_specifiers declarator {drv.EnterNewScope($2);} compound_statement
 		{drv.LeaveScope();}
-	| declarator declaration_list {mcc::PrintColored("Entered new scope: "+$1,mcc::TextColor::Good);drv.EnterNewScope($1);} compound_statement
+	| declarator declaration_list {drv.EnterNewScope($1);} compound_statement
 		{drv.LeaveScope();}
-	| declarator {mcc::PrintColored("Entered new scope"+$1,mcc::TextColor::Good);drv.EnterNewScope($1);} compound_statement
-	{drv.LeaveScope();}
+	| declarator {drv.EnterNewScope($1);} compound_statement
+		{drv.LeaveScope();}
 	;
 
 %%
