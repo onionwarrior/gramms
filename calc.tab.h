@@ -384,14 +384,14 @@ namespace yy {
     {
       // polynomial
       // monom
+      // any_var
       char dummy1[sizeof (Polynomial)];
 
       // "basic"
       char dummy2[sizeof (char)];
 
       // "int"
-      // integer_const
-      // int_eval
+      // pow
       char dummy3[sizeof (int64_t)];
 
       // "var"
@@ -499,8 +499,8 @@ namespace yy {
         S_line = 19,                             // line
         S_polynomial = 20,                       // polynomial
         S_monom = 21,                            // monom
-        S_integer_const = 22,                    // integer_const
-        S_int_eval = 23                          // int_eval
+        S_pow = 22,                              // pow
+        S_any_var = 23                           // any_var
       };
     };
 
@@ -539,6 +539,7 @@ namespace yy {
     {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
+      case symbol_kind::S_any_var: // any_var
         value.move< Polynomial > (std::move (that.value));
         break;
 
@@ -547,8 +548,7 @@ namespace yy {
         break;
 
       case symbol_kind::S_INTEGER: // "int"
-      case symbol_kind::S_integer_const: // integer_const
-      case symbol_kind::S_int_eval: // int_eval
+      case symbol_kind::S_pow: // pow
         value.move< int64_t > (std::move (that.value));
         break;
 
@@ -661,6 +661,7 @@ switch (yykind)
     {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
+      case symbol_kind::S_any_var: // any_var
         value.template destroy< Polynomial > ();
         break;
 
@@ -669,8 +670,7 @@ switch (yykind)
         break;
 
       case symbol_kind::S_INTEGER: // "int"
-      case symbol_kind::S_integer_const: // integer_const
-      case symbol_kind::S_int_eval: // int_eval
+      case symbol_kind::S_pow: // pow
         value.template destroy< int64_t > ();
         break;
 
@@ -1445,7 +1445,7 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 72,     ///< Last index in yytable_.
+      yylast_ = 49,     ///< Last index in yytable_.
       yynnts_ = 7,  ///< Number of nonterminal symbols.
       yyfinal_ = 8 ///< Termination state number.
     };
@@ -1474,6 +1474,7 @@ switch (yykind)
     {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
+      case symbol_kind::S_any_var: // any_var
         value.copy< Polynomial > (YY_MOVE (that.value));
         break;
 
@@ -1482,8 +1483,7 @@ switch (yykind)
         break;
 
       case symbol_kind::S_INTEGER: // "int"
-      case symbol_kind::S_integer_const: // integer_const
-      case symbol_kind::S_int_eval: // int_eval
+      case symbol_kind::S_pow: // pow
         value.copy< int64_t > (YY_MOVE (that.value));
         break;
 
@@ -1524,6 +1524,7 @@ switch (yykind)
     {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
+      case symbol_kind::S_any_var: // any_var
         value.move< Polynomial > (YY_MOVE (s.value));
         break;
 
@@ -1532,8 +1533,7 @@ switch (yykind)
         break;
 
       case symbol_kind::S_INTEGER: // "int"
-      case symbol_kind::S_integer_const: // integer_const
-      case symbol_kind::S_int_eval: // int_eval
+      case symbol_kind::S_pow: // pow
         value.move< int64_t > (YY_MOVE (s.value));
         break;
 

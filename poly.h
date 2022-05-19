@@ -5,15 +5,16 @@
 #include <list>
 #include <map>
 #include <numeric>
+#include <optional>
 #include <stdexcept>
 #include <string>
-#include <optional>
 #include <variant>
 class Monom {
   int64_t coef_ = 1;
   int64_t pow_ = 1;
+
 public:
-  Monom(int64_t coef, int64_t pow) : coef_{coef}, pow_{pow}{}
+  Monom(int64_t coef, int64_t pow) : coef_{coef}, pow_{pow} {}
   Monom() = default;
   Monom &operator=(const Monom &) = default;
   Monom &operator+=(const Monom &rhs) {
@@ -75,9 +76,10 @@ public:
 class Polynomial {
   std::list<Monom> terms_;
   char variable_ = '\0';
+
 public:
-  inline auto GetBase() const {return variable_;}
-  inline auto SetBase(const char base) {variable_=base;}
+  inline auto GetBase() const { return variable_; }
+  inline auto SetBase(const char base) { variable_ = base; }
   inline int64_t degree() const {
     return terms_.empty() ? 0 : terms_.front().get_pow();
   }
@@ -218,7 +220,8 @@ public:
   }
   friend std::ostream &operator<<(std::ostream &output,
                                   const Polynomial &poly) {
-    output << poly.to_string();
+    const auto view = poly.to_string();
+    output << (!view.empty() ? view : "0");
     return output;
   }
   Polynomial &operator^=(const int64_t pow) {
@@ -240,8 +243,11 @@ public:
   Polynomial(const Polynomial &) = default;
   Polynomial &operator=(const Polynomial &) = default;
   Polynomial &operator=(Polynomial &&) = default;
-  Polynomial(const Monom &monom){ *this += monom; }
-  Polynomial(int64_t coef, int64_t pow ,const char variable) : Polynomial{Monom{coef, pow}} {variable_=variable;}
+  Polynomial(const Monom &monom) { *this += monom; }
+  Polynomial(int64_t coef, int64_t pow, const char variable)
+      : Polynomial{Monom{coef, pow}} {
+    variable_ = variable;
+  }
 };
 inline int64_t ipow64(const int64_t base, const int64_t power) {
   int64_t rv = 1;
@@ -251,21 +257,18 @@ inline int64_t ipow64(const int64_t base, const int64_t power) {
 }
 class SymbolTable {
   std::map<std::string, Polynomial> symbols_;
-  inline static SymbolTable * inst_=nullptr;
+  inline static SymbolTable *inst_ = nullptr;
   SymbolTable() = default;
+
 public:
-  static auto GetInst()
-{
-    if (inst_==nullptr)
-      inst_=new SymbolTable();
+  static auto GetInst() {
+    if (inst_ == nullptr)
+      inst_ = new SymbolTable();
     return inst_;
   }
-  Polynomial & GetVar(const std::string &var_name) {
-    return symbols_[var_name];
-  }
-  const std::optional<Polynomial> ReadVar(const std::string & var_name ) const
-  {
-    if(symbols_.find(var_name)!=symbols_.cend())
+  Polynomial &GetVar(const std::string &var_name) { return symbols_[var_name]; }
+  const std::optional<Polynomial> ReadVar(const std::string &var_name) const {
+    if (symbols_.find(var_name) != symbols_.cend())
       return symbols_.at(var_name);
     return {};
   }

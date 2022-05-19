@@ -21,7 +21,7 @@
   // Code run each time a pattern is matched.
   # define YY_USER_ACTION  loc.columns (yyleng);
 %}
-var_ref_or_decl \@[a-zA-Z][a-zA-Z0-9_]+
+var_ref_or_decl \@[a-zA-Z][a-zA-Z0-9_]*
 var_basic [a-z]
 %x IN_COMMENT
 %%

@@ -116,8 +116,8 @@ class driver;
 %type <mcc::Symbol> expression;
 %type <mcc::Symbol> "literal"
 %type <mcc::Symbol> "constant"
-%type <mcc::type_t> declaration_specifiers;
-%type <mcc::type_t> type_specifier;
+%type <mcc::TypeOrNone> declaration_specifiers;
+%type <mcc::Type> type_specifier;
 %type <mcc::Symbol> cast_expression multiplicative_expression additive_expression;
 %type <mcc::Symbol> shift_expression relational_expression equality_expression;
 %type <mcc::Symbol> and_expression exclusive_or_expression inclusive_or_expression
@@ -127,8 +127,8 @@ class driver;
 %type <std::string> "typename";
 %type <std::string> type_qualifier;
 %type <std::string> type_qualifier_list;
-%type <std::pair<mcc::type_t,mcc::PtrBits>> type_name;
-%type <std::pair<mcc::type_t,mcc::PtrBits>> specifier_qualifier_list;
+%type <std::pair<mcc::Type,mcc::PtrBits>> type_name;
+%type <std::pair<mcc::Type,mcc::PtrBits>> specifier_qualifier_list;
 %param { driver& drv }
 %code {
 # include "driver.h"
@@ -467,7 +467,7 @@ struct_declaration
 specifier_qualifier_list
 	: type_specifier specifier_qualifier_list
 	{
-		if(std::holds_alternative<bool>($1)^std::holds_alternative<bool>($2.first))
+		if(std::holds_alternative<mcc::NoneType>($1)^std::holds_alternative<mcc::NoneType>($2.first))
 		{$$={$1,{}};}
 		else
 		{
@@ -527,9 +527,13 @@ declarator
 
 direct_declarator
 	: "identifier"
-	{$$=$1;}
+	//return name for declarator
+	{//Setname?
+	}
+	//idk
 	| "(" declarator ")"
 	{$$=$2;}
+	//return array of direct_declarator
 	| direct_declarator  "[" constant_expression  "]"
 	{
 		mcc::PrintColored("Array def:",mcc::TextColor::Good);
@@ -538,7 +542,7 @@ direct_declarator
 	| direct_declarator "[" "]"
 	{
 		mcc::PrintColored("Array def VLA:",mcc::TextColor::Good);
-		drv.AddSymbol($1,mcc::Symbol{drv.GetCurrentType(),1,true,true,true});
+		drv.AddSymbol($1,mcc::Symbol{,0,true,true,true});
 	}
 	| direct_declarator "(" parameter_type_list ")"
 	{ mcc::PrintColored("Function ptr only type proto",mcc::TextColor::Good);}

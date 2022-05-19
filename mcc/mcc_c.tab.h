@@ -409,13 +409,15 @@ namespace yy {
       // init_declarator
       char dummy2[sizeof (mcc::Symbol)];
 
-      // declaration_specifiers
       // type_specifier
-      char dummy3[sizeof (mcc::type_t)];
+      char dummy3[sizeof (mcc::Type)];
+
+      // declaration_specifiers
+      char dummy4[sizeof (mcc::TypeOrNone)];
 
       // specifier_qualifier_list
       // type_name
-      char dummy4[sizeof (std::pair<mcc::type_t,mcc::PtrBits>)];
+      char dummy5[sizeof (std::pair<mcc::Type,mcc::PtrBits>)];
 
       // "identifier"
       // "typename"
@@ -423,10 +425,10 @@ namespace yy {
       // declarator
       // direct_declarator
       // type_qualifier_list
-      char dummy5[sizeof (std::string)];
+      char dummy6[sizeof (std::string)];
 
       // init_declarator_list
-      char dummy6[sizeof (std::vector<mcc::Symbol>)];
+      char dummy7[sizeof (std::vector<mcc::Symbol>)];
     };
 
     /// The size of the largest semantic type.
@@ -800,14 +802,17 @@ namespace yy {
         value.move< mcc::Symbol > (std::move (that.value));
         break;
 
-      case symbol_kind::S_declaration_specifiers: // declaration_specifiers
       case symbol_kind::S_type_specifier: // type_specifier
-        value.move< mcc::type_t > (std::move (that.value));
+        value.move< mcc::Type > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_declaration_specifiers: // declaration_specifiers
+        value.move< mcc::TypeOrNone > (std::move (that.value));
         break;
 
       case symbol_kind::S_specifier_qualifier_list: // specifier_qualifier_list
       case symbol_kind::S_type_name: // type_name
-        value.move< std::pair<mcc::type_t,mcc::PtrBits> > (std::move (that.value));
+        value.move< std::pair<mcc::Type,mcc::PtrBits> > (std::move (that.value));
         break;
 
       case symbol_kind::S_IDENTIFIER: // "identifier"
@@ -875,13 +880,13 @@ namespace yy {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
-      basic_symbol (typename Base::kind_type t, mcc::type_t&& v, location_type&& l)
+      basic_symbol (typename Base::kind_type t, mcc::Type&& v, location_type&& l)
         : Base (t)
         , value (std::move (v))
         , location (std::move (l))
       {}
 #else
-      basic_symbol (typename Base::kind_type t, const mcc::type_t& v, const location_type& l)
+      basic_symbol (typename Base::kind_type t, const mcc::Type& v, const location_type& l)
         : Base (t)
         , value (v)
         , location (l)
@@ -889,13 +894,27 @@ namespace yy {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
-      basic_symbol (typename Base::kind_type t, std::pair<mcc::type_t,mcc::PtrBits>&& v, location_type&& l)
+      basic_symbol (typename Base::kind_type t, mcc::TypeOrNone&& v, location_type&& l)
         : Base (t)
         , value (std::move (v))
         , location (std::move (l))
       {}
 #else
-      basic_symbol (typename Base::kind_type t, const std::pair<mcc::type_t,mcc::PtrBits>& v, const location_type& l)
+      basic_symbol (typename Base::kind_type t, const mcc::TypeOrNone& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, std::pair<mcc::Type,mcc::PtrBits>&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const std::pair<mcc::Type,mcc::PtrBits>& v, const location_type& l)
         : Base (t)
         , value (v)
         , location (l)
@@ -982,14 +1001,17 @@ switch (yykind)
         value.template destroy< mcc::Symbol > ();
         break;
 
-      case symbol_kind::S_declaration_specifiers: // declaration_specifiers
       case symbol_kind::S_type_specifier: // type_specifier
-        value.template destroy< mcc::type_t > ();
+        value.template destroy< mcc::Type > ();
+        break;
+
+      case symbol_kind::S_declaration_specifiers: // declaration_specifiers
+        value.template destroy< mcc::TypeOrNone > ();
         break;
 
       case symbol_kind::S_specifier_qualifier_list: // specifier_qualifier_list
       case symbol_kind::S_type_name: // type_name
-        value.template destroy< std::pair<mcc::type_t,mcc::PtrBits> > ();
+        value.template destroy< std::pair<mcc::Type,mcc::PtrBits> > ();
         break;
 
       case symbol_kind::S_IDENTIFIER: // "identifier"
@@ -2854,14 +2876,17 @@ switch (yykind)
         value.copy< mcc::Symbol > (YY_MOVE (that.value));
         break;
 
-      case symbol_kind::S_declaration_specifiers: // declaration_specifiers
       case symbol_kind::S_type_specifier: // type_specifier
-        value.copy< mcc::type_t > (YY_MOVE (that.value));
+        value.copy< mcc::Type > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_declaration_specifiers: // declaration_specifiers
+        value.copy< mcc::TypeOrNone > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_specifier_qualifier_list: // specifier_qualifier_list
       case symbol_kind::S_type_name: // type_name
-        value.copy< std::pair<mcc::type_t,mcc::PtrBits> > (YY_MOVE (that.value));
+        value.copy< std::pair<mcc::Type,mcc::PtrBits> > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_IDENTIFIER: // "identifier"
@@ -2936,14 +2961,17 @@ switch (yykind)
         value.move< mcc::Symbol > (YY_MOVE (s.value));
         break;
 
-      case symbol_kind::S_declaration_specifiers: // declaration_specifiers
       case symbol_kind::S_type_specifier: // type_specifier
-        value.move< mcc::type_t > (YY_MOVE (s.value));
+        value.move< mcc::Type > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_declaration_specifiers: // declaration_specifiers
+        value.move< mcc::TypeOrNone > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_specifier_qualifier_list: // specifier_qualifier_list
       case symbol_kind::S_type_name: // type_name
-        value.move< std::pair<mcc::type_t,mcc::PtrBits> > (YY_MOVE (s.value));
+        value.move< std::pair<mcc::Type,mcc::PtrBits> > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_IDENTIFIER: // "identifier"
@@ -3025,7 +3053,7 @@ switch (yykind)
 
 
 } // yy
-#line 3029 "mcc_c.tab.h"
+#line 3057 "mcc_c.tab.h"
 
 
 

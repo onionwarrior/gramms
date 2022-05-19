@@ -1,9 +1,11 @@
-@var :=3x
-@var_2 :=3x
-@var_3 :=3x
-@var_4 := (@var_2)/(@var_3-@var)
-<<@var_
+@var_3 := x^2^2^3+3+4+2+7
+@var_4 := 2x^7-2x^5*x^2
+@x := x^2
+@var_5 := @x^2^2^2^2
+<<@var_4
+<<@var_3
+<<@var_5
 //variable name
-weird comment
+/*weird comment
 ******/
 

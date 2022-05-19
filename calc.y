@@ -34,10 +34,8 @@ class driver;
 	;
 %token END 0 "end of file"
 %param { driver& drv }
-%type <Polynomial> polynomial;
-%type <Polynomial> monom;
-%type <int64_t> integer_const;
-%type <int64_t> int_eval;
+%type <Polynomial> polynomial monom any_var;
+%type <int64_t> pow;
 /*Everything is printed using <<*/
 %printer { yyo << $$; } <*>;
 %left PLUS MINUS
@@ -133,35 +131,51 @@ polynomial:
 						$$ =$1/$3;
 						$$.SetBase((std::max)(br,bl));
 				}
-			| "(" polynomial ")" "^" integer_const
+			| "(" polynomial ")" "^" polynomial
 				/*Raising a polynomial to a certain power
 				 * requires enclosing it with brackets*/
 			        {
-					if($5<0)
+					const auto deg = $2.degree();
+					if(deg!=0)
 					{
 						std::stringstream cause{};
 						cause<<"'("<<$2<<")^"<<"("<<$5<<")' at "<<drv.location;
 						throw std::invalid_argument("Raising to negative power is forbiden, caused by: "+cause.str());
 					}
-					$$=$2^$5;
+					const auto coef = $5.lead().coef();
+					if(coef<0)
+					{
+						std::stringstream cause{};
+						cause<<"'("<<$2<<")^"<<"("<<$5<<")' at "<<drv.location;
+						throw std::invalid_argument("Raising to negative power is forbiden, caused by: "+cause.str());
+					}
+					$$=$2^coef;
 				}
 
 monom:
 			/*All possible ways to represent a monom*/
-			"int" "basic" "^" integer_const
-				{$$={$1,$4,$2};}
-			|"basic" "^" integer_const
-				{$$={1,$3,$1};}
-			|"int" "basic"
-                                {$$={$1,1,$2};}
-                        |"basic"
-                                {$$={1,1,$1};}
-                        |"int"
-                                {$$={$1,0,0};}
-			|"int" "^" integer_const
-				{$$={ipow64($1,$3),0,0};}
-			|"var"
-				{
+			"int" any_var "^" pow
+				{$$=($2^$4)*Polynomial{$1,0,0};}
+			|any_var "^" pow
+				{$$=$1^$3;}
+			|"int" any_var
+                {$$=Polynomial{$1,0,0}*$2;}
+		    |any_var
+				{$$=$1;}
+		    |"int"
+				{$$={$1,0,0};}
+pow:
+		"int"
+		{$$=$1;}
+		| "(" pow ")"
+		{$$=$2;}
+		| pow "^" pow
+		{$$=ipow64($1,$3);}
+any_var:
+		"basic"
+		{$$={1,1,$1};}
+		| "var"
+		{
 					auto var = SymbolTable::GetInst()->ReadVar($1);
 					if (!var)
 					{
@@ -170,36 +184,9 @@ monom:
 						throw std::invalid_argument("No such variable, caused by: "+cause.str());
 					}
 				    $$=var.value();
-				};
+		};
 
-integer_const:		/*Wrapper for expression which
-			evaluates to an integer*/
-			"int"
-				{$$=$1;}
-			| "-" "int" %prec UMINUS
-				{$$=-$2;}
-			| "(" int_eval ")"
-				{$$=$2;}
 
-int_eval:		/*This exists only to differentiate pure
-			numbers and polynomials since we cant raise
-			to a polynomial power*/
-			"int"
-				{$$=$1;}
-			| "-" "int" %prec UMINUS
-				{$$=-$2;}
-			|"(" int_eval ")"
-				{$$=$2;}
-			|int_eval "*" int_eval
-				{$$=$1*$3;}
-			| int_eval "/" int_eval
-				{$$=$1/$3;}
-			| int_eval "+" int_eval
-				{$$=$1+$3;}
-			| int_eval "-" int_eval
-				{$$=$1-$3;}
-			| int_eval "^" int_eval
-				{$$=ipow64($1,$3);}
 %%
 void
 yy::parser::error (const location_type& l, const std::string& m)

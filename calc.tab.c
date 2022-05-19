@@ -42,7 +42,7 @@
 
 
 // Unqualified %code blocks.
-#line 47 "calc.y"
+#line 45 "calc.y"
 
 # include "driver.h"
 
@@ -209,6 +209,7 @@ namespace yy {
     {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
+      case symbol_kind::S_any_var: // any_var
         value.YY_MOVE_OR_COPY< Polynomial > (YY_MOVE (that.value));
         break;
 
@@ -217,8 +218,7 @@ namespace yy {
         break;
 
       case symbol_kind::S_INTEGER: // "int"
-      case symbol_kind::S_integer_const: // integer_const
-      case symbol_kind::S_int_eval: // int_eval
+      case symbol_kind::S_pow: // pow
         value.YY_MOVE_OR_COPY< int64_t > (YY_MOVE (that.value));
         break;
 
@@ -243,6 +243,7 @@ namespace yy {
     {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
+      case symbol_kind::S_any_var: // any_var
         value.move< Polynomial > (YY_MOVE (that.value));
         break;
 
@@ -251,8 +252,7 @@ namespace yy {
         break;
 
       case symbol_kind::S_INTEGER: // "int"
-      case symbol_kind::S_integer_const: // integer_const
-      case symbol_kind::S_int_eval: // int_eval
+      case symbol_kind::S_pow: // pow
         value.move< int64_t > (YY_MOVE (that.value));
         break;
 
@@ -277,6 +277,7 @@ namespace yy {
     {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
+      case symbol_kind::S_any_var: // any_var
         value.copy< Polynomial > (that.value);
         break;
 
@@ -285,8 +286,7 @@ namespace yy {
         break;
 
       case symbol_kind::S_INTEGER: // "int"
-      case symbol_kind::S_integer_const: // integer_const
-      case symbol_kind::S_int_eval: // int_eval
+      case symbol_kind::S_pow: // pow
         value.copy< int64_t > (that.value);
         break;
 
@@ -310,6 +310,7 @@ namespace yy {
     {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
+      case symbol_kind::S_any_var: // any_var
         value.move< Polynomial > (that.value);
         break;
 
@@ -318,8 +319,7 @@ namespace yy {
         break;
 
       case symbol_kind::S_INTEGER: // "int"
-      case symbol_kind::S_integer_const: // integer_const
-      case symbol_kind::S_int_eval: // int_eval
+      case symbol_kind::S_pow: // pow
         value.move< int64_t > (that.value);
         break;
 
@@ -364,44 +364,44 @@ namespace yy {
         switch (yykind)
     {
       case symbol_kind::S_INTEGER: // "int"
-#line 42 "calc.y"
+#line 40 "calc.y"
                  { yyo << yysym.value.template as < int64_t > (); }
 #line 370 "calc.tab.c"
         break;
 
       case symbol_kind::S_VAR: // "var"
-#line 42 "calc.y"
+#line 40 "calc.y"
                  { yyo << yysym.value.template as < std::string > (); }
 #line 376 "calc.tab.c"
         break;
 
       case symbol_kind::S_BASIC: // "basic"
-#line 42 "calc.y"
+#line 40 "calc.y"
                  { yyo << yysym.value.template as < char > (); }
 #line 382 "calc.tab.c"
         break;
 
       case symbol_kind::S_polynomial: // polynomial
-#line 42 "calc.y"
+#line 40 "calc.y"
                  { yyo << yysym.value.template as < Polynomial > (); }
 #line 388 "calc.tab.c"
         break;
 
       case symbol_kind::S_monom: // monom
-#line 42 "calc.y"
+#line 40 "calc.y"
                  { yyo << yysym.value.template as < Polynomial > (); }
 #line 394 "calc.tab.c"
         break;
 
-      case symbol_kind::S_integer_const: // integer_const
-#line 42 "calc.y"
+      case symbol_kind::S_pow: // pow
+#line 40 "calc.y"
                  { yyo << yysym.value.template as < int64_t > (); }
 #line 400 "calc.tab.c"
         break;
 
-      case symbol_kind::S_int_eval: // int_eval
-#line 42 "calc.y"
-                 { yyo << yysym.value.template as < int64_t > (); }
+      case symbol_kind::S_any_var: // any_var
+#line 40 "calc.y"
+                 { yyo << yysym.value.template as < Polynomial > (); }
 #line 406 "calc.tab.c"
         break;
 
@@ -644,6 +644,7 @@ namespace yy {
     {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
+      case symbol_kind::S_any_var: // any_var
         yylhs.value.emplace< Polynomial > ();
         break;
 
@@ -652,8 +653,7 @@ namespace yy {
         break;
 
       case symbol_kind::S_INTEGER: // "int"
-      case symbol_kind::S_integer_const: // integer_const
-      case symbol_kind::S_int_eval: // int_eval
+      case symbol_kind::S_pow: // pow
         yylhs.value.emplace< int64_t > ();
         break;
 
@@ -682,25 +682,25 @@ namespace yy {
           switch (yyn)
             {
   case 2: // calculation: line
-#line 53 "calc.y"
+#line 51 "calc.y"
                              {}
 #line 688 "calc.tab.c"
     break;
 
   case 3: // calculation: calculation line
-#line 54 "calc.y"
+#line 52 "calc.y"
                                           {}
 #line 694 "calc.tab.c"
     break;
 
   case 4: // line: "var" ":=" polynomial "\n"
-#line 58 "calc.y"
+#line 56 "calc.y"
                                 {SymbolTable::GetInst()->GetVar(yystack_[3].value.as < std::string > ())=yystack_[1].value.as < Polynomial > ();}
 #line 700 "calc.tab.c"
     break;
 
   case 5: // line: "<<" "var" "\n"
-#line 60 "calc.y"
+#line 58 "calc.y"
                                 {
 				const auto variable = SymbolTable::GetInst()->ReadVar(yystack_[1].value.as < std::string > ());
 				if (!variable)
@@ -715,19 +715,19 @@ namespace yy {
     break;
 
   case 7: // polynomial: monom
-#line 73 "calc.y"
+#line 71 "calc.y"
                                 { yylhs.value.as < Polynomial > ()=yystack_[0].value.as < Polynomial > ();}
 #line 721 "calc.tab.c"
     break;
 
   case 8: // polynomial: "-" polynomial
-#line 75 "calc.y"
+#line 73 "calc.y"
                                 {yylhs.value.as < Polynomial > ()=-yystack_[0].value.as < Polynomial > ();}
 #line 727 "calc.tab.c"
     break;
 
   case 9: // polynomial: polynomial "+" polynomial
-#line 77 "calc.y"
+#line 75 "calc.y"
                                 {
 						const auto br=yystack_[2].value.as < Polynomial > ().GetBase();
 						const auto bl=yystack_[0].value.as < Polynomial > ().GetBase();
@@ -744,7 +744,7 @@ namespace yy {
     break;
 
   case 10: // polynomial: polynomial "-" polynomial
-#line 90 "calc.y"
+#line 88 "calc.y"
                                 {
 						const auto br=yystack_[2].value.as < Polynomial > ().GetBase();
 						const auto bl=yystack_[0].value.as < Polynomial > ().GetBase();
@@ -761,7 +761,7 @@ namespace yy {
     break;
 
   case 11: // polynomial: polynomial "*" polynomial
-#line 103 "calc.y"
+#line 101 "calc.y"
                                 {
 						const auto br=yystack_[2].value.as < Polynomial > ().GetBase();
 						const auto bl=yystack_[0].value.as < Polynomial > ().GetBase();
@@ -778,13 +778,13 @@ namespace yy {
     break;
 
   case 12: // polynomial: "(" polynomial ")"
-#line 116 "calc.y"
+#line 114 "calc.y"
                                 { yylhs.value.as < Polynomial > () = yystack_[1].value.as < Polynomial > (); }
 #line 784 "calc.tab.c"
     break;
 
   case 13: // polynomial: polynomial "/" polynomial
-#line 118 "calc.y"
+#line 116 "calc.y"
                                 {
 						const auto br=yystack_[2].value.as < Polynomial > ().GetBase();
 						const auto bl=yystack_[0].value.as < Polynomial > ().GetBase();
@@ -806,59 +806,85 @@ namespace yy {
 #line 807 "calc.tab.c"
     break;
 
-  case 14: // polynomial: "(" polynomial ")" "^" integer_const
-#line 139 "calc.y"
+  case 14: // polynomial: "(" polynomial ")" "^" polynomial
+#line 137 "calc.y"
                                 {
-					if(yystack_[0].value.as < int64_t > ()<0)
+					const auto deg = yystack_[3].value.as < Polynomial > ().degree();
+					if(deg!=0)
 					{
 						std::stringstream cause{};
-						cause<<"'("<<yystack_[3].value.as < Polynomial > ()<<")^"<<"("<<yystack_[0].value.as < int64_t > ()<<")' at "<<drv.location;
+						cause<<"'("<<yystack_[3].value.as < Polynomial > ()<<")^"<<"("<<yystack_[0].value.as < Polynomial > ()<<")' at "<<drv.location;
 						throw std::invalid_argument("Raising to negative power is forbiden, caused by: "+cause.str());
 					}
-					yylhs.value.as < Polynomial > ()=yystack_[3].value.as < Polynomial > ()^yystack_[0].value.as < int64_t > ();
+					const auto coef = yystack_[0].value.as < Polynomial > ().lead().coef();
+					if(coef<0)
+					{
+						std::stringstream cause{};
+						cause<<"'("<<yystack_[3].value.as < Polynomial > ()<<")^"<<"("<<yystack_[0].value.as < Polynomial > ()<<")' at "<<drv.location;
+						throw std::invalid_argument("Raising to negative power is forbiden, caused by: "+cause.str());
+					}
+					yylhs.value.as < Polynomial > ()=yystack_[3].value.as < Polynomial > ()^coef;
 				}
-#line 821 "calc.tab.c"
+#line 829 "calc.tab.c"
     break;
 
-  case 15: // monom: "int" "basic" "^" integer_const
-#line 152 "calc.y"
-                                {yylhs.value.as < Polynomial > ()={yystack_[3].value.as < int64_t > (),yystack_[0].value.as < int64_t > (),yystack_[2].value.as < char > ()};}
-#line 827 "calc.tab.c"
-    break;
-
-  case 16: // monom: "basic" "^" integer_const
-#line 154 "calc.y"
-                                {yylhs.value.as < Polynomial > ()={1,yystack_[0].value.as < int64_t > (),yystack_[2].value.as < char > ()};}
-#line 833 "calc.tab.c"
-    break;
-
-  case 17: // monom: "int" "basic"
-#line 156 "calc.y"
-                                {yylhs.value.as < Polynomial > ()={yystack_[1].value.as < int64_t > (),1,yystack_[0].value.as < char > ()};}
-#line 839 "calc.tab.c"
-    break;
-
-  case 18: // monom: "basic"
+  case 15: // monom: "int" any_var "^" pow
 #line 158 "calc.y"
-                                {yylhs.value.as < Polynomial > ()={1,1,yystack_[0].value.as < char > ()};}
-#line 845 "calc.tab.c"
+                                {yylhs.value.as < Polynomial > ()=(yystack_[2].value.as < Polynomial > ()^yystack_[0].value.as < int64_t > ())*Polynomial{yystack_[3].value.as < int64_t > (),0,0};}
+#line 835 "calc.tab.c"
+    break;
+
+  case 16: // monom: any_var "^" pow
+#line 160 "calc.y"
+                                {yylhs.value.as < Polynomial > ()=yystack_[2].value.as < Polynomial > ()^yystack_[0].value.as < int64_t > ();}
+#line 841 "calc.tab.c"
+    break;
+
+  case 17: // monom: "int" any_var
+#line 162 "calc.y"
+                {yylhs.value.as < Polynomial > ()=Polynomial{yystack_[1].value.as < int64_t > (),0,0}*yystack_[0].value.as < Polynomial > ();}
+#line 847 "calc.tab.c"
+    break;
+
+  case 18: // monom: any_var
+#line 164 "calc.y"
+                                {yylhs.value.as < Polynomial > ()=yystack_[0].value.as < Polynomial > ();}
+#line 853 "calc.tab.c"
     break;
 
   case 19: // monom: "int"
-#line 160 "calc.y"
+#line 166 "calc.y"
                                 {yylhs.value.as < Polynomial > ()={yystack_[0].value.as < int64_t > (),0,0};}
-#line 851 "calc.tab.c"
+#line 859 "calc.tab.c"
     break;
 
-  case 20: // monom: "int" "^" integer_const
-#line 162 "calc.y"
-                                {yylhs.value.as < Polynomial > ()={ipow64(yystack_[2].value.as < int64_t > (),yystack_[0].value.as < int64_t > ()),0,0};}
-#line 857 "calc.tab.c"
+  case 20: // pow: "int"
+#line 169 "calc.y"
+                {yylhs.value.as < int64_t > ()=yystack_[0].value.as < int64_t > ();}
+#line 865 "calc.tab.c"
     break;
 
-  case 21: // monom: "var"
-#line 164 "calc.y"
-                                {
+  case 21: // pow: "(" pow ")"
+#line 171 "calc.y"
+                {yylhs.value.as < int64_t > ()=yystack_[1].value.as < int64_t > ();}
+#line 871 "calc.tab.c"
+    break;
+
+  case 22: // pow: pow "^" pow
+#line 173 "calc.y"
+                {yylhs.value.as < int64_t > ()=ipow64(yystack_[2].value.as < int64_t > (),yystack_[0].value.as < int64_t > ());}
+#line 877 "calc.tab.c"
+    break;
+
+  case 23: // any_var: "basic"
+#line 176 "calc.y"
+                {yylhs.value.as < Polynomial > ()={1,1,yystack_[0].value.as < char > ()};}
+#line 883 "calc.tab.c"
+    break;
+
+  case 24: // any_var: "var"
+#line 178 "calc.y"
+                {
 					auto var = SymbolTable::GetInst()->ReadVar(yystack_[0].value.as < std::string > ());
 					if (!var)
 					{
@@ -867,78 +893,12 @@ namespace yy {
 						throw std::invalid_argument("No such variable, caused by: "+cause.str());
 					}
 				    yylhs.value.as < Polynomial > ()=var.value();
-				}
-#line 872 "calc.tab.c"
+		}
+#line 898 "calc.tab.c"
     break;
 
-  case 22: // integer_const: "int"
-#line 178 "calc.y"
-                                {yylhs.value.as < int64_t > ()=yystack_[0].value.as < int64_t > ();}
-#line 878 "calc.tab.c"
-    break;
 
-  case 23: // integer_const: "-" "int"
-#line 180 "calc.y"
-                                {yylhs.value.as < int64_t > ()=-yystack_[0].value.as < int64_t > ();}
-#line 884 "calc.tab.c"
-    break;
-
-  case 24: // integer_const: "(" int_eval ")"
-#line 182 "calc.y"
-                                {yylhs.value.as < int64_t > ()=yystack_[1].value.as < int64_t > ();}
-#line 890 "calc.tab.c"
-    break;
-
-  case 25: // int_eval: "int"
-#line 188 "calc.y"
-                                {yylhs.value.as < int64_t > ()=yystack_[0].value.as < int64_t > ();}
-#line 896 "calc.tab.c"
-    break;
-
-  case 26: // int_eval: "-" "int"
-#line 190 "calc.y"
-                                {yylhs.value.as < int64_t > ()=-yystack_[0].value.as < int64_t > ();}
 #line 902 "calc.tab.c"
-    break;
-
-  case 27: // int_eval: "(" int_eval ")"
-#line 192 "calc.y"
-                                {yylhs.value.as < int64_t > ()=yystack_[1].value.as < int64_t > ();}
-#line 908 "calc.tab.c"
-    break;
-
-  case 28: // int_eval: int_eval "*" int_eval
-#line 194 "calc.y"
-                                {yylhs.value.as < int64_t > ()=yystack_[2].value.as < int64_t > ()*yystack_[0].value.as < int64_t > ();}
-#line 914 "calc.tab.c"
-    break;
-
-  case 29: // int_eval: int_eval "/" int_eval
-#line 196 "calc.y"
-                                {yylhs.value.as < int64_t > ()=yystack_[2].value.as < int64_t > ()/yystack_[0].value.as < int64_t > ();}
-#line 920 "calc.tab.c"
-    break;
-
-  case 30: // int_eval: int_eval "+" int_eval
-#line 198 "calc.y"
-                                {yylhs.value.as < int64_t > ()=yystack_[2].value.as < int64_t > ()+yystack_[0].value.as < int64_t > ();}
-#line 926 "calc.tab.c"
-    break;
-
-  case 31: // int_eval: int_eval "-" int_eval
-#line 200 "calc.y"
-                                {yylhs.value.as < int64_t > ()=yystack_[2].value.as < int64_t > ()-yystack_[0].value.as < int64_t > ();}
-#line 932 "calc.tab.c"
-    break;
-
-  case 32: // int_eval: int_eval "^" int_eval
-#line 202 "calc.y"
-                                {yylhs.value.as < int64_t > ()=ipow64(yystack_[2].value.as < int64_t > (),yystack_[0].value.as < int64_t > ());}
-#line 938 "calc.tab.c"
-    break;
-
-
-#line 942 "calc.tab.c"
 
             default:
               break;
@@ -1124,8 +1084,7 @@ namespace yy {
     {
     "end of file", "error", "invalid token", "int", "var", "basic", "\n",
   "+", "-", "*", "/", "^", "(", ")", ":=", "<<", "UMINUS", "$accept",
-  "calculation", "line", "polynomial", "monom", "integer_const",
-  "int_eval", YY_NULLPTR
+  "calculation", "line", "polynomial", "monom", "pow", "any_var", YY_NULLPTR
     };
     return yy_sname[yysymbol];
   }
@@ -1394,82 +1353,70 @@ namespace yy {
   }
 
 
-  const signed char parser::yypact_ninf_ = -21;
+  const signed char parser::yypact_ninf_ = -22;
 
   const signed char parser::yytable_ninf_ = -1;
 
   const signed char
   parser::yypact_[] =
   {
-      -2,   -11,   -21,    10,     1,   -21,    31,    11,   -21,   -21,
-       7,   -21,     8,    31,    31,    62,   -21,   -21,    27,     3,
-       3,   -21,    54,   -21,    31,    31,    31,    31,     3,   -21,
-      37,    34,   -21,   -21,    30,    35,    35,   -21,   -21,   -21,
-     -21,   -21,    49,    34,    40,     3,   -21,    47,    34,    34,
-      34,    34,    34,   -21,   -21,   -21,    17,    17,    48,    48,
-      48
+      12,   -10,   -22,     5,     2,   -22,    18,     9,   -22,   -22,
+      31,   -22,   -22,    18,    18,    32,   -22,    13,   -22,    35,
+     -22,    24,   -22,    18,    18,    18,    18,    17,    17,    36,
+      34,    34,   -22,   -22,   -22,    17,    37,    37,    18,    -8,
+      17,   -22,   -22,    37
   };
 
   const signed char
   parser::yydefact_[] =
   {
        0,     0,     6,     0,     0,     2,     0,     0,     1,     3,
-      19,    21,    18,     0,     0,     0,     7,     5,    17,     0,
-       0,     8,     0,     4,     0,     0,     0,     0,     0,    22,
-       0,     0,    20,    16,    12,     9,    10,    11,    13,    15,
-      23,    25,     0,     0,     0,     0,    26,     0,     0,     0,
-       0,     0,     0,    24,    14,    27,    30,    31,    28,    29,
-      32
+      19,    24,    23,     0,     0,     0,     7,    18,     5,    17,
+       8,     0,     4,     0,     0,     0,     0,     0,     0,    12,
+       9,    10,    11,    13,    20,     0,    16,    15,     0,     0,
+       0,    14,    21,    22
   };
 
   const signed char
   parser::yypgoto_[] =
   {
-     -21,   -21,    61,    -4,   -21,   -20,   -19
+     -22,   -22,    41,   -13,   -22,   -21,    39
   };
 
   const signed char
   parser::yydefgoto_[] =
   {
-       0,     4,     5,    15,    16,    32,    44
+       0,     4,     5,    15,    16,    36,    17
   };
 
   const signed char
   parser::yytable_[] =
   {
-      33,     8,     1,     6,     2,     1,    29,     2,    39,    21,
-      22,    30,    18,     3,     7,    31,     3,    17,    19,    20,
-      35,    36,    37,    38,    47,    54,    50,    51,    52,    56,
-      57,    58,    59,    60,    10,    11,    12,    41,    28,    13,
-      40,    45,    42,    14,    26,    27,    43,    48,    49,    50,
-      51,    52,    46,    53,    48,    49,    50,    51,    52,    52,
-      55,    24,    25,    26,    27,     9,     0,    34,    23,    24,
-      25,    26,    27
+      20,    21,     8,    40,     6,    42,     1,    37,     2,     7,
+      30,    31,    32,    33,    39,    18,     1,     3,     2,    43,
+      34,    10,    11,    12,    27,    41,    13,     3,     0,    35,
+      14,    23,    24,    25,    26,    11,    12,    29,    22,    23,
+      24,    25,    26,    25,    26,     9,    28,    38,    40,    19
   };
 
   const signed char
   parser::yycheck_[] =
   {
-      20,     0,     4,    14,     6,     4,     3,     6,    28,    13,
-      14,     8,     5,    15,     4,    12,    15,     6,    11,    11,
-      24,    25,    26,    27,    43,    45,     9,    10,    11,    48,
-      49,    50,    51,    52,     3,     4,     5,     3,    11,     8,
-       3,    11,     8,    12,     9,    10,    12,     7,     8,     9,
-      10,    11,     3,    13,     7,     8,     9,    10,    11,    11,
-      13,     7,     8,     9,    10,     4,    -1,    13,     6,     7,
-       8,     9,    10
+      13,    14,     0,    11,    14,    13,     4,    28,     6,     4,
+      23,    24,    25,    26,    35,     6,     4,    15,     6,    40,
+       3,     3,     4,     5,    11,    38,     8,    15,    -1,    12,
+      12,     7,     8,     9,    10,     4,     5,    13,     6,     7,
+       8,     9,    10,     9,    10,     4,    11,    11,    11,    10
   };
 
   const signed char
   parser::yystos_[] =
   {
        0,     4,     6,    15,    18,    19,    14,     4,     0,    19,
-       3,     4,     5,     8,    12,    20,    21,     6,     5,    11,
-      11,    20,    20,     6,     7,     8,     9,    10,    11,     3,
-       8,    12,    22,    22,    13,    20,    20,    20,    20,    22,
-       3,     3,     8,    12,    23,    11,     3,    23,     7,     8,
-       9,    10,    11,    13,    22,    13,    23,    23,    23,    23,
-      23
+       3,     4,     5,     8,    12,    20,    21,    23,     6,    23,
+      20,    20,     6,     7,     8,     9,    10,    11,    11,    13,
+      20,    20,    20,    20,     3,    12,    22,    22,    11,    22,
+      11,    20,    13,    22
   };
 
   const signed char
@@ -1477,8 +1424,7 @@ namespace yy {
   {
        0,    17,    18,    18,    19,    19,    19,    20,    20,    20,
       20,    20,    20,    20,    20,    21,    21,    21,    21,    21,
-      21,    21,    22,    22,    22,    23,    23,    23,    23,    23,
-      23,    23,    23
+      22,    22,    22,    23,    23
   };
 
   const signed char
@@ -1486,8 +1432,7 @@ namespace yy {
   {
        0,     2,     1,     2,     4,     3,     1,     1,     2,     3,
        3,     3,     3,     3,     5,     4,     3,     2,     1,     1,
-       3,     1,     1,     2,     3,     1,     2,     3,     3,     3,
-       3,     3,     3
+       1,     3,     3,     1,     1
   };
 
 
@@ -1497,10 +1442,9 @@ namespace yy {
   const unsigned char
   parser::yyrline_[] =
   {
-       0,    53,    53,    54,    57,    59,    70,    72,    74,    76,
-      89,   102,   115,   117,   136,   151,   153,   155,   157,   159,
-     161,   163,   177,   179,   181,   187,   189,   191,   193,   195,
-     197,   199,   201
+       0,    51,    51,    52,    55,    57,    68,    70,    72,    74,
+      87,   100,   113,   115,   134,   157,   159,   161,   163,   165,
+     168,   170,   172,   175,   177
   };
 
   void
@@ -1532,9 +1476,9 @@ namespace yy {
 
 
 } // yy
-#line 1536 "calc.tab.c"
+#line 1480 "calc.tab.c"
 
-#line 203 "calc.y"
+#line 190 "calc.y"
 
 void
 yy::parser::error (const location_type& l, const std::string& m)

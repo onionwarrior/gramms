@@ -16,7 +16,7 @@ private:
   mcc::SymbolTable symb_table_;
   mcc::TypeTable type_table_;
   std::set<std::string> labels_;
-  mcc::type_t cur_type_;
+  mcc::Type cur_type_;
   bool is_in_const_;
 public:
   auto SetInConst(bool c) {is_in_const_=c;}
@@ -39,7 +39,7 @@ public:
     }
   }
   auto GetCurrentType() const {return cur_type_;}
-  auto SetCurrentType(const mcc::type_t &t) { cur_type_ = t; }
+  auto SetCurrentType(const mcc::Type &t) { cur_type_ = t; }
   auto UnsetCurrentType() { cur_type_ = {}; }
   auto LeaveScope() {
     if (scopes_.back()[0] == '@')
