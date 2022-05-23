@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -88,11 +89,8 @@ public:
 
 struct Func;
 typedef std::false_type NoneType;
-typedef std::variant<NoneType, Primitive, UserType, Func *, Enum> TypeOrNone;
-typedef std::variant<Primitive, UserType, Func *, Enum> ArrayType;
-inline auto IsNoneType(const mcc::TypeOrNone &t) {
-  return std::holds_alternative<mcc::NoneType>(t);
-}
+typedef std::variant<Primitive, UserType, std::shared_ptr<Func>, Enum> ArrayType;
+
 /* An array is represented as a vector of size_t's, which indicate array sizes
  * * i.e.
  * int arr[10][5][33] is represented as <10,5,33>
@@ -115,16 +113,23 @@ public:
     assert(begin != end);
   }
 };
-typedef std::variant<Primitive, UserType, Func *, Enum, CArray> Type;
+
+typedef std::variant<NoneType, Primitive, UserType, std::shared_ptr<Func>, Enum,CArray> TypeOrNone;
+
+inline auto IsNoneType(const mcc::TypeOrNone &t) {
+  return std::holds_alternative<mcc::NoneType>(t);
+}
 class Func {
-  Type return_type_;
-  std::vector<Type> args_;
+  TypeOrNone return_type_ = mcc::Primitive::Int;
+  std::vector<TypeOrNone> args_;
 
 public:
-  Func(const Type &ret, const std::vector<Type> &args)
+  auto SetReturnType(const mcc::TypeOrNone &new_t) { return_type_ = new_t; }
+  Func(const std::vector<TypeOrNone> &args) : args_{args} {}
+  Func(const TypeOrNone &ret, const std::vector<TypeOrNone> &args)
       : return_type_{ret}, args_{args} {}
 };
-inline auto IsIntegerT(const Type &t) {
+inline auto IsIntegerT(const TypeOrNone &t) {
   std::array<std::string, 10> integer_types{
       {"int", "unsigned int", "char", "unsigned char", "long", "long long",
        "unsigned long", "unsigned long long", "short", "unsigned short"}};
@@ -141,7 +146,7 @@ inline auto IsIntegerT(const Type &t) {
 }
 class Symbol {
   bool is_lvalue_ = true;
-  mcc::Type type_;
+  mcc::TypeOrNone type_;
   bool defined_ = false;
   mcc::PtrBits indirection_;
   bool is_const_ = false;
@@ -156,7 +161,7 @@ public:
   }
   auto inline IsLvalue() const { return is_lvalue_; }
   auto inline IsConst() const { return is_const_; }
-  Symbol(const Type &type, const std::size_t indirection_lvl,
+  Symbol(const TypeOrNone &type, const std::size_t indirection_lvl,
          const bool is_const, bool defined, bool is_lvalue)
       : type_{type}, indirection_(indirection_lvl),
         is_const_(is_const), defined_{defined}, is_lvalue_(is_lvalue) {
@@ -166,6 +171,9 @@ public:
   Symbol(const Symbol &) = default;
   auto GetType() const { return type_; }
 };
+auto inline IsFuncPtr(const mcc::Symbol &s) {
+  return std::holds_alternative<std::shared_ptr<Func>>(s.GetType());
+}
 class SymbolTable {
 
 private:
@@ -194,7 +202,7 @@ public:
 };
 class TypeTable {
 private:
-  std::map<std::string, Type> types_ = {
+  std::map<std::string, TypeOrNone> types_ = {
       {"int", Primitive::Int},
       {"unsigned int", Primitive::UInt},
       {"long", Primitive::Long},
@@ -224,8 +232,8 @@ public:
   }
   auto GetTypeByName(const std::string &name) const {
     if (TypeDefined(name))
-      return std::optional<Type>(types_.at(name));
-    return std::optional<Type>{};
+      return std::optional<TypeOrNone>(types_.at(name));
+    return std::optional<TypeOrNone>{};
   }
   auto DefineNewTypedef(const std::string &type_name,
                         const std::string &alias) {

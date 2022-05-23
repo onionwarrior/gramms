@@ -29,12 +29,12 @@ class driver;
 	POW "^"
 	LEFT "("
 	RIGHT ")"
-	DECL ":="
+	DECL "="
 	PRINT "<<"
 	;
 %token END 0 "end of file"
 %param { driver& drv }
-%type <Polynomial> polynomial monom any_var;
+%type <Polynomial> polynomial monom any_var var;
 %type <int64_t> pow;
 /*Everything is printed using <<*/
 %printer { yyo << $$; } <*>;
@@ -52,7 +52,7 @@ calculation:
 			| calculation line{}
 
 line:
-			"var" ":=" polynomial "\n"
+			"var" "=" polynomial "\n"
 				{SymbolTable::GetInst()->GetVar($1)=$3;}
 			| "<<" "var" "\n"
 				{
@@ -69,35 +69,21 @@ line:
 polynomial:
 			monom /*A single monom*/
 				{ $$=$1;}
-			| "-" polynomial %prec UMINUS /* Inverted polynomial*/
+			| "(" polynomial ")" "^" pow
+				/*Raising a polynomial to a certain power
+				 * requires enclosing it with brackets*/
+			    {
+					if($5<0)
+					{
+						std::stringstream cause{};
+						cause<<"'("<<$2<<")^"<<"("<<$5<<")' at "<<drv.location;
+						throw std::invalid_argument("Raising to negative power is forbiden, caused by: "+cause.str());
+					}
+					$$=$2^$5;
+				}|
+ "-" polynomial %prec UMINUS /* Inverted polynomial*/
 				{$$=-$2;}
-			| polynomial "+" polynomial
-				{
-						const auto br=$1.GetBase();
-						const auto bl=$3.GetBase();
-						if(br!=bl&&bl&&br)
-						{
-								std::stringstream cause{};
-								cause<<"'Cant add "<<$1<<" and "<<$3<<"' at "<<drv.location;
-								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
-						}
-						$$=$1+$3;
-						$$.SetBase((std::max)(br,bl));
-				}
-			| polynomial "-" polynomial
-				{
-						const auto br=$1.GetBase();
-						const auto bl=$3.GetBase();
-						if(br!=bl&&bl&&br)
-						{
-								std::stringstream cause{};
-								cause<<"'Cant sub "<<$3<<" from "<<$1<<"' at "<<drv.location;
-								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
-						}
-						$$=$1-$3;
-						$$.SetBase((std::max)(br,bl));
-				}
-			| polynomial "*" polynomial
+				| polynomial "*" polynomial
 				{
 						const auto br=$1.GetBase();
 						const auto bl=$3.GetBase();
@@ -131,50 +117,83 @@ polynomial:
 						$$ =$1/$3;
 						$$.SetBase((std::max)(br,bl));
 				}
-			| "(" polynomial ")" "^" polynomial
-				/*Raising a polynomial to a certain power
-				 * requires enclosing it with brackets*/
-			        {
-					const auto deg = $2.degree();
-					if(deg!=0)
-					{
-						std::stringstream cause{};
-						cause<<"'("<<$2<<")^"<<"("<<$5<<")' at "<<drv.location;
-						throw std::invalid_argument("Raising to negative power is forbiden, caused by: "+cause.str());
-					}
-					const auto coef = $5.lead().coef();
-					if(coef<0)
-					{
-						std::stringstream cause{};
-						cause<<"'("<<$2<<")^"<<"("<<$5<<")' at "<<drv.location;
-						throw std::invalid_argument("Raising to negative power is forbiden, caused by: "+cause.str());
-					}
-					$$=$2^coef;
-				}
 
-monom:
+			| polynomial "+" polynomial
+				{
+						const auto br=$1.GetBase();
+						const auto bl=$3.GetBase();
+						if(br!=bl&&bl&&br)
+						{
+								std::stringstream cause{};
+								cause<<"'Cant add "<<$1<<" and "<<$3<<"' at "<<drv.location;
+								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
+						}
+						$$=$1+$3;
+						$$.SetBase((std::max)(br,bl));
+				}
+			| polynomial "-" polynomial
+				{
+						const auto br=$1.GetBase();
+						const auto bl=$3.GetBase();
+						if(br!=bl&&bl&&br)
+						{
+								std::stringstream cause{};
+								cause<<"'Cant sub "<<$3<<" from "<<$1<<"' at "<<drv.location;
+								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
+						}
+						$$=$1-$3;
+						$$.SetBase((std::max)(br,bl));
+				}
+						monom:
 			/*All possible ways to represent a monom*/
 			"int" any_var "^" pow
-				{$$=($2^$4)*Polynomial{$1,0,0};}
+				{$$=($2^$4)*Polynomial{$1,0,$2.GetBase()};}
 			|any_var "^" pow
 				{$$=$1^$3;}
 			|"int" any_var
-                {$$=Polynomial{$1,0,0}*$2;}
+                {$$=Polynomial{$1,0,$2.GetBase()}*$2;}
 		    |any_var
 				{$$=$1;}
 		    |"int"
 				{$$={$1,0,0};}
+		    |"int" "^" pow
+			{
+				{$$={ipow64($1,$3),0,0};}
+
+			}
 pow:
 		"int"
 		{$$=$1;}
+		|var
+		{
+		const auto deg = $1.degree();
+		const auto coef = $1.coef();
+				if(deg!=0)
+						{
+								std::stringstream cause{};
+								cause<<"'Cant raise to power of "<<$1<<"' at "<<drv.location;
+								throw std::invalid_argument("Exponentiation error, caused by: "+cause.str());
+						}
+				if(coef<0)
+						{
+								std::stringstream cause{};
+								cause<<"'Cant raise to negative power of "<<$1<<"' at "<<drv.location;
+								throw std::invalid_argument("Exponentiation error, caused by: "+cause.str());
+						}
+
+		$$=$1.coef();
+		}
 		| "(" pow ")"
 		{$$=$2;}
 		| pow "^" pow
 		{$$=ipow64($1,$3);}
 any_var:
 		"basic"
-		{$$={1,1,$1};}
-		| "var"
+		{$$={1,1,$1};
+		std::cout<<$$<<std::endl;}
+		|var
+		{$$=$1;}
+		var : "var"
 		{
 					auto var = SymbolTable::GetInst()->ReadVar($1);
 					if (!var)
@@ -185,6 +204,7 @@ any_var:
 					}
 				    $$=var.value();
 		};
+
 
 
 %%

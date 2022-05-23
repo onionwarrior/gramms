@@ -1,7 +1,17 @@
-@var_3 := x^2^2^3+3+4+2+7
-@var_4 := 2x^7-2x^5*x^2
-@x := x^2
-@var_5 := @x^2^2^2^2
+@var_3 = x^2^2^3+3+4+2+7
+@var_4 = 2x^7-2x^5*x^2
+@rrr = 2x^2+2x^2+2x^2
+@ZZZZZZZ=2^1^1^1^1
+<<@ZZZZZZZ
+<<@rrr
+@zzz=@rrr
+@zzz=@zzz^2
+<<@zzz
+@p3=@ZZZZZZZ^@ZZZZZZZ^@ZZZZZZZ
+@p3=(2x^3)^@ZZZZZZZ
+<<@p3
+<<@rrr
+@var_5 = @zzz^2^2^2^2
 <<@var_4
 <<@var_3
 <<@var_5

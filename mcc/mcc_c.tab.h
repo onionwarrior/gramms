@@ -409,32 +409,35 @@ namespace yy {
       // init_declarator
       char dummy2[sizeof (mcc::Symbol)];
 
-      // type_specifier
-      char dummy3[sizeof (mcc::Type)];
-
       // declaration_specifiers
-      char dummy4[sizeof (mcc::TypeOrNone)];
+      // type_specifier
+      char dummy3[sizeof (mcc::TypeOrNone)];
 
       // specifier_qualifier_list
       // type_name
-      char dummy5[sizeof (std::pair<mcc::Type,mcc::PtrBits>)];
+      char dummy4[sizeof (std::pair<mcc::TypeOrNone,mcc::PtrBits>)];
 
+      // declarator
       // id_or_idptr
-      char dummy6[sizeof (std::pair<std::string,mcc::PtrBits>)];
+      // direct_declarator
+      char dummy5[sizeof (std::pair<std::string,mcc::Symbol>)];
 
       // array_dim
-      char dummy7[sizeof (std::size_t)];
+      char dummy6[sizeof (std::size_t)];
 
       // "identifier"
       // "typename"
       // type_qualifier
-      // declarator
-      // direct_declarator
       // type_qualifier_list
-      char dummy8[sizeof (std::string)];
+      char dummy7[sizeof (std::string)];
 
       // init_declarator_list
-      char dummy9[sizeof (std::vector<mcc::Symbol>)];
+      char dummy8[sizeof (std::vector<mcc::Symbol>)];
+
+      // parameter_type_list
+      // parameter_list
+      // parameter_declaration
+      char dummy9[sizeof (std::vector<std::pair<std::string,mcc::Symbol>>)];
 
       // array_dim_list
       char dummy10[sizeof (std::vector<std::size_t>)];
@@ -811,21 +814,20 @@ namespace yy {
         value.move< mcc::Symbol > (std::move (that.value));
         break;
 
-      case symbol_kind::S_type_specifier: // type_specifier
-        value.move< mcc::Type > (std::move (that.value));
-        break;
-
       case symbol_kind::S_declaration_specifiers: // declaration_specifiers
+      case symbol_kind::S_type_specifier: // type_specifier
         value.move< mcc::TypeOrNone > (std::move (that.value));
         break;
 
       case symbol_kind::S_specifier_qualifier_list: // specifier_qualifier_list
       case symbol_kind::S_type_name: // type_name
-        value.move< std::pair<mcc::Type,mcc::PtrBits> > (std::move (that.value));
+        value.move< std::pair<mcc::TypeOrNone,mcc::PtrBits> > (std::move (that.value));
         break;
 
+      case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_id_or_idptr: // id_or_idptr
-        value.move< std::pair<std::string,mcc::PtrBits> > (std::move (that.value));
+      case symbol_kind::S_direct_declarator: // direct_declarator
+        value.move< std::pair<std::string,mcc::Symbol> > (std::move (that.value));
         break;
 
       case symbol_kind::S_array_dim: // array_dim
@@ -835,14 +837,18 @@ namespace yy {
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_TYPE_NAME: // "typename"
       case symbol_kind::S_type_qualifier: // type_qualifier
-      case symbol_kind::S_declarator: // declarator
-      case symbol_kind::S_direct_declarator: // direct_declarator
       case symbol_kind::S_type_qualifier_list: // type_qualifier_list
         value.move< std::string > (std::move (that.value));
         break;
 
       case symbol_kind::S_init_declarator_list: // init_declarator_list
         value.move< std::vector<mcc::Symbol> > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_parameter_type_list: // parameter_type_list
+      case symbol_kind::S_parameter_list: // parameter_list
+      case symbol_kind::S_parameter_declaration: // parameter_declaration
+        value.move< std::vector<std::pair<std::string,mcc::Symbol>> > (std::move (that.value));
         break;
 
       case symbol_kind::S_array_dim_list: // array_dim_list
@@ -901,20 +907,6 @@ namespace yy {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
-      basic_symbol (typename Base::kind_type t, mcc::Type&& v, location_type&& l)
-        : Base (t)
-        , value (std::move (v))
-        , location (std::move (l))
-      {}
-#else
-      basic_symbol (typename Base::kind_type t, const mcc::Type& v, const location_type& l)
-        : Base (t)
-        , value (v)
-        , location (l)
-      {}
-#endif
-
-#if 201103L <= YY_CPLUSPLUS
       basic_symbol (typename Base::kind_type t, mcc::TypeOrNone&& v, location_type&& l)
         : Base (t)
         , value (std::move (v))
@@ -929,13 +921,13 @@ namespace yy {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
-      basic_symbol (typename Base::kind_type t, std::pair<mcc::Type,mcc::PtrBits>&& v, location_type&& l)
+      basic_symbol (typename Base::kind_type t, std::pair<mcc::TypeOrNone,mcc::PtrBits>&& v, location_type&& l)
         : Base (t)
         , value (std::move (v))
         , location (std::move (l))
       {}
 #else
-      basic_symbol (typename Base::kind_type t, const std::pair<mcc::Type,mcc::PtrBits>& v, const location_type& l)
+      basic_symbol (typename Base::kind_type t, const std::pair<mcc::TypeOrNone,mcc::PtrBits>& v, const location_type& l)
         : Base (t)
         , value (v)
         , location (l)
@@ -943,13 +935,13 @@ namespace yy {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
-      basic_symbol (typename Base::kind_type t, std::pair<std::string,mcc::PtrBits>&& v, location_type&& l)
+      basic_symbol (typename Base::kind_type t, std::pair<std::string,mcc::Symbol>&& v, location_type&& l)
         : Base (t)
         , value (std::move (v))
         , location (std::move (l))
       {}
 #else
-      basic_symbol (typename Base::kind_type t, const std::pair<std::string,mcc::PtrBits>& v, const location_type& l)
+      basic_symbol (typename Base::kind_type t, const std::pair<std::string,mcc::Symbol>& v, const location_type& l)
         : Base (t)
         , value (v)
         , location (l)
@@ -992,6 +984,20 @@ namespace yy {
       {}
 #else
       basic_symbol (typename Base::kind_type t, const std::vector<mcc::Symbol>& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, std::vector<std::pair<std::string,mcc::Symbol>>&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const std::vector<std::pair<std::string,mcc::Symbol>>& v, const location_type& l)
         : Base (t)
         , value (v)
         , location (l)
@@ -1064,21 +1070,20 @@ switch (yykind)
         value.template destroy< mcc::Symbol > ();
         break;
 
-      case symbol_kind::S_type_specifier: // type_specifier
-        value.template destroy< mcc::Type > ();
-        break;
-
       case symbol_kind::S_declaration_specifiers: // declaration_specifiers
+      case symbol_kind::S_type_specifier: // type_specifier
         value.template destroy< mcc::TypeOrNone > ();
         break;
 
       case symbol_kind::S_specifier_qualifier_list: // specifier_qualifier_list
       case symbol_kind::S_type_name: // type_name
-        value.template destroy< std::pair<mcc::Type,mcc::PtrBits> > ();
+        value.template destroy< std::pair<mcc::TypeOrNone,mcc::PtrBits> > ();
         break;
 
+      case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_id_or_idptr: // id_or_idptr
-        value.template destroy< std::pair<std::string,mcc::PtrBits> > ();
+      case symbol_kind::S_direct_declarator: // direct_declarator
+        value.template destroy< std::pair<std::string,mcc::Symbol> > ();
         break;
 
       case symbol_kind::S_array_dim: // array_dim
@@ -1088,14 +1093,18 @@ switch (yykind)
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_TYPE_NAME: // "typename"
       case symbol_kind::S_type_qualifier: // type_qualifier
-      case symbol_kind::S_declarator: // declarator
-      case symbol_kind::S_direct_declarator: // direct_declarator
       case symbol_kind::S_type_qualifier_list: // type_qualifier_list
         value.template destroy< std::string > ();
         break;
 
       case symbol_kind::S_init_declarator_list: // init_declarator_list
         value.template destroy< std::vector<mcc::Symbol> > ();
+        break;
+
+      case symbol_kind::S_parameter_type_list: // parameter_type_list
+      case symbol_kind::S_parameter_list: // parameter_list
+      case symbol_kind::S_parameter_declaration: // parameter_declaration
+        value.template destroy< std::vector<std::pair<std::string,mcc::Symbol>> > ();
         break;
 
       case symbol_kind::S_array_dim_list: // array_dim_list
@@ -2896,7 +2905,7 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 1371,     ///< Last index in yytable_.
+      yylast_ = 1347,     ///< Last index in yytable_.
       yynnts_ = 73,  ///< Number of nonterminal symbols.
       yyfinal_ = 57 ///< Termination state number.
     };
@@ -2951,21 +2960,20 @@ switch (yykind)
         value.copy< mcc::Symbol > (YY_MOVE (that.value));
         break;
 
-      case symbol_kind::S_type_specifier: // type_specifier
-        value.copy< mcc::Type > (YY_MOVE (that.value));
-        break;
-
       case symbol_kind::S_declaration_specifiers: // declaration_specifiers
+      case symbol_kind::S_type_specifier: // type_specifier
         value.copy< mcc::TypeOrNone > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_specifier_qualifier_list: // specifier_qualifier_list
       case symbol_kind::S_type_name: // type_name
-        value.copy< std::pair<mcc::Type,mcc::PtrBits> > (YY_MOVE (that.value));
+        value.copy< std::pair<mcc::TypeOrNone,mcc::PtrBits> > (YY_MOVE (that.value));
         break;
 
+      case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_id_or_idptr: // id_or_idptr
-        value.copy< std::pair<std::string,mcc::PtrBits> > (YY_MOVE (that.value));
+      case symbol_kind::S_direct_declarator: // direct_declarator
+        value.copy< std::pair<std::string,mcc::Symbol> > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_array_dim: // array_dim
@@ -2975,14 +2983,18 @@ switch (yykind)
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_TYPE_NAME: // "typename"
       case symbol_kind::S_type_qualifier: // type_qualifier
-      case symbol_kind::S_declarator: // declarator
-      case symbol_kind::S_direct_declarator: // direct_declarator
       case symbol_kind::S_type_qualifier_list: // type_qualifier_list
         value.copy< std::string > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_init_declarator_list: // init_declarator_list
         value.copy< std::vector<mcc::Symbol> > (YY_MOVE (that.value));
+        break;
+
+      case symbol_kind::S_parameter_type_list: // parameter_type_list
+      case symbol_kind::S_parameter_list: // parameter_list
+      case symbol_kind::S_parameter_declaration: // parameter_declaration
+        value.copy< std::vector<std::pair<std::string,mcc::Symbol>> > (YY_MOVE (that.value));
         break;
 
       case symbol_kind::S_array_dim_list: // array_dim_list
@@ -3048,21 +3060,20 @@ switch (yykind)
         value.move< mcc::Symbol > (YY_MOVE (s.value));
         break;
 
-      case symbol_kind::S_type_specifier: // type_specifier
-        value.move< mcc::Type > (YY_MOVE (s.value));
-        break;
-
       case symbol_kind::S_declaration_specifiers: // declaration_specifiers
+      case symbol_kind::S_type_specifier: // type_specifier
         value.move< mcc::TypeOrNone > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_specifier_qualifier_list: // specifier_qualifier_list
       case symbol_kind::S_type_name: // type_name
-        value.move< std::pair<mcc::Type,mcc::PtrBits> > (YY_MOVE (s.value));
+        value.move< std::pair<mcc::TypeOrNone,mcc::PtrBits> > (YY_MOVE (s.value));
         break;
 
+      case symbol_kind::S_declarator: // declarator
       case symbol_kind::S_id_or_idptr: // id_or_idptr
-        value.move< std::pair<std::string,mcc::PtrBits> > (YY_MOVE (s.value));
+      case symbol_kind::S_direct_declarator: // direct_declarator
+        value.move< std::pair<std::string,mcc::Symbol> > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_array_dim: // array_dim
@@ -3072,14 +3083,18 @@ switch (yykind)
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_TYPE_NAME: // "typename"
       case symbol_kind::S_type_qualifier: // type_qualifier
-      case symbol_kind::S_declarator: // declarator
-      case symbol_kind::S_direct_declarator: // direct_declarator
       case symbol_kind::S_type_qualifier_list: // type_qualifier_list
         value.move< std::string > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_init_declarator_list: // init_declarator_list
         value.move< std::vector<mcc::Symbol> > (YY_MOVE (s.value));
+        break;
+
+      case symbol_kind::S_parameter_type_list: // parameter_type_list
+      case symbol_kind::S_parameter_list: // parameter_list
+      case symbol_kind::S_parameter_declaration: // parameter_declaration
+        value.move< std::vector<std::pair<std::string,mcc::Symbol>> > (YY_MOVE (s.value));
         break;
 
       case symbol_kind::S_array_dim_list: // array_dim_list
@@ -3152,7 +3167,7 @@ switch (yykind)
 
 
 } // yy
-#line 3156 "mcc_c.tab.h"
+#line 3171 "mcc_c.tab.h"
 
 
 

@@ -385,6 +385,7 @@ namespace yy {
       // polynomial
       // monom
       // any_var
+      // var
       char dummy1[sizeof (Polynomial)];
 
       // "basic"
@@ -456,7 +457,7 @@ namespace yy {
     TOK_POW = 11,                  // "^"
     TOK_LEFT = 12,                 // "("
     TOK_RIGHT = 13,                // ")"
-    TOK_DECL = 14,                 // ":="
+    TOK_DECL = 14,                 // "="
     TOK_PRINT = 15,                // "<<"
     TOK_UMINUS = 16                // UMINUS
       };
@@ -491,7 +492,7 @@ namespace yy {
         S_POW = 11,                              // "^"
         S_LEFT = 12,                             // "("
         S_RIGHT = 13,                            // ")"
-        S_DECL = 14,                             // ":="
+        S_DECL = 14,                             // "="
         S_PRINT = 15,                            // "<<"
         S_UMINUS = 16,                           // UMINUS
         S_YYACCEPT = 17,                         // $accept
@@ -500,7 +501,8 @@ namespace yy {
         S_polynomial = 20,                       // polynomial
         S_monom = 21,                            // monom
         S_pow = 22,                              // pow
-        S_any_var = 23                           // any_var
+        S_any_var = 23,                          // any_var
+        S_var = 24                               // var
       };
     };
 
@@ -540,6 +542,7 @@ namespace yy {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
       case symbol_kind::S_any_var: // any_var
+      case symbol_kind::S_var: // var
         value.move< Polynomial > (std::move (that.value));
         break;
 
@@ -662,6 +665,7 @@ switch (yykind)
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
       case symbol_kind::S_any_var: // any_var
+      case symbol_kind::S_var: // var
         value.template destroy< Polynomial > ();
         break;
 
@@ -1445,8 +1449,8 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 49,     ///< Last index in yytable_.
-      yynnts_ = 7,  ///< Number of nonterminal symbols.
+      yylast_ = 59,     ///< Last index in yytable_.
+      yynnts_ = 8,  ///< Number of nonterminal symbols.
       yyfinal_ = 8 ///< Termination state number.
     };
 
@@ -1475,6 +1479,7 @@ switch (yykind)
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
       case symbol_kind::S_any_var: // any_var
+      case symbol_kind::S_var: // var
         value.copy< Polynomial > (YY_MOVE (that.value));
         break;
 
@@ -1525,6 +1530,7 @@ switch (yykind)
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
       case symbol_kind::S_any_var: // any_var
+      case symbol_kind::S_var: // var
         value.move< Polynomial > (YY_MOVE (s.value));
         break;
 
@@ -1607,7 +1613,7 @@ switch (yykind)
 
 
 } // yy
-#line 1611 "calc.tab.h"
+#line 1617 "calc.tab.h"
 
 
 

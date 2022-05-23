@@ -210,6 +210,7 @@ namespace yy {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
       case symbol_kind::S_any_var: // any_var
+      case symbol_kind::S_var: // var
         value.YY_MOVE_OR_COPY< Polynomial > (YY_MOVE (that.value));
         break;
 
@@ -244,6 +245,7 @@ namespace yy {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
       case symbol_kind::S_any_var: // any_var
+      case symbol_kind::S_var: // var
         value.move< Polynomial > (YY_MOVE (that.value));
         break;
 
@@ -278,6 +280,7 @@ namespace yy {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
       case symbol_kind::S_any_var: // any_var
+      case symbol_kind::S_var: // var
         value.copy< Polynomial > (that.value);
         break;
 
@@ -311,6 +314,7 @@ namespace yy {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
       case symbol_kind::S_any_var: // any_var
+      case symbol_kind::S_var: // var
         value.move< Polynomial > (that.value);
         break;
 
@@ -366,43 +370,49 @@ namespace yy {
       case symbol_kind::S_INTEGER: // "int"
 #line 40 "calc.y"
                  { yyo << yysym.value.template as < int64_t > (); }
-#line 370 "calc.tab.c"
+#line 374 "calc.tab.c"
         break;
 
       case symbol_kind::S_VAR: // "var"
 #line 40 "calc.y"
                  { yyo << yysym.value.template as < std::string > (); }
-#line 376 "calc.tab.c"
+#line 380 "calc.tab.c"
         break;
 
       case symbol_kind::S_BASIC: // "basic"
 #line 40 "calc.y"
                  { yyo << yysym.value.template as < char > (); }
-#line 382 "calc.tab.c"
+#line 386 "calc.tab.c"
         break;
 
       case symbol_kind::S_polynomial: // polynomial
 #line 40 "calc.y"
                  { yyo << yysym.value.template as < Polynomial > (); }
-#line 388 "calc.tab.c"
+#line 392 "calc.tab.c"
         break;
 
       case symbol_kind::S_monom: // monom
 #line 40 "calc.y"
                  { yyo << yysym.value.template as < Polynomial > (); }
-#line 394 "calc.tab.c"
+#line 398 "calc.tab.c"
         break;
 
       case symbol_kind::S_pow: // pow
 #line 40 "calc.y"
                  { yyo << yysym.value.template as < int64_t > (); }
-#line 400 "calc.tab.c"
+#line 404 "calc.tab.c"
         break;
 
       case symbol_kind::S_any_var: // any_var
 #line 40 "calc.y"
                  { yyo << yysym.value.template as < Polynomial > (); }
-#line 406 "calc.tab.c"
+#line 410 "calc.tab.c"
+        break;
+
+      case symbol_kind::S_var: // var
+#line 40 "calc.y"
+                 { yyo << yysym.value.template as < Polynomial > (); }
+#line 416 "calc.tab.c"
         break;
 
       default:
@@ -645,6 +655,7 @@ namespace yy {
       case symbol_kind::S_polynomial: // polynomial
       case symbol_kind::S_monom: // monom
       case symbol_kind::S_any_var: // any_var
+      case symbol_kind::S_var: // var
         yylhs.value.emplace< Polynomial > ();
         break;
 
@@ -684,19 +695,19 @@ namespace yy {
   case 2: // calculation: line
 #line 51 "calc.y"
                              {}
-#line 688 "calc.tab.c"
+#line 699 "calc.tab.c"
     break;
 
   case 3: // calculation: calculation line
 #line 52 "calc.y"
                                           {}
-#line 694 "calc.tab.c"
+#line 705 "calc.tab.c"
     break;
 
-  case 4: // line: "var" ":=" polynomial "\n"
+  case 4: // line: "var" "=" polynomial "\n"
 #line 56 "calc.y"
                                 {SymbolTable::GetInst()->GetVar(yystack_[3].value.as < std::string > ())=yystack_[1].value.as < Polynomial > ();}
-#line 700 "calc.tab.c"
+#line 711 "calc.tab.c"
     break;
 
   case 5: // line: "<<" "var" "\n"
@@ -711,57 +722,37 @@ namespace yy {
 				}
 				std::cout<<variable.value()<<std::endl;
 				}
-#line 715 "calc.tab.c"
+#line 726 "calc.tab.c"
     break;
 
   case 7: // polynomial: monom
 #line 71 "calc.y"
                                 { yylhs.value.as < Polynomial > ()=yystack_[0].value.as < Polynomial > ();}
-#line 721 "calc.tab.c"
+#line 732 "calc.tab.c"
     break;
 
-  case 8: // polynomial: "-" polynomial
-#line 73 "calc.y"
-                                {yylhs.value.as < Polynomial > ()=-yystack_[0].value.as < Polynomial > ();}
-#line 727 "calc.tab.c"
-    break;
-
-  case 9: // polynomial: polynomial "+" polynomial
+  case 8: // polynomial: "(" polynomial ")" "^" pow
 #line 75 "calc.y"
-                                {
-						const auto br=yystack_[2].value.as < Polynomial > ().GetBase();
-						const auto bl=yystack_[0].value.as < Polynomial > ().GetBase();
-						if(br!=bl&&bl&&br)
-						{
-								std::stringstream cause{};
-								cause<<"'Cant add "<<yystack_[2].value.as < Polynomial > ()<<" and "<<yystack_[0].value.as < Polynomial > ()<<"' at "<<drv.location;
-								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
-						}
-						yylhs.value.as < Polynomial > ()=yystack_[2].value.as < Polynomial > ()+yystack_[0].value.as < Polynomial > ();
-						yylhs.value.as < Polynomial > ().SetBase((std::max)(br,bl));
+                            {
+					if(yystack_[0].value.as < int64_t > ()<0)
+					{
+						std::stringstream cause{};
+						cause<<"'("<<yystack_[3].value.as < Polynomial > ()<<")^"<<"("<<yystack_[0].value.as < int64_t > ()<<")' at "<<drv.location;
+						throw std::invalid_argument("Raising to negative power is forbiden, caused by: "+cause.str());
+					}
+					yylhs.value.as < Polynomial > ()=yystack_[3].value.as < Polynomial > ()^yystack_[0].value.as < int64_t > ();
 				}
-#line 744 "calc.tab.c"
+#line 746 "calc.tab.c"
     break;
 
-  case 10: // polynomial: polynomial "-" polynomial
-#line 88 "calc.y"
-                                {
-						const auto br=yystack_[2].value.as < Polynomial > ().GetBase();
-						const auto bl=yystack_[0].value.as < Polynomial > ().GetBase();
-						if(br!=bl&&bl&&br)
-						{
-								std::stringstream cause{};
-								cause<<"'Cant sub "<<yystack_[0].value.as < Polynomial > ()<<" from "<<yystack_[2].value.as < Polynomial > ()<<"' at "<<drv.location;
-								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
-						}
-						yylhs.value.as < Polynomial > ()=yystack_[2].value.as < Polynomial > ()-yystack_[0].value.as < Polynomial > ();
-						yylhs.value.as < Polynomial > ().SetBase((std::max)(br,bl));
-				}
-#line 761 "calc.tab.c"
+  case 9: // polynomial: "-" polynomial
+#line 85 "calc.y"
+                                {yylhs.value.as < Polynomial > ()=-yystack_[0].value.as < Polynomial > ();}
+#line 752 "calc.tab.c"
     break;
 
-  case 11: // polynomial: polynomial "*" polynomial
-#line 101 "calc.y"
+  case 10: // polynomial: polynomial "*" polynomial
+#line 87 "calc.y"
                                 {
 						const auto br=yystack_[2].value.as < Polynomial > ().GetBase();
 						const auto bl=yystack_[0].value.as < Polynomial > ().GetBase();
@@ -774,17 +765,17 @@ namespace yy {
 						yylhs.value.as < Polynomial > () = yystack_[2].value.as < Polynomial > ()*yystack_[0].value.as < Polynomial > ();
 						yylhs.value.as < Polynomial > ().SetBase((std::max)(br,bl));
 				}
-#line 778 "calc.tab.c"
+#line 769 "calc.tab.c"
     break;
 
-  case 12: // polynomial: "(" polynomial ")"
-#line 114 "calc.y"
+  case 11: // polynomial: "(" polynomial ")"
+#line 100 "calc.y"
                                 { yylhs.value.as < Polynomial > () = yystack_[1].value.as < Polynomial > (); }
-#line 784 "calc.tab.c"
+#line 775 "calc.tab.c"
     break;
 
-  case 13: // polynomial: polynomial "/" polynomial
-#line 116 "calc.y"
+  case 12: // polynomial: polynomial "/" polynomial
+#line 102 "calc.y"
                                 {
 						const auto br=yystack_[2].value.as < Polynomial > ().GetBase();
 						const auto bl=yystack_[0].value.as < Polynomial > ().GetBase();
@@ -803,87 +794,138 @@ namespace yy {
 						yylhs.value.as < Polynomial > () =yystack_[2].value.as < Polynomial > ()/yystack_[0].value.as < Polynomial > ();
 						yylhs.value.as < Polynomial > ().SetBase((std::max)(br,bl));
 				}
-#line 807 "calc.tab.c"
+#line 798 "calc.tab.c"
     break;
 
-  case 14: // polynomial: "(" polynomial ")" "^" polynomial
-#line 137 "calc.y"
+  case 13: // polynomial: polynomial "+" polynomial
+#line 122 "calc.y"
                                 {
-					const auto deg = yystack_[3].value.as < Polynomial > ().degree();
-					if(deg!=0)
-					{
-						std::stringstream cause{};
-						cause<<"'("<<yystack_[3].value.as < Polynomial > ()<<")^"<<"("<<yystack_[0].value.as < Polynomial > ()<<")' at "<<drv.location;
-						throw std::invalid_argument("Raising to negative power is forbiden, caused by: "+cause.str());
-					}
-					const auto coef = yystack_[0].value.as < Polynomial > ().lead().coef();
-					if(coef<0)
-					{
-						std::stringstream cause{};
-						cause<<"'("<<yystack_[3].value.as < Polynomial > ()<<")^"<<"("<<yystack_[0].value.as < Polynomial > ()<<")' at "<<drv.location;
-						throw std::invalid_argument("Raising to negative power is forbiden, caused by: "+cause.str());
-					}
-					yylhs.value.as < Polynomial > ()=yystack_[3].value.as < Polynomial > ()^coef;
+						const auto br=yystack_[2].value.as < Polynomial > ().GetBase();
+						const auto bl=yystack_[0].value.as < Polynomial > ().GetBase();
+						if(br!=bl&&bl&&br)
+						{
+								std::stringstream cause{};
+								cause<<"'Cant add "<<yystack_[2].value.as < Polynomial > ()<<" and "<<yystack_[0].value.as < Polynomial > ()<<"' at "<<drv.location;
+								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
+						}
+						yylhs.value.as < Polynomial > ()=yystack_[2].value.as < Polynomial > ()+yystack_[0].value.as < Polynomial > ();
+						yylhs.value.as < Polynomial > ().SetBase((std::max)(br,bl));
 				}
-#line 829 "calc.tab.c"
+#line 815 "calc.tab.c"
+    break;
+
+  case 14: // polynomial: polynomial "-" polynomial
+#line 135 "calc.y"
+                                {
+						const auto br=yystack_[2].value.as < Polynomial > ().GetBase();
+						const auto bl=yystack_[0].value.as < Polynomial > ().GetBase();
+						if(br!=bl&&bl&&br)
+						{
+								std::stringstream cause{};
+								cause<<"'Cant sub "<<yystack_[0].value.as < Polynomial > ()<<" from "<<yystack_[2].value.as < Polynomial > ()<<"' at "<<drv.location;
+								throw std::invalid_argument("Base mismatch, caused by: "+cause.str());
+						}
+						yylhs.value.as < Polynomial > ()=yystack_[2].value.as < Polynomial > ()-yystack_[0].value.as < Polynomial > ();
+						yylhs.value.as < Polynomial > ().SetBase((std::max)(br,bl));
+				}
+#line 832 "calc.tab.c"
     break;
 
   case 15: // monom: "int" any_var "^" pow
-#line 158 "calc.y"
-                                {yylhs.value.as < Polynomial > ()=(yystack_[2].value.as < Polynomial > ()^yystack_[0].value.as < int64_t > ())*Polynomial{yystack_[3].value.as < int64_t > (),0,0};}
-#line 835 "calc.tab.c"
+#line 150 "calc.y"
+                                {yylhs.value.as < Polynomial > ()=(yystack_[2].value.as < Polynomial > ()^yystack_[0].value.as < int64_t > ())*Polynomial{yystack_[3].value.as < int64_t > (),0,yystack_[2].value.as < Polynomial > ().GetBase()};}
+#line 838 "calc.tab.c"
     break;
 
   case 16: // monom: any_var "^" pow
-#line 160 "calc.y"
+#line 152 "calc.y"
                                 {yylhs.value.as < Polynomial > ()=yystack_[2].value.as < Polynomial > ()^yystack_[0].value.as < int64_t > ();}
-#line 841 "calc.tab.c"
+#line 844 "calc.tab.c"
     break;
 
   case 17: // monom: "int" any_var
-#line 162 "calc.y"
-                {yylhs.value.as < Polynomial > ()=Polynomial{yystack_[1].value.as < int64_t > (),0,0}*yystack_[0].value.as < Polynomial > ();}
-#line 847 "calc.tab.c"
+#line 154 "calc.y"
+                {yylhs.value.as < Polynomial > ()=Polynomial{yystack_[1].value.as < int64_t > (),0,yystack_[0].value.as < Polynomial > ().GetBase()}*yystack_[0].value.as < Polynomial > ();}
+#line 850 "calc.tab.c"
     break;
 
   case 18: // monom: any_var
-#line 164 "calc.y"
+#line 156 "calc.y"
                                 {yylhs.value.as < Polynomial > ()=yystack_[0].value.as < Polynomial > ();}
-#line 853 "calc.tab.c"
+#line 856 "calc.tab.c"
     break;
 
   case 19: // monom: "int"
-#line 166 "calc.y"
+#line 158 "calc.y"
                                 {yylhs.value.as < Polynomial > ()={yystack_[0].value.as < int64_t > (),0,0};}
-#line 859 "calc.tab.c"
+#line 862 "calc.tab.c"
     break;
 
-  case 20: // pow: "int"
-#line 169 "calc.y"
-                {yylhs.value.as < int64_t > ()=yystack_[0].value.as < int64_t > ();}
-#line 865 "calc.tab.c"
-    break;
+  case 20: // monom: "int" "^" pow
+#line 160 "calc.y"
+                        {
+				{yylhs.value.as < Polynomial > ()={ipow64(yystack_[2].value.as < int64_t > (),yystack_[0].value.as < int64_t > ()),0,0};}
 
-  case 21: // pow: "(" pow ")"
-#line 171 "calc.y"
-                {yylhs.value.as < int64_t > ()=yystack_[1].value.as < int64_t > ();}
+			}
 #line 871 "calc.tab.c"
     break;
 
-  case 22: // pow: pow "^" pow
-#line 173 "calc.y"
-                {yylhs.value.as < int64_t > ()=ipow64(yystack_[2].value.as < int64_t > (),yystack_[0].value.as < int64_t > ());}
+  case 21: // pow: "int"
+#line 166 "calc.y"
+                {yylhs.value.as < int64_t > ()=yystack_[0].value.as < int64_t > ();}
 #line 877 "calc.tab.c"
     break;
 
-  case 23: // any_var: "basic"
-#line 176 "calc.y"
-                {yylhs.value.as < Polynomial > ()={1,1,yystack_[0].value.as < char > ()};}
-#line 883 "calc.tab.c"
+  case 22: // pow: var
+#line 168 "calc.y"
+                {
+		const auto deg = yystack_[0].value.as < Polynomial > ().degree();
+		const auto coef = yystack_[0].value.as < Polynomial > ().coef();
+				if(deg!=0)
+						{
+								std::stringstream cause{};
+								cause<<"'Cant raise to power of "<<yystack_[0].value.as < Polynomial > ()<<"' at "<<drv.location;
+								throw std::invalid_argument("Exponentiation error, caused by: "+cause.str());
+						}
+				if(coef<0)
+						{
+								std::stringstream cause{};
+								cause<<"'Cant raise to negative power of "<<yystack_[0].value.as < Polynomial > ()<<"' at "<<drv.location;
+								throw std::invalid_argument("Exponentiation error, caused by: "+cause.str());
+						}
+
+		yylhs.value.as < int64_t > ()=yystack_[0].value.as < Polynomial > ().coef();
+		}
+#line 900 "calc.tab.c"
     break;
 
-  case 24: // any_var: "var"
-#line 178 "calc.y"
+  case 23: // pow: "(" pow ")"
+#line 187 "calc.y"
+                {yylhs.value.as < int64_t > ()=yystack_[1].value.as < int64_t > ();}
+#line 906 "calc.tab.c"
+    break;
+
+  case 24: // pow: pow "^" pow
+#line 189 "calc.y"
+                {yylhs.value.as < int64_t > ()=ipow64(yystack_[2].value.as < int64_t > (),yystack_[0].value.as < int64_t > ());}
+#line 912 "calc.tab.c"
+    break;
+
+  case 25: // any_var: "basic"
+#line 192 "calc.y"
+                {yylhs.value.as < Polynomial > ()={1,1,yystack_[0].value.as < char > ()};
+		std::cout<<yylhs.value.as < Polynomial > ()<<std::endl;}
+#line 919 "calc.tab.c"
+    break;
+
+  case 26: // any_var: var
+#line 195 "calc.y"
+                {yylhs.value.as < Polynomial > ()=yystack_[0].value.as < Polynomial > ();}
+#line 925 "calc.tab.c"
+    break;
+
+  case 27: // var: "var"
+#line 197 "calc.y"
                 {
 					auto var = SymbolTable::GetInst()->ReadVar(yystack_[0].value.as < std::string > ());
 					if (!var)
@@ -894,11 +936,11 @@ namespace yy {
 					}
 				    yylhs.value.as < Polynomial > ()=var.value();
 		}
-#line 898 "calc.tab.c"
+#line 940 "calc.tab.c"
     break;
 
 
-#line 902 "calc.tab.c"
+#line 944 "calc.tab.c"
 
             default:
               break;
@@ -1083,8 +1125,8 @@ namespace yy {
     static const char *const yy_sname[] =
     {
     "end of file", "error", "invalid token", "int", "var", "basic", "\n",
-  "+", "-", "*", "/", "^", "(", ")", ":=", "<<", "UMINUS", "$accept",
-  "calculation", "line", "polynomial", "monom", "pow", "any_var", YY_NULLPTR
+  "+", "-", "*", "/", "^", "(", ")", "=", "<<", "UMINUS", "$accept",
+  "calculation", "line", "polynomial", "monom", "pow", "any_var", "var", YY_NULLPTR
     };
     return yy_sname[yysymbol];
   }
@@ -1360,63 +1402,65 @@ namespace yy {
   const signed char
   parser::yypact_[] =
   {
-      12,   -10,   -22,     5,     2,   -22,    18,     9,   -22,   -22,
-      31,   -22,   -22,    18,    18,    32,   -22,    13,   -22,    35,
-     -22,    24,   -22,    18,    18,    18,    18,    17,    17,    36,
-      34,    34,   -22,   -22,   -22,    17,    37,    37,    18,    -8,
-      17,   -22,   -22,    37
+      22,    -7,   -22,    15,    25,   -22,    30,    14,   -22,   -22,
+       1,   -22,   -22,    30,    30,    47,   -22,    16,   -22,   -22,
+      40,    28,   -22,    38,   -22,    30,    30,    30,    30,    40,
+     -22,    40,    39,   -22,    40,    48,    -8,    -8,   -22,   -22,
+      39,    19,    40,    39,    40,   -22,    39,    39
   };
 
   const signed char
   parser::yydefact_[] =
   {
        0,     0,     6,     0,     0,     2,     0,     0,     1,     3,
-      19,    24,    23,     0,     0,     0,     7,    18,     5,    17,
-       8,     0,     4,     0,     0,     0,     0,     0,     0,    12,
-       9,    10,    11,    13,    20,     0,    16,    15,     0,     0,
-       0,    14,    21,    22
+      19,    27,    25,     0,     0,     0,     7,    18,    26,     5,
+       0,    17,     9,     0,     4,     0,     0,     0,     0,     0,
+      21,     0,    20,    22,     0,    11,    13,    14,    10,    12,
+      16,     0,     0,    15,     0,    23,    24,     8
   };
 
   const signed char
   parser::yypgoto_[] =
   {
-     -22,   -22,    41,   -13,   -22,   -21,    39
+     -22,   -22,    32,   -10,   -22,   -21,    31,   -20
   };
 
   const signed char
   parser::yydefgoto_[] =
   {
-       0,     4,     5,    15,    16,    36,    17
+       0,     4,     5,    15,    16,    32,    17,    18
   };
 
   const signed char
   parser::yytable_[] =
   {
-      20,    21,     8,    40,     6,    42,     1,    37,     2,     7,
-      30,    31,    32,    33,    39,    18,     1,     3,     2,    43,
-      34,    10,    11,    12,    27,    41,    13,     3,     0,    35,
-      14,    23,    24,    25,    26,    11,    12,    29,    22,    23,
-      24,    25,    26,    25,    26,     9,    28,    38,    40,    19
+      33,    27,    28,    22,    23,    11,    12,     6,    40,    33,
+      41,    33,    20,    43,    33,    36,    37,    38,    39,     7,
+      19,    46,    33,    47,    33,     8,     1,    29,     2,     1,
+      42,     2,    45,    10,    11,    12,     9,     3,    13,    34,
+       3,    21,    14,    30,    11,    25,    26,    27,    28,     0,
+      42,    35,    31,    24,    25,    26,    27,    28,     0,    44
   };
 
   const signed char
   parser::yycheck_[] =
   {
-      13,    14,     0,    11,    14,    13,     4,    28,     6,     4,
-      23,    24,    25,    26,    35,     6,     4,    15,     6,    40,
-       3,     3,     4,     5,    11,    38,     8,    15,    -1,    12,
-      12,     7,     8,     9,    10,     4,     5,    13,     6,     7,
-       8,     9,    10,     9,    10,     4,    11,    11,    11,    10
+      20,     9,    10,    13,    14,     4,     5,    14,    29,    29,
+      31,    31,    11,    34,    34,    25,    26,    27,    28,     4,
+       6,    42,    42,    44,    44,     0,     4,    11,     6,     4,
+      11,     6,    13,     3,     4,     5,     4,    15,     8,    11,
+      15,    10,    12,     3,     4,     7,     8,     9,    10,    -1,
+      11,    13,    12,     6,     7,     8,     9,    10,    -1,    11
   };
 
   const signed char
   parser::yystos_[] =
   {
        0,     4,     6,    15,    18,    19,    14,     4,     0,    19,
-       3,     4,     5,     8,    12,    20,    21,    23,     6,    23,
-      20,    20,     6,     7,     8,     9,    10,    11,    11,    13,
-      20,    20,    20,    20,     3,    12,    22,    22,    11,    22,
-      11,    20,    13,    22
+       3,     4,     5,     8,    12,    20,    21,    23,    24,     6,
+      11,    23,    20,    20,     6,     7,     8,     9,    10,    11,
+       3,    12,    22,    24,    11,    13,    20,    20,    20,    20,
+      22,    22,    11,    22,    11,    13,    22,    22
   };
 
   const signed char
@@ -1424,15 +1468,15 @@ namespace yy {
   {
        0,    17,    18,    18,    19,    19,    19,    20,    20,    20,
       20,    20,    20,    20,    20,    21,    21,    21,    21,    21,
-      22,    22,    22,    23,    23
+      21,    22,    22,    22,    22,    23,    23,    24
   };
 
   const signed char
   parser::yyr2_[] =
   {
-       0,     2,     1,     2,     4,     3,     1,     1,     2,     3,
-       3,     3,     3,     3,     5,     4,     3,     2,     1,     1,
-       1,     3,     3,     1,     1
+       0,     2,     1,     2,     4,     3,     1,     1,     5,     2,
+       3,     3,     3,     3,     3,     4,     3,     2,     1,     1,
+       3,     1,     1,     3,     3,     1,     1,     1
   };
 
 
@@ -1442,9 +1486,9 @@ namespace yy {
   const unsigned char
   parser::yyrline_[] =
   {
-       0,    51,    51,    52,    55,    57,    68,    70,    72,    74,
-      87,   100,   113,   115,   134,   157,   159,   161,   163,   165,
-     168,   170,   172,   175,   177
+       0,    51,    51,    52,    55,    57,    68,    70,    72,    84,
+      86,    99,   101,   121,   134,   149,   151,   153,   155,   157,
+     159,   165,   167,   186,   188,   191,   194,   196
   };
 
   void
@@ -1476,9 +1520,9 @@ namespace yy {
 
 
 } // yy
-#line 1480 "calc.tab.c"
+#line 1524 "calc.tab.c"
 
-#line 190 "calc.y"
+#line 210 "calc.y"
 
 void
 yy::parser::error (const location_type& l, const std::string& m)

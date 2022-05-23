@@ -1,4 +1,4 @@
-int (fun)(const char *a,const char*b)
+int fun(char (*a), char (*b))
 {
 	return 1;
 }
@@ -12,14 +12,18 @@ struct s{
 }
 int main()
 {
-	int (* (*a)(int))[5];
-	int func()();
+	int func();
 	int  z = (struct s*)sym;
-	double func(void);
+	double func(char * a);
 	const int constint=3;
 	constint=55;
 	
 	int arr[15];
+
+sus:
+	goto sus;
+	goto amogus;
+	goto bla;
 	blah blah_val;
 	const int gggg = ((int)0)?1:2;
 	int azzz[];
@@ -44,4 +48,8 @@ int main()
 	fun("%s","hello");
 	fun(1,2);
 	return 0;
+}
+void fun()
+{
+
 }

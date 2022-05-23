@@ -22,7 +22,7 @@
   # define YY_USER_ACTION  loc.columns (yyleng);
 %}
 var_ref_or_decl \@[a-zA-Z][a-zA-Z0-9_]*
-var_basic [a-z]
+var_basic [a-zA-Z]
 %x IN_COMMENT
 %%
 %{
@@ -46,7 +46,7 @@ var_basic [a-z]
 "*" return yy::parser::make_MUL(loc);
 "/" return yy::parser::make_DIV(loc);
 "^" return yy::parser::make_POW(loc);
-":=" return yy::parser::make_DECL(loc);
+"=" return yy::parser::make_DECL(loc);
 [[:digit:]]+ return make_INTEGER(yytext,loc);
 "(" return yy::parser::make_LEFT(loc);
 ")" return yy::parser::make_RIGHT(loc);

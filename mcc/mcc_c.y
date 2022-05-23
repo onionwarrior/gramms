@@ -107,31 +107,32 @@ class driver;
 %nonassoc "if"
 %nonassoc "else"
 %type <std::size_t> array_dim;
+%type <std::vector<std::pair<std::string,mcc::Symbol>>> parameter_type_list
+%type <std::vector<std::pair<std::string,mcc::Symbol>>> parameter_declaration parameter_list;
 %type <std::vector<std::size_t>> array_dim_list;
-%type <std::string> direct_declarator;
 %type <mcc::Symbol> init_declarator;
 %type <std::vector<mcc::Symbol>> init_declarator_list;
 %type <std::string> "identifier";
-%type <std::string> declarator
 %type <mcc::Symbol> primary_expression;
 %type <mcc::Symbol> postfix_expression
 %type <mcc::Symbol> expression;
-%type <mcc::Symbol> "literal"
-%type <mcc::Symbol> "constant"
+%type <mcc::Symbol> "literal";
+%type <mcc::Symbol> "constant";
 %type <mcc::TypeOrNone> declaration_specifiers;
-%type <mcc::Type> type_specifier;
+%type <mcc::TypeOrNone> type_specifier;
 %type <mcc::Symbol> cast_expression multiplicative_expression additive_expression;
 %type <mcc::Symbol> shift_expression relational_expression equality_expression;
 %type <mcc::Symbol> and_expression exclusive_or_expression inclusive_or_expression
 %type <mcc::Symbol> logical_and_expression logical_or_expression constant_expression
 %type <mcc::Symbol> conditional_expression assignment_expression unary_expression
 %type <mcc::PtrBits> pointer;
-%type <std::pair<std::string,mcc::PtrBits>> id_or_idptr;
+%type <std::pair<std::string,mcc::Symbol>> id_or_idptr direct_declarator declarator
+;
 %type <std::string> "typename";
 %type <std::string> type_qualifier;
 %type <std::string> type_qualifier_list;
-%type <std::pair<mcc::Type,mcc::PtrBits>> type_name;
-%type <std::pair<mcc::Type,mcc::PtrBits>> specifier_qualifier_list;
+%type <std::pair<mcc::TypeOrNone,mcc::PtrBits>> type_name;
+%type <std::pair<mcc::TypeOrNone,mcc::PtrBits>> specifier_qualifier_list;
 %param { driver& drv }
 %code {
 # include "driver.h"
@@ -180,7 +181,7 @@ postfix_expression
 	{
 		const auto is_sub_int = mcc::IsIntegerT($3.GetType());
 		const auto ind = $3.GetIndLevel();
-		if( $1.IsPtr())
+		if( $1.IsPtr()||std::holds_alternative<mcc::CArray>($1.GetType()))
 		{
 			const auto ind_lhs = $1.GetIndLevel();
 			$$={$1.GetType(),ind_lhs-1,$1.DerefIsConst(),true,false};
@@ -307,7 +308,6 @@ inclusive_or_expression
 
 	| inclusive_or_expression "|" exclusive_or_expression
 	;
-
 logical_and_expression
 	: inclusive_or_expression
 	{$$=$1;}
@@ -392,17 +392,31 @@ declaration
 // must return a type
 declaration_specifiers
 	: storage_class_specifier
-	{$$=mcc::Primitive::Int;drv.SetCurrentType($$);}
+	{
+		$$=mcc::Primitive::Int;
+		drv.SetCurrentType($$);
+	}
 	| storage_class_specifier declaration_specifiers
-	{$$=$2;drv.SetCurrentType($$);}
+	{
+		$$=$2;drv.SetCurrentType($$);
+	}
 	| type_specifier
-	{$$=$1;drv.SetCurrentType($$);}
+	{
+		$$=$1;
+		drv.SetCurrentType($$);
+	}
 	| type_specifier declaration_specifiers
-	{$$=$1;drv.SetCurrentType($$);}
+	{
+		$$=$1;drv.SetCurrentType($$);
+	}
 	| type_qualifier
-	{$$=mcc::Primitive::Int;drv.SetCurrentType($$);}
+	{
+		$$=mcc::Primitive::Int;drv.SetCurrentType($$);}
 	| type_qualifier declaration_specifiers
-	{ $$=$2;drv.SetCurrentType($$);}
+	{
+		$$=$2;
+	drv.SetCurrentType($$);
+	}
 	;
 
 init_declarator_list
@@ -415,12 +429,12 @@ init_declarator
 	: declarator
 	{
 		auto sym = mcc::Symbol{drv.GetCurrentType(),0,drv.GetInConst(),true,true};
-		drv.AddSymbol($1,std::move(sym));
+		drv.AddSymbol($1.first,$1.second);
 	}
 	| declarator "=" initializer
 	{
 		auto sym=mcc::Symbol{drv.GetCurrentType(),0,drv.GetInConst(),true,true};
-		drv.AddSymbol($1,std::move(sym));
+		drv.AddSymbol($1.first,$1.second);
 	}
 	;
 
@@ -440,9 +454,8 @@ type_specifier
 	| "long"{$$=mcc::Primitive::Long;}
 	| "float"{$$=mcc::Primitive::Float;}
 	| "double"{$$=mcc::Primitive::Double;}
-	| "signed"
-	{}
-	| "unsigned"{}
+	| "signed" {$$=mcc::Primitive::Int;}
+	| "unsigned"{$$=mcc::Primitive::UInt;}
 	| struct_or_union_specifier{}
 	| enum_specifier{}
 	| "typename"
@@ -473,7 +486,9 @@ specifier_qualifier_list
 	: type_specifier specifier_qualifier_list
 	{
 		if(std::holds_alternative<mcc::NoneType>($1)^std::holds_alternative<mcc::NoneType>($2.first))
-		{$$={$1,{}};}
+		{
+			$$={$1,{}};
+		}
 		else
 		{
 			mcc::PrintColored("Invalid type",mcc::TextColor::Error);
@@ -496,7 +511,11 @@ struct_declarator_list
 struct_declarator
 	: declarator
 	| ":" constant_expression
-	| declarator ":" constant_expression
+	| declarator ":" constant_expression| id_or_idptr "(" identifier_list  ")"
+	{
+		mcc::PrintColored("Func argnames",mcc::TextColor::Good);
+	}
+
 	;
 
 enum_specifier
@@ -532,19 +551,19 @@ declarator
 id_or_idptr:
 	"identifier"
 	{
-		$$={$1,{}};
+		$$={$1,{drv.GetCurrentType(),0,drv.GetInConst(),true,true}};
 		//symbol has no indirection, i.e. int arr[] - array of int
 	}
 	|
 	"(" "identifier" ")"
 	{
-		$$={$2,{}};
+		$$={$2,{drv.GetCurrentType(),0,drv.GetInConst(),true,true}};
 	}
 	//same as w/o braces
 	|
 	"(" pointer "identifier" ")"
 	{
-		$$={$3,$2};
+		$$={$3,{drv.GetCurrentType(),$2.GetIndirection(),drv.GetInConst(),true,true}};
 	//symbol HAS indirection, i.e int (*arr)[] - POINTER to an array of int
 	}
 array_dim:
@@ -566,14 +585,13 @@ array_dim_list:
 	|array_dim_list array_dim
 	{
 		$$=$1;
-		$$.push_back($2[0]);
+		$$.push_back($2);
 	}
 	;
 direct_declarator
-	: "identifier"
+	: id_or_idptr
 	//return name for declarator
 	{
-		mcc::PrintColored("basic direct_declarator",mcc::TextColor::Good);
 		//this is name of the symbol or type idk
 	}
 	//return array of direct_declarator
@@ -581,11 +599,7 @@ direct_declarator
 	{
 		mcc::PrintColored("Array:",mcc::TextColor::Good);
 	}
-	| id_or_idptr "(" parameter_type_list ")"
-		{
-		mcc::PrintColored("Function ptr only type proto",mcc::TextColor::Good);
-		}
-	| id_or_idptr "(" identifier_list  ")"
+	| id_or_idptr "(" parameter_type_list  ")"
 	{
 		mcc::PrintColored("Func argnames",mcc::TextColor::Good);
 	}
@@ -628,18 +642,27 @@ type_qualifier_list
 
 parameter_type_list
 	: parameter_list
+	{
+		$$=$1;
+	}
 	| parameter_list "," "..."
+	{$$=$1;}
 	;
 
 parameter_list
 	: parameter_declaration
+	{$$=$1;}
 	| parameter_list "," parameter_declaration
 	;
 
 parameter_declaration
-	: declaration_specifiers direct_declarator
-	| declaration_specifiers abstract_declarator
-	| declaration_specifiers
+	: declaration_specifiers declarator
+	{
+			auto decl = $2.second;
+			mcc::PrintColored($2.first+"\n",mcc::TextColor::Warning);
+			$$={};
+			$$.push_back({$2.first,mcc::Symbol{$1,decl.GetIndLevel(),drv.GetInConst(),true,true}});
+	}
 	;
 
 identifier_list
@@ -696,6 +719,9 @@ statement
 // error if no such tag exists
 labeled_statement
 	: "identifier" ":" statement
+	{
+		drv.AddLabel($1);
+	}
 	| "case" constant_expression ":" statement
 	| "default" ":" statement
 	;
@@ -726,17 +752,21 @@ iteration_statement
 	| "do" statement "while" "(" expression {mcc::EvalsToBool($5);} ")" ";"
 	| "for" "(" expression_statement expression_statement ")" statement
 
+	{std::cout<<"param decl\n";}
 	| "for" "(" expression_statement expression_statement expression ")" statement
 	;
 
 jump_statement
 	: "goto" "identifier" ";"
+	{
+		drv.AddLabelRef($2);
+	}
 	| "continue" ";"
 	| "break" ";"
 	| "return" ";"
 	| "return" expression ";"
 	;
-
+//nothing to do here
 translation_unit
 	: external_declaration
 	| translation_unit external_declaration
@@ -749,13 +779,19 @@ external_declaration
 	;
 //All kinds of functions definitions...
 function_definition:
-	 declaration_specifiers direct_declarator {drv.EnterNewScope($2);} compound_statement
+	 declaration_specifiers direct_declarator {drv.EnterNewScope($2.first);} compound_statement
 		{drv.LeaveScope();}
 	| direct_declarator
 		{
-			auto this_func = 
-			drv.AddSymbol();
-			drv.EnterNewScope($1);
+			if(!mcc::IsFuncPtr($1.second))
+			{
+				//drv.AddSymbol();
+				drv.EnterNewScope($1.first);
+			}
+			else
+			{
+			//bad
+			}
 		}
 		compound_statement
 		{drv.LeaveScope();}

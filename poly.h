@@ -83,6 +83,7 @@ public:
   inline int64_t degree() const {
     return terms_.empty() ? 0 : terms_.front().get_pow();
   }
+  inline auto coef() const {return terms_.empty()? 0 : terms_.front().coef();}
   inline Monom lead() const { return terms_.front(); }
   inline auto begin() const { return terms_.begin(); }
   inline auto end() const { return terms_.end(); }
