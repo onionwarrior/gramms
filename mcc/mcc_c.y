@@ -106,6 +106,8 @@ class driver;
 %token END 0 "end of file"
 %nonassoc "if"
 %nonassoc "else"
+%type <std::size_t> array_dim;
+%type <std::vector<std::size_t>> array_dim_list;
 %type <std::string> direct_declarator;
 %type <mcc::Symbol> init_declarator;
 %type <std::vector<mcc::Symbol>> init_declarator_list;
@@ -124,6 +126,7 @@ class driver;
 %type <mcc::Symbol> logical_and_expression logical_or_expression constant_expression
 %type <mcc::Symbol> conditional_expression assignment_expression unary_expression
 %type <mcc::PtrBits> pointer;
+%type <std::pair<std::string,mcc::PtrBits>> id_or_idptr;
 %type <std::string> "typename";
 %type <std::string> type_qualifier;
 %type <std::string> type_qualifier_list;
@@ -176,9 +179,11 @@ postfix_expression
 	| postfix_expression "[" expression "]"
 	{
 		const auto is_sub_int = mcc::IsIntegerT($3.GetType());
-		const auto ind = $3.GetType().index();
+		const auto ind = $3.GetIndLevel();
 		if( $1.IsPtr())
 		{
+			const auto ind_lhs = $1.GetIndLevel();
+			$$={$1.GetType(),ind_lhs-1,$1.DerefIsConst(),true,false};
 			if(!is_sub_int || $3.IsPtr())
 			{
 				mcc::PrintColored("Array subscript can't be non integer",mcc::TextColor::Error);
@@ -524,34 +529,70 @@ declarator
 		$$=$1;
 	}
 	;
-
+id_or_idptr:
+	"identifier"
+	{
+		$$={$1,{}};
+		//symbol has no indirection, i.e. int arr[] - array of int
+	}
+	|
+	"(" "identifier" ")"
+	{
+		$$={$2,{}};
+	}
+	//same as w/o braces
+	|
+	"(" pointer "identifier" ")"
+	{
+		$$={$3,$2};
+	//symbol HAS indirection, i.e int (*arr)[] - POINTER to an array of int
+	}
+array_dim:
+	"[" constant_expression "]"
+	{
+		$$=1;
+	}
+	|"[" "]"
+	{
+		$$=0;
+	}
+	;
+array_dim_list:
+	array_dim
+	{
+		$$={};
+		$$.push_back($1);
+	}
+	|array_dim_list array_dim
+	{
+		$$=$1;
+		$$.push_back($2[0]);
+	}
+	;
 direct_declarator
 	: "identifier"
 	//return name for declarator
-	{//Setname?
+	{
+		mcc::PrintColored("basic direct_declarator",mcc::TextColor::Good);
+		//this is name of the symbol or type idk
 	}
-	//idk
-	| "(" declarator ")"
-	{$$=$2;}
 	//return array of direct_declarator
-	| direct_declarator  "[" constant_expression  "]"
+	| id_or_idptr array_dim_list
 	{
-		mcc::PrintColored("Array def:",mcc::TextColor::Good);
-		drv.AddSymbol($1,mcc::Symbol{drv.GetCurrentType(),1,true,true,true});
+		mcc::PrintColored("Array:",mcc::TextColor::Good);
 	}
-	| direct_declarator "[" "]"
-	{
-		mcc::PrintColored("Array def VLA:",mcc::TextColor::Good);
-		drv.AddSymbol($1,mcc::Symbol{,0,true,true,true});
-	}
-	| direct_declarator "(" parameter_type_list ")"
-	{ mcc::PrintColored("Function ptr only type proto",mcc::TextColor::Good);}
-	| direct_declarator "(" identifier_list  ")"
+	| id_or_idptr "(" parameter_type_list ")"
+		{
+		mcc::PrintColored("Function ptr only type proto",mcc::TextColor::Good);
+		}
+	| id_or_idptr "(" identifier_list  ")"
 	{
 		mcc::PrintColored("Func argnames",mcc::TextColor::Good);
 	}
-	| direct_declarator "(" ")"
-	;
+	| id_or_idptr "(" ")"
+	{
+
+	}
 
 pointer
 	: "*"
@@ -596,7 +637,7 @@ parameter_list
 	;
 
 parameter_declaration
-	: declaration_specifiers declarator
+	: declaration_specifiers direct_declarator
 	| declaration_specifiers abstract_declarator
 	| declaration_specifiers
 	;
@@ -651,12 +692,14 @@ statement
 	| jump_statement
 	| declaration
 	;
-
+// Must fill list of tags and check on function exit list of tag refs and print
+// error if no such tag exists
 labeled_statement
 	: "identifier" ":" statement
 	| "case" constant_expression ":" statement
 	| "default" ":" statement
 	;
+
 // Anonymous scope if does not start with an identifier
 compound_statement
 	:"{"  statement_list "}"
@@ -666,10 +709,6 @@ compound_statement
 statement_list
 	: statement
 	| statement_list statement
-	;
-declaration_list
-	:declaration
-	| declaration_list declaration
 	;
 expression_statement
 	: ";"
@@ -709,14 +748,16 @@ external_declaration
 	{mcc::PrintColored("New global definition",mcc::TextColor::Good);}
 	;
 //All kinds of functions definitions...
-function_definition
-	: declaration_specifiers declarator declaration_list {drv.EnterNewScope($2);} compound_statement
+function_definition:
+	 declaration_specifiers direct_declarator {drv.EnterNewScope($2);} compound_statement
 		{drv.LeaveScope();}
-	| declaration_specifiers declarator {drv.EnterNewScope($2);} compound_statement
-		{drv.LeaveScope();}
-	| declarator declaration_list {drv.EnterNewScope($1);} compound_statement
-		{drv.LeaveScope();}
-	| declarator {drv.EnterNewScope($1);} compound_statement
+	| direct_declarator
+		{
+			auto this_func = 
+			drv.AddSymbol();
+			drv.EnterNewScope($1);
+		}
+		compound_statement
 		{drv.LeaveScope();}
 	;
 

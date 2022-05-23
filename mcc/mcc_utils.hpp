@@ -37,7 +37,7 @@ class PtrBits {
 public:
   auto AddIndirection(const bool is_const) { ptrs_[counter_++] = is_const; }
   auto GetIndirection() const { return counter_; }
-  auto GetBit(const size_t b) { return ptrs_[b]; }
+  auto GetBit(const size_t b) const { return ptrs_[b]; }
   PtrBits(const std::size_t ind) {
     for (auto i = 0u; i < ind; i++)
       ptrs_.set(i);
@@ -116,9 +116,13 @@ public:
   }
 };
 typedef std::variant<Primitive, UserType, Func *, Enum, CArray> Type;
-struct Func {
+class Func {
   Type return_type_;
-  std::vector<Type> args;
+  std::vector<Type> args_;
+
+public:
+  Func(const Type &ret, const std::vector<Type> &args)
+      : return_type_{ret}, args_{args} {}
 };
 inline auto IsIntegerT(const Type &t) {
   std::array<std::string, 10> integer_types{
@@ -147,6 +151,9 @@ public:
 
   auto inline GetIndLevel() const { return indirection_.GetIndirection(); }
   auto inline IsPtr() const { return GetIndLevel() > 0; }
+  auto inline DerefIsConst() const {
+    return indirection_.GetBit(GetIndLevel() - 1);
+  }
   auto inline IsLvalue() const { return is_lvalue_; }
   auto inline IsConst() const { return is_const_; }
   Symbol(const Type &type, const std::size_t indirection_lvl,
@@ -235,13 +242,6 @@ inline auto EvalsToBool(const Symbol &sym) {
   } else if (std::get<mcc::Primitive>(sym.GetType()) == mcc::Primitive::Void) {
     mcc::PrintColored("Void where pointer or arithmetic type is required",
                       mcc::TextColor::Error);
-  }
-}
-inline auto MakeArrayOf(const mcc::ArrayType & t,const std::size_t s)
-{
-  if(std::holds_alternative<CArray>(t)
-  {
-
   }
 }
 

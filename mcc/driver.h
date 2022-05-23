@@ -28,7 +28,7 @@ public:
   bool trace_parsing = false;
   void scan_begin();
   void scan_end();
-  bool trace_scanning = false;
+    bool trace_scanning = false;
   yy::location location;
   auto EnterNewScope(const std::string &scope) {
     if (!scope.empty()) {
