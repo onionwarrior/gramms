@@ -18,7 +18,7 @@ private:
   mcc::TypeTable type_table_;
   std::set<std::string> labels_;
   std::set<std::string> labels_refd_;
-  mcc::TypeOrNone cur_type_;
+  mcc::T cur_type_;
   bool is_in_const_;
 
 public:
@@ -59,7 +59,7 @@ public:
     }
   }
   auto GetCurrentType() const { return cur_type_; }
-  auto SetCurrentType(const mcc::TypeOrNone &t) { cur_type_ = t; }
+  auto SetCurrentType(const mcc::T &t) { cur_type_ = t; }
   auto UnsetCurrentType() { cur_type_ = {}; }
   auto LeaveScope() {
     if (scopes_.back()[0] == '@')

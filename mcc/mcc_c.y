@@ -118,8 +118,8 @@ class driver;
 %type <mcc::Symbol> expression;
 %type <mcc::Symbol> "literal";
 %type <mcc::Symbol> "constant";
-%type <mcc::TypeOrNone> declaration_specifiers;
-%type <mcc::TypeOrNone> type_specifier;
+%type <mcc::T> declaration_specifiers;
+%type <mcc::T> type_specifier;
 %type <mcc::Symbol> cast_expression multiplicative_expression additive_expression;
 %type <mcc::Symbol> shift_expression relational_expression equality_expression;
 %type <mcc::Symbol> and_expression exclusive_or_expression inclusive_or_expression
@@ -131,8 +131,8 @@ class driver;
 %type <std::string> "typename";
 %type <std::string> type_qualifier;
 %type <std::string> type_qualifier_list;
-%type <std::pair<mcc::TypeOrNone,mcc::PtrBits>> type_name;
-%type <std::pair<mcc::TypeOrNone,mcc::PtrBits>> specifier_qualifier_list;
+%type <mcc::T> type_name;
+%type <mcc::T> specifier_qualifier_list;
 %param { driver& drv }
 %code {
 # include "driver.h"
@@ -177,6 +177,9 @@ primary_expression
 
 postfix_expression
 	: primary_expression
+	{
+		$$=$1;
+	}
 	| postfix_expression "[" expression "]"
 	{
 		const auto is_sub_int = mcc::IsIntegerT($3.GetType());
@@ -184,7 +187,7 @@ postfix_expression
 		if( $1.IsPtr()||std::holds_alternative<mcc::CArray>($1.GetType()))
 		{
 			const auto ind_lhs = $1.GetIndLevel();
-			$$={$1.GetType(),ind_lhs-1,$1.DerefIsConst(),true,false};
+			$$={{$1.GetType(),$1.GetDeref()},$1.DerefIsConst(),true,false};
 			if(!is_sub_int || $3.IsPtr())
 			{
 				mcc::PrintColored("Array subscript can't be non integer",mcc::TextColor::Error);
@@ -196,7 +199,19 @@ postfix_expression
 		}
 	}
 	| postfix_expression "(" ")"
-	{mcc::PrintColored("Function call with no args",mcc::TextColor::Good);}
+	{
+		if(mcc::IsFuncPtr($1))
+		{
+			const auto ftype = std::get<std::shared_ptr<mcc::Func>>($1.GetType());
+			$$={ftype->GetReturnType(),false,true,false};
+		}
+		else
+		{
+			mcc::PrintColored("Is not a function",mcc::TextColor::Error);
+			$$={};
+		}
+		mcc::PrintColored("Function call with no args",mcc::TextColor::Good);
+	}
 	| postfix_expression "(" argument_expression_list ")"
 	{mcc::PrintColored("Function call with args",mcc::TextColor::Good);}
 	| postfix_expression "." "identifier"
@@ -224,9 +239,9 @@ unary_expression
 	| unary_operator cast_expression
 	{$$=$2;}
 	| "sizeof" unary_expression
-	{$$=mcc::Symbol(mcc::Primitive::ULongLong,0,true,true,false);}
+	{$$=mcc::Symbol({mcc::Primitive::ULongLong,0},true,true,false);}
 	| "sizeof" "(" type_name ")"
-	{$$=mcc::Symbol(mcc::Primitive::ULongLong,0,true,true,false);}
+	{$$=mcc::Symbol({mcc::Primitive::ULongLong,0},true,true,false);}
 
 	;
 
@@ -243,7 +258,7 @@ cast_expression
 	: unary_expression
 	{$$=$1;}
 	| "(" type_name ")" cast_expression
-	{$$=mcc::Symbol{$2.first,$2.second.GetIndirection(),true,true,false};}
+	{$$=mcc::Symbol{$2,true,true,false};}
 	;
 
 multiplicative_expression
@@ -373,7 +388,7 @@ assignment_operator
 
 expression
 	: assignment_expression
-	{$$=mcc::Symbol($1.GetType(),$1.GetIndLevel(),false,true,true);}
+	{$$=mcc::Symbol({$1.GetType(),$1.GetIndLevel()},false,true,true);}
 	| expression "," assignment_expression
 	;
 
@@ -393,7 +408,7 @@ declaration
 declaration_specifiers
 	: storage_class_specifier
 	{
-		$$=mcc::Primitive::Int;
+		$$={mcc::Primitive::Int};
 		drv.SetCurrentType($$);
 	}
 	| storage_class_specifier declaration_specifiers
@@ -407,15 +422,17 @@ declaration_specifiers
 	}
 	| type_specifier declaration_specifiers
 	{
-		$$=$1;drv.SetCurrentType($$);
+		$$={$1};
+		drv.SetCurrentType($$);
 	}
 	| type_qualifier
 	{
-		$$=mcc::Primitive::Int;drv.SetCurrentType($$);}
+		$$={mcc::Primitive::Int};
+		drv.SetCurrentType($$);}
 	| type_qualifier declaration_specifiers
 	{
-		$$=$2;
-	drv.SetCurrentType($$);
+		$$={$2};
+		drv.SetCurrentType($$);
 	}
 	;
 
@@ -428,12 +445,12 @@ init_declarator_list
 init_declarator
 	: declarator
 	{
-		auto sym = mcc::Symbol{drv.GetCurrentType(),0,drv.GetInConst(),true,true};
+		auto sym = mcc::Symbol{drv.GetCurrentType(),drv.GetInConst(),true,true};
 		drv.AddSymbol($1.first,$1.second);
 	}
 	| declarator "=" initializer
 	{
-		auto sym=mcc::Symbol{drv.GetCurrentType(),0,drv.GetInConst(),true,true};
+		auto sym=mcc::Symbol{drv.GetCurrentType(),drv.GetInConst(),true,true};
 		drv.AddSymbol($1.first,$1.second);
 	}
 	;
@@ -447,15 +464,15 @@ storage_class_specifier
 	;
 
 type_specifier
-	: "void"{$$=mcc::Primitive::Void;}
-	| "char"{$$=mcc::Primitive::Char;}
-	| "short"{$$=mcc::Primitive::Short;}
-	| "int"{$$=mcc::Primitive::Int;}
-	| "long"{$$=mcc::Primitive::Long;}
-	| "float"{$$=mcc::Primitive::Float;}
-	| "double"{$$=mcc::Primitive::Double;}
-	| "signed" {$$=mcc::Primitive::Int;}
-	| "unsigned"{$$=mcc::Primitive::UInt;}
+	: "void"{$$={mcc::Primitive::Void};}
+	| "char"{$$={mcc::Primitive::Char};}
+	| "short"{$$={mcc::Primitive::Short};}
+	| "int"{$$={mcc::Primitive::Int};}
+	| "long"{$$={mcc::Primitive::Long};}
+	| "float"{$$={mcc::Primitive::Float};}
+	| "double"{$$={mcc::Primitive::Double};}
+	| "signed" {$$={mcc::Primitive::Int};}
+	| "unsigned"{$$={mcc::Primitive::UInt};}
 	| struct_or_union_specifier{}
 	| enum_specifier{}
 	| "typename"
@@ -485,22 +502,22 @@ struct_declaration
 specifier_qualifier_list
 	: type_specifier specifier_qualifier_list
 	{
-		if(std::holds_alternative<mcc::NoneType>($1)^std::holds_alternative<mcc::NoneType>($2.first))
+		if(std::holds_alternative<mcc::NoneType>($1.GetType())^std::holds_alternative<mcc::NoneType>($2.GetType()))
 		{
-			$$={$1,{}};
+			$$=$1;
 		}
 		else
 		{
 			mcc::PrintColored("Invalid type",mcc::TextColor::Error);
-			$$={};
+			$$={mcc::Primitive::Void};
 		}
 	}
 	| type_specifier
-	{$$={$1,{}};}
+	{$$=$1;}
 	| type_qualifier specifier_qualifier_list
 	{$$=$2;}
 	| type_qualifier
-	{$$={};}
+	{$$={true};}
 	;
 
 struct_declarator_list
@@ -551,19 +568,19 @@ declarator
 id_or_idptr:
 	"identifier"
 	{
-		$$={$1,{drv.GetCurrentType(),0,drv.GetInConst(),true,true}};
+		$$={$1,{drv.GetCurrentType(),drv.GetInConst(),true,true}};
 		//symbol has no indirection, i.e. int arr[] - array of int
 	}
 	|
 	"(" "identifier" ")"
 	{
-		$$={$2,{drv.GetCurrentType(),0,drv.GetInConst(),true,true}};
+		$$={$2,{drv.GetCurrentType(),drv.GetInConst(),true,true}};
 	}
 	//same as w/o braces
 	|
 	"(" pointer "identifier" ")"
 	{
-		$$={$3,{drv.GetCurrentType(),$2.GetIndirection(),drv.GetInConst(),true,true}};
+		$$={$3,{{drv.GetCurrentType().GetType(),$2.GetIndirection()},drv.GetInConst(),true,true}};
 	//symbol HAS indirection, i.e int (*arr)[] - POINTER to an array of int
 	}
 array_dim:
@@ -597,6 +614,9 @@ direct_declarator
 	//return array of direct_declarator
 	| id_or_idptr array_dim_list
 	{
+		auto as_arr_t = mcc::T{$1.second.GetType()}.ToArrT();
+		mcc::PrintColored(std::to_string($1.second.GetIndLevel()),mcc::TextColor::Error);
+		drv.AddSymbol($1.first,{{mcc::CArray{as_arr_t,$2.begin(),$2.end()},$1.second.GetIndLevel()},drv.GetInConst(),true,false});
 		mcc::PrintColored("Array:",mcc::TextColor::Good);
 	}
 	| id_or_idptr "(" parameter_type_list  ")"
@@ -661,7 +681,7 @@ parameter_declaration
 			auto decl = $2.second;
 			mcc::PrintColored($2.first+"\n",mcc::TextColor::Warning);
 			$$={};
-			$$.push_back({$2.first,mcc::Symbol{$1,decl.GetIndLevel(),drv.GetInConst(),true,true}});
+			$$.push_back({$2.first,{$1,drv.GetInConst(),true,true}});
 	}
 	;
 

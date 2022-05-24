@@ -3,6 +3,7 @@
 #include <bitset>
 #include <cassert>
 #include <cstddef>
+#include <ios>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -32,16 +33,20 @@ enum class Primitive {
 };
 class PtrBits {
   // if a bit is set - ptr is const;
-  std::bitset<64> ptrs_;
+  std::bitset<256> ptrs_ = 0;
   std::size_t counter_ = 0;
 
 public:
-  auto AddIndirection(const bool is_const) { ptrs_[counter_++] = is_const; }
+  auto AddIndirection(const bool is_const) {
+    std::cout << std::boolalpha << is_const;
+    ptrs_[counter_++] = is_const;
+  }
   auto GetIndirection() const { return counter_; }
   auto GetBit(const size_t b) const { return ptrs_[b]; }
   PtrBits(const std::size_t ind) {
-    for (auto i = 0u; i < ind; i++)
-      ptrs_.set(i);
+
+    for (counter_ = 0u; counter_ < ind; counter_++)
+      ptrs_.set(counter_);
   }
   PtrBits() = default;
 };
@@ -81,15 +86,15 @@ public:
   auto HasField(const std::string &field) {
     return types_.find(field) != types_.cend();
   }
-  auto GetUnderlyingType() const {
-    auto &&[_, type] = *(types_.begin());
-    return type;
+  auto GetFieldTName(const std::string &field) const {
+    return types_.at(field);
   }
 };
 
 struct Func;
-typedef std::false_type NoneType;
-typedef std::variant<Primitive, UserType, std::shared_ptr<Func>, Enum> ArrayType;
+typedef bool NoneType;
+typedef std::variant<Primitive, UserType, std::shared_ptr<Func>, Enum>
+    ArrayType;
 
 /* An array is represented as a vector of size_t's, which indicate array sizes
  * * i.e.
@@ -114,31 +119,58 @@ public:
   }
 };
 
-typedef std::variant<NoneType, Primitive, UserType, std::shared_ptr<Func>, Enum,CArray> TypeOrNone;
+typedef std::variant<NoneType, Primitive, UserType, std::shared_ptr<Func>, Enum,
+                     CArray>
+    TypeOrNone;
+class T {
+  mcc::PtrBits ptr_;
+  mcc::TypeOrNone t_;
 
+public:
+  T(const mcc::PtrBits &ptr, const mcc::TypeOrNone &t) : ptr_{ptr}, t_{t} {}
+  T(const mcc::TypeOrNone &t, const mcc::PtrBits &ptr) : ptr_{ptr}, t_{t} {}
+
+  T(const mcc::TypeOrNone &t) : t_{t} {}
+  T() = default;
+  mcc::ArrayType ToArrT() const {
+    return std::visit(
+        [this](auto &&arg) {
+          using T = std::decay_t<decltype(arg)>;
+          if constexpr (std::is_same_v<T, Primitive>)
+            return mcc::ArrayType{std::get<T>(t_)};
+          else if constexpr (std::is_same_v<T, std::shared_ptr<Func>>)
+            return mcc::ArrayType{std::get<T>(t_)};
+          else if constexpr (std::is_same_v<T, UserType>)
+            return mcc::ArrayType(std::get<T>(t_));
+          else if constexpr (std::is_same_v<T, Enum>)
+            return mcc::ArrayType(std::get<T>(t_));
+          else
+            return mcc::ArrayType{mcc::Primitive::Void};
+        },
+        t_);
+  }
+  auto GetType() const { return t_; }
+  auto GetPtr() const { return ptr_; }
+  auto GetInd() const { return ptr_.GetIndirection(); }
+  auto IsPtrT() const { return ptr_.GetIndirection() > 0; }
+};
 inline auto IsNoneType(const mcc::TypeOrNone &t) {
   return std::holds_alternative<mcc::NoneType>(t);
 }
 class Func {
-  TypeOrNone return_type_ = mcc::Primitive::Int;
-  std::vector<TypeOrNone> args_;
+  T return_type_ = {mcc::Primitive::Int};
+  std::vector<T> args_;
 
 public:
-  auto SetReturnType(const mcc::TypeOrNone &new_t) { return_type_ = new_t; }
-  Func(const std::vector<TypeOrNone> &args) : args_{args} {}
-  Func(const TypeOrNone &ret, const std::vector<TypeOrNone> &args)
+  auto SetReturnType(const mcc::T &new_t) { return_type_ = new_t; }
+  auto GetReturnType() const { return return_type_; }
+  Func(const std::vector<T> &args) : args_{args} {}
+  Func(const T &ret, const std::vector<T> &args)
       : return_type_{ret}, args_{args} {}
 };
-inline auto IsIntegerT(const TypeOrNone &t) {
-  std::array<std::string, 10> integer_types{
-      {"int", "unsigned int", "char", "unsigned char", "long", "long long",
-       "unsigned long", "unsigned long long", "short", "unsigned short"}};
-  if (std::holds_alternative<UserType>(t))
-    return std::find(integer_types.cbegin(), integer_types.cend(),
-                     std::get<UserType>(t).GetUnderlyingType()) !=
-           integer_types.cend();
-  if (std::holds_alternative<Primitive>(t)) {
-    const auto e_type = std::get<Primitive>(t);
+inline auto IsIntegerT(const T &t) {
+  if (std::holds_alternative<Primitive>(t.GetType()) && !t.IsPtrT()) {
+    const auto e_type = std::get<Primitive>(t.GetType());
     return e_type != Primitive::Void && e_type != Primitive::Float &&
            e_type != Primitive::Double && e_type != Primitive::LongDouble;
   }
@@ -146,30 +178,29 @@ inline auto IsIntegerT(const TypeOrNone &t) {
 }
 class Symbol {
   bool is_lvalue_ = true;
-  mcc::TypeOrNone type_;
+  mcc::T type_;
   bool defined_ = false;
-  mcc::PtrBits indirection_;
   bool is_const_ = false;
 
 public:
-  bool is_default = true;
-
-  auto inline GetIndLevel() const { return indirection_.GetIndirection(); }
-  auto inline IsPtr() const { return GetIndLevel() > 0; }
+  auto inline GetIndLevel() const { return type_.GetInd(); }
+  auto inline IsPtr() const { return type_.IsPtrT(); }
   auto inline DerefIsConst() const {
-    return indirection_.GetBit(GetIndLevel() - 1);
+    return type_.GetPtr().GetBit(GetIndLevel() - 1);
+  }
+  auto inline GetDeref() const {
+    mcc::PrintColored(std::to_string(type_.GetInd() - 1),
+                      mcc::TextColor::Error);
+    return mcc::PtrBits{type_.GetInd() - 1};
   }
   auto inline IsLvalue() const { return is_lvalue_; }
   auto inline IsConst() const { return is_const_; }
-  Symbol(const TypeOrNone &type, const std::size_t indirection_lvl,
-         const bool is_const, bool defined, bool is_lvalue)
-      : type_{type}, indirection_(indirection_lvl),
-        is_const_(is_const), defined_{defined}, is_lvalue_(is_lvalue) {
-    is_default = false;
-  }
+  Symbol(const T &type, const bool is_const, bool defined, bool is_lvalue)
+      : type_{type}, is_const_(is_const), defined_{defined},
+        is_lvalue_(is_lvalue) {}
   Symbol() = default;
   Symbol(const Symbol &) = default;
-  auto GetType() const { return type_; }
+  auto GetType() const { return type_.GetType(); }
 };
 auto inline IsFuncPtr(const mcc::Symbol &s) {
   return std::holds_alternative<std::shared_ptr<Func>>(s.GetType());
@@ -202,29 +233,29 @@ public:
 };
 class TypeTable {
 private:
-  std::map<std::string, TypeOrNone> types_ = {
-      {"int", Primitive::Int},
-      {"unsigned int", Primitive::UInt},
-      {"long", Primitive::Long},
-      {"long long", Primitive::LongLong},
-      {"unsigned long", Primitive::ULong},
-      {"unsigned long long", Primitive::ULongLong},
-      {"short", Primitive::Short},
-      {"unsigned short", Primitive::UShort},
-      {"char", Primitive::Char},
-      {"unsigned char", Primitive::UChar},
-      {"float", Primitive::Float},
-      {"double", Primitive::Double},
-      {"long double", Primitive::LongDouble},
-      {"blah", Primitive::Int},
-      {"void", Primitive::Void}};
+  std::map<std::string, T> types_ = {
+      {"int", {Primitive::Int}},
+      {"unsigned int", {Primitive::UInt}},
+      {"long", {Primitive::Long}},
+      {"long long", {Primitive::LongLong}},
+      {"unsigned long", {Primitive::ULong}},
+      {"unsigned long long", {Primitive::ULongLong}},
+      {"short", {Primitive::Short}},
+      {"unsigned short", {Primitive::UShort}},
+      {"char", {Primitive::Char}},
+      {"unsigned char", {Primitive::UChar}},
+      {"float", {Primitive::Float}},
+      {"double", {Primitive::Double}},
+      {"long double", {Primitive::LongDouble}},
+      {"blah", {Primitive::Int}},
+      {"void", {Primitive::Void}}};
 
 public:
   TypeTable() = default;
   auto DefineNewType(const std::string &type_name, const UserType &type) {
     if (types_.find(type_name) != types_.cend())
       return false;
-    types_[type_name] = type;
+    types_[type_name] = {type};
     return true;
   }
   auto TypeDefined(const std::string &name) const {
@@ -232,8 +263,8 @@ public:
   }
   auto GetTypeByName(const std::string &name) const {
     if (TypeDefined(name))
-      return std::optional<TypeOrNone>(types_.at(name));
-    return std::optional<TypeOrNone>{};
+      return std::optional<T>(types_.at(name));
+    return std::optional<T>{};
   }
   auto DefineNewTypedef(const std::string &type_name,
                         const std::string &alias) {

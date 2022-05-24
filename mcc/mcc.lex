@@ -82,7 +82,7 @@ yy::parser::symbol_type make_CFLOAT(const std::string &s,const yy::parser::locat
 0[xX]{hex}+{sgn}?		{ count(); return make_CINT(yytext,loc); }
 0{decimal}+{sgn}?		{ count(); return make_CINT(yytext,loc); }
 {decimal}+{sgn}?		{ count(); return make_CINT(yytext,loc); }
-L?'(\\.|[^\\'])+'	{ count(); return yy::parser::make_CONSTANT({mcc::Primitive::Char,0,true,true,false},loc); }
+L?'(\\.|[^\\'])+'	{ count(); return yy::parser::make_CONSTANT({{mcc::Primitive::Char,0},true,true,false},loc); }
 
 {decimal}+{exp}{fs}?		{ count(); return make_CFLOAT(yytext,loc); }
 {decimal}*"."{decimal}+({exp})?{fs}?	{ count(); return make_CFLOAT(yytext,loc); }
@@ -188,7 +188,7 @@ yy::parser::symbol_type make_IDENTIFIER(const std::string & s, const yy::parser:
 }
 yy::parser::symbol_type make_STRING_LITERAL(const std::string &s,const yy::parser::location_type&loc)
 {
-  return yy::parser::make_STRING_LITERAL({mcc::Primitive::Char,1,true,true,false},loc);
+  return yy::parser::make_STRING_LITERAL({{mcc::Primitive::Char,1},true,true,false},loc);
 }
 yy::parser::symbol_type make_CINT(const std::string &s,const yy::parser::location_type&loc)
 {
@@ -196,25 +196,25 @@ yy::parser::symbol_type make_CINT(const std::string &s,const yy::parser::locatio
   std::transform(lower.begin(), lower.end(), lower.begin(),
     [](auto c){ return std::tolower(c); });
   if(lower.find("ll")!=std::string::npos && lower.find('u')!=std::string::npos)
-    return yy::parser::make_CONSTANT({mcc::Primitive::ULongLong,0,true,true,false},loc);
+    return yy::parser::make_CONSTANT({{mcc::Primitive::ULongLong,0},true,true,false},loc);
   if(lower.find("ll")!=std::string::npos)
-    return yy::parser::make_CONSTANT({mcc::Primitive::LongLong,0,true,true,false},loc);
+    return yy::parser::make_CONSTANT({{mcc::Primitive::LongLong,0},true,true,false},loc);
   if(lower.find('l')!=std::string::npos&& lower.find('u')!=std::string::npos)
-    return yy::parser::make_CONSTANT({mcc::Primitive::ULong,0,true,true,false},loc);
+    return yy::parser::make_CONSTANT({{mcc::Primitive::ULong,0},true,true,false},loc);
   if(lower.find('u')!=std::string::npos)
-    return yy::parser::make_CONSTANT({mcc::Primitive::UInt,0,true,true,false},loc);
+    return yy::parser::make_CONSTANT({{mcc::Primitive::UInt,0},true,true,false},loc);
   if(lower.find('l')!=std::string::npos)
-    return yy::parser::make_CONSTANT({mcc::Primitive::Long,0,true,true,false},loc);
-  return yy::parser::make_CONSTANT({mcc::Primitive::Int,0,true,true,false},loc);
+    return yy::parser::make_CONSTANT({{mcc::Primitive::Long,0},true,true,false},loc);
+  return yy::parser::make_CONSTANT({{mcc::Primitive::Int,0},true,true,false},loc);
 }
 yy::parser::symbol_type make_CFLOAT(const std::string &s,const yy::parser::location_type&loc)
 {
   auto lower = std::tolower(s.back());
   if(lower=='f')
-    return yy::parser::make_CONSTANT({mcc::Primitive::Float,0,true,true,false},loc);
+    return yy::parser::make_CONSTANT({{mcc::Primitive::Float,0},true,true,false},loc);
   if(lower=='l')
-    return yy::parser::make_CONSTANT({mcc::Primitive::LongDouble,0,true,true,false},loc);
-return yy::parser::make_CONSTANT({mcc::Primitive::Double,0,true,true,false},loc);
+    return yy::parser::make_CONSTANT({{mcc::Primitive::LongDouble,0},true,true,false},loc);
+return yy::parser::make_CONSTANT({{mcc::Primitive::Double,0},true,true,false},loc);
 
 
 
