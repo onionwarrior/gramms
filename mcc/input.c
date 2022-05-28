@@ -29,9 +29,12 @@ sus:
 	int azzz[];
 	int braces =(5);
 	int ccc = arr[4];
-	const static int;
 	int cast = (blah)ccc;
 	int int var;
+	int intojor = 5;
+	int ffffff=arr[arr[5]];
+	int darray[5][16];
+	int fff = darray[5][3][3];
 	float zzz=3,bbb=3;
 	{
 		int var =3;

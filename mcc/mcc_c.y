@@ -184,15 +184,22 @@ postfix_expression
 	{
 		const auto is_sub_int = mcc::IsIntegerT($3.GetType());
 		const auto ind = $3.GetIndLevel();
-		if( $1.IsPtr()||std::holds_alternative<mcc::CArray>($1.GetType()))
-		{
-			const auto ind_lhs = $1.GetIndLevel();
-			$$={{$1.GetType(),$1.GetDeref()},$1.DerefIsConst(),true,false};
-			if(!is_sub_int || $3.IsPtr())
+		if(!is_sub_int || $3.IsPtr())
 			{
 				mcc::PrintColored("Array subscript can't be non integer",mcc::TextColor::Error);
 			}
-		}
+
+		else if( $1.IsPtr())
+		{
+			const auto ind_lhs = $1.GetIndLevel();
+			$$={{$1.GetType(),$1.GetDeref()},$1.DerefIsConst(),true,false};
+					}
+		else if(std::holds_alternative<mcc::CArray>($1.GetType()))
+		{
+			auto arr_t = std::get<mcc::CArray>($1.GetType());
+			auto deref_t = arr_t.GetDerefT();
+			$$={{deref_t},true,true,false};
+					}
 		else
 		{
 			mcc::PrintColored("Cannot apply subscript operator to a non pointer value",mcc::TextColor::Error);
@@ -615,7 +622,6 @@ direct_declarator
 	| id_or_idptr array_dim_list
 	{
 		auto as_arr_t = mcc::T{$1.second.GetType()}.ToArrT();
-		mcc::PrintColored(std::to_string($1.second.GetIndLevel()),mcc::TextColor::Error);
 		drv.AddSymbol($1.first,{{mcc::CArray{as_arr_t,$2.begin(),$2.end()},$1.second.GetIndLevel()},drv.GetInConst(),true,false});
 		mcc::PrintColored("Array:",mcc::TextColor::Good);
 	}

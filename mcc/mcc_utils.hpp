@@ -31,16 +31,27 @@ enum class Primitive {
   LongDouble,
   Void
 };
+template <class... Args> struct variant_cast_proxy {
+  std::variant<Args...> v;
+
+  template <class... ToArgs> operator std::variant<ToArgs...>() const {
+    return std::visit([](auto &&arg) -> std::variant<ToArgs...> { return arg; },
+                      v);
+  }
+};
+
+template <class... Args>
+auto variant_cast(const std::variant<Args...> &v)
+    -> variant_cast_proxy<Args...> {
+  return {v};
+}
 class PtrBits {
   // if a bit is set - ptr is const;
   std::bitset<256> ptrs_ = 0;
   std::size_t counter_ = 0;
 
 public:
-  auto AddIndirection(const bool is_const) {
-    std::cout << std::boolalpha << is_const;
-    ptrs_[counter_++] = is_const;
-  }
+  auto AddIndirection(const bool is_const) { ptrs_[counter_++] = is_const; }
   auto GetIndirection() const { return counter_; }
   auto GetBit(const size_t b) const { return ptrs_[b]; }
   PtrBits(const std::size_t ind) {
@@ -100,6 +111,10 @@ typedef std::variant<Primitive, UserType, std::shared_ptr<Func>, Enum>
  * * i.e.
  * int arr[10][5][33] is represented as <10,5,33>
  */
+class CArray;
+typedef std::variant<NoneType, Primitive, UserType, std::shared_ptr<Func>, Enum,
+                     CArray>
+    TypeOrNone;
 class CArray {
   mcc::ArrayType arr_type_;
   std::vector<std::size_t> sizes_;
@@ -107,6 +122,12 @@ class CArray {
 public:
   auto GetArrayIndirection() const { return sizes_.size(); }
   auto GetSizeAt(const std::size_t idx) const { return sizes_[idx]; }
+  mcc::TypeOrNone GetDerefT() const {
+    if (sizes_.size() > 1)
+      return mcc::CArray{arr_type_, sizes_.begin(), sizes_.end() - 1};
+    else
+      return variant_cast(arr_type_);
+  }
   template <
       typename T, typename It,
       std::enable_if_t<
@@ -119,9 +140,6 @@ public:
   }
 };
 
-typedef std::variant<NoneType, Primitive, UserType, std::shared_ptr<Func>, Enum,
-                     CArray>
-    TypeOrNone;
 class T {
   mcc::PtrBits ptr_;
   mcc::TypeOrNone t_;
@@ -129,7 +147,6 @@ class T {
 public:
   T(const mcc::PtrBits &ptr, const mcc::TypeOrNone &t) : ptr_{ptr}, t_{t} {}
   T(const mcc::TypeOrNone &t, const mcc::PtrBits &ptr) : ptr_{ptr}, t_{t} {}
-
   T(const mcc::TypeOrNone &t) : t_{t} {}
   T() = default;
   mcc::ArrayType ToArrT() const {
@@ -188,11 +205,7 @@ public:
   auto inline DerefIsConst() const {
     return type_.GetPtr().GetBit(GetIndLevel() - 1);
   }
-  auto inline GetDeref() const {
-    mcc::PrintColored(std::to_string(type_.GetInd() - 1),
-                      mcc::TextColor::Error);
-    return mcc::PtrBits{type_.GetInd() - 1};
-  }
+  auto inline GetDeref() const { return mcc::PtrBits{type_.GetInd() - 1}; }
   auto inline IsLvalue() const { return is_lvalue_; }
   auto inline IsConst() const { return is_const_; }
   Symbol(const T &type, const bool is_const, bool defined, bool is_lvalue)
