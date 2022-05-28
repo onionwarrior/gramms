@@ -193,13 +193,14 @@ postfix_expression
 		else if( $1.IsPtr())
 		{
 			const auto ind_lhs = $1.GetIndLevel();
-			$$={{$1.GetType(),$1.GetDeref()},$1.DerefIsConst(),true,false};
+			$$={{$1.GetType(),$1.GetDeref()},$1.DerefIsConst(),true,true};
 					}
 		else if(std::holds_alternative<mcc::CArray>($1.GetType()))
 		{
 			auto arr_t = std::get<mcc::CArray>($1.GetType());
 			auto deref_t = arr_t.GetDerefT();
-			$$={{deref_t},true,true,false};
+			$$={{deref_t},true,true,true};
+			mcc::PrintColored(std::to_string($$.IsLvalue()),mcc::TextColor::Error);
 					}
 		else
 		{
@@ -210,9 +211,13 @@ postfix_expression
 	{
 		if(mcc::IsFuncPtr($1))
 		{
+			if(!$1.IsDefined())
+			{
+				mcc::PrintColored("Function is declared,but not defined",mcc::TextColor::Warning);
+			}
 			const auto ftype = std::get<std::shared_ptr<mcc::Func>>($1.GetType());
 			auto & fargs = ftype->GetArgs();
-			if (!fargs.size())
+			if (fargs.size())
 			{
 				$$={};
 				mcc::PrintColored("Argument count mismatch, function requires " +
@@ -243,7 +248,17 @@ postfix_expression
 				,mcc::TextColor::Error);
 			}
 			else
-			$$={ftype->GetReturnType(),false,true,false};
+			{
+				if(std::equal(fargs.begin(),fargs.end(),$3.begin(),$3.end(),[](auto&&l,auto&&r)
+				{
+					return l==r.GetType();
+				}))
+				$$={ftype->GetReturnType(),false,true,false};
+				else {
+					$$={};
+					mcc::PrintColored("Wrong func arg types",mcc::TextColor::Error);
+				}
+			}
 		}
 		else
 		{
@@ -252,13 +267,37 @@ postfix_expression
 		}
 	}
 	| postfix_expression "." "identifier"
-	{mcc::PrintColored("Non ptr struct or union field access",mcc::TextColor::Good);}
+	{
+		mcc::PrintColored("Non ptr struct or union field access",mcc::TextColor::Good);
+	}
 	| postfix_expression "->" "identifier"
-	{mcc::PrintColored("Ptr struct or union field access",mcc::TextColor::Good);}
+	{
+		auto t = $1.GetType();
+		if(!$1.IsUserType()&&!$1.IsPtr())
+		{
+			mcc::PrintColored("Cannot apply ++ operator to a non-lvalue",mcc::TextColor::Error);
+		}
+		mcc::PrintColored("Ptr struct or union field access",mcc::TextColor::Good);
+	}
 	| postfix_expression "++"
-	{mcc::PrintColored("Postfix increment",mcc::TextColor::Good);}
+	{
+		if(!$1.IsLvalue())
+		{
+					mcc::PrintColored("Cannot apply ++ operator to a non-lvalue",mcc::TextColor::Error);
+		}
+
+		$$=$1.GetRvalue();
+		mcc::PrintColored("Postfix increment",mcc::TextColor::Good);
+	}
 	| postfix_expression "--"
-	{mcc::PrintColored("Postfix decrement",mcc::TextColor::Good);}
+	{
+		if(!$1.IsLvalue())
+		{
+			mcc::PrintColored("Cannot apply -- operator to a non-lvalue",mcc::TextColor::Error);
+		}
+		$$=$1.GetRvalue();
+		mcc::PrintColored("Postfix decrement",mcc::TextColor::Good);
+	}
 	;
 
 argument_expression_list
@@ -687,7 +726,7 @@ direct_declarator
 				return arg.second.GetType();
 			});
 		mcc::PrintColored("Func argnames",mcc::TextColor::Good);
-		$$={$1.first,{{std::make_shared<mcc::Func>(param_types),0},drv.GetInConst(),true,false}};
+		$$={$1.first,{{std::make_shared<mcc::Func>(param_types),0},drv.GetInConst(),false,false}};
 	}
 	| id_or_idptr "(" ")"
 	{

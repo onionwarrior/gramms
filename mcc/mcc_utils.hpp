@@ -170,6 +170,24 @@ public:
   auto GetPtr() const { return ptr_; }
   auto GetInd() const { return ptr_.GetIndirection(); }
   auto IsPtrT() const { return ptr_.GetIndirection() > 0; }
+  /*typedef std::variant<NoneType, Primitive, UserType, std::shared_ptr<Func>,
+    Enum, CArray> TypeOrNone;
+*/
+  friend bool operator==(const mcc::T &l, const mcc::T &r) {
+    auto lt = l.GetType();
+    auto rt = r.GetType();
+    auto li = l.GetInd();
+    auto ri = r.GetInd();
+    if (std::holds_alternative<NoneType>(lt) &&
+        std::holds_alternative<NoneType>(rt))
+      return true;
+    if ((std::holds_alternative<Primitive>(lt) ||
+         std::holds_alternative<Enum>(lt)) &&
+        (std::holds_alternative<Primitive>(rt) ||
+         std::holds_alternative<Enum>(rt)))
+      return std::get<Primitive>(lt)!=mcc::Primitive::Void&&std::get<Primitive>(rt)!=mcc::Primitive::Void;
+    return false;
+  }
 };
 inline auto IsNoneType(const mcc::TypeOrNone &t) {
   return std::holds_alternative<mcc::NoneType>(t);
@@ -181,7 +199,7 @@ class Func {
 public:
   auto SetReturnType(const mcc::T &new_t) { return_type_ = new_t; }
   auto GetReturnType() const { return return_type_; }
-  const auto & GetArgs() const {return args_;}
+  const auto &GetArgs() const { return args_; }
   Func(const std::vector<T> &args) : args_{args} {}
   Func(const T &ret, const std::vector<T> &args)
       : return_type_{ret}, args_{args} {}
@@ -199,23 +217,29 @@ class Symbol {
   mcc::T type_;
   bool defined_ = false;
   bool is_const_ = false;
-  bool is_default_constructed_= true;
+  bool is_default_constructed_ = true;
+
 public:
   auto inline GetIndLevel() const { return type_.GetInd(); }
   auto inline IsPtr() const { return type_.IsPtrT(); }
   auto inline DerefIsConst() const {
     return type_.GetPtr().GetBit(GetIndLevel() - 1);
   }
+
   auto inline GetDeref() const { return mcc::PtrBits{type_.GetInd() - 1}; }
   auto inline IsLvalue() const { return is_lvalue_; }
   auto inline IsConst() const { return is_const_; }
+  auto inline IsDefined() const { return defined_;}
   Symbol(const T &type, const bool is_const, bool defined, bool is_lvalue)
       : type_{type}, is_const_(is_const), defined_{defined},
-        is_lvalue_(is_lvalue) {is_default_constructed_=false;}
+        is_lvalue_(is_lvalue) {
+    is_default_constructed_ = false;
+  }
   Symbol() = default;
-  auto isdef() {return is_default_constructed_;}
   Symbol(const Symbol &) = default;
   auto GetType() const { return type_.GetType(); }
+  auto GetRvalue() const { return Symbol{type_,is_const_,defined_,false};}
+  auto IsUserType() const { return std::holds_alternative<mcc::UserType>(type_.GetType());}
 };
 auto inline IsFuncPtr(const mcc::Symbol &s) {
   return std::holds_alternative<std::shared_ptr<Func>>(s.GetType());

@@ -16,6 +16,10 @@ int swap(int a,int b)
 }
 int main()
 {
+	int arr[4];
 	swap(1,2,3);
-	swap(1,1);
+	swap(swap,1);
+	int funz();
+	funz();
+	int a = arr[3]--;
 }
