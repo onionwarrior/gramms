@@ -429,6 +429,7 @@ namespace yy {
       // type_qualifier_list
       char dummy6[sizeof (std::string)];
 
+      // argument_expression_list
       // init_declarator_list
       char dummy7[sizeof (std::vector<mcc::Symbol>)];
 
@@ -726,28 +727,27 @@ namespace yy {
         S_parameter_type_list = 134,             // parameter_type_list
         S_parameter_list = 135,                  // parameter_list
         S_parameter_declaration = 136,           // parameter_declaration
-        S_identifier_list = 137,                 // identifier_list
-        S_type_name = 138,                       // type_name
-        S_abstract_declarator = 139,             // abstract_declarator
-        S_direct_abstract_declarator = 140,      // direct_abstract_declarator
-        S_initializer = 141,                     // initializer
-        S_initializer_list = 142,                // initializer_list
-        S_statement = 143,                       // statement
-        S_144_3 = 144,                           // $@3
-        S_labeled_statement = 145,               // labeled_statement
-        S_compound_statement = 146,              // compound_statement
-        S_statement_list = 147,                  // statement_list
-        S_expression_statement = 148,            // expression_statement
-        S_selection_statement = 149,             // selection_statement
-        S_iteration_statement = 150,             // iteration_statement
-        S_151_4 = 151,                           // $@4
-        S_152_5 = 152,                           // $@5
-        S_jump_statement = 153,                  // jump_statement
-        S_translation_unit = 154,                // translation_unit
-        S_external_declaration = 155,            // external_declaration
-        S_function_definition = 156,             // function_definition
-        S_157_6 = 157,                           // $@6
-        S_158_7 = 158                            // $@7
+        S_type_name = 137,                       // type_name
+        S_abstract_declarator = 138,             // abstract_declarator
+        S_direct_abstract_declarator = 139,      // direct_abstract_declarator
+        S_initializer = 140,                     // initializer
+        S_initializer_list = 141,                // initializer_list
+        S_statement = 142,                       // statement
+        S_143_3 = 143,                           // $@3
+        S_labeled_statement = 144,               // labeled_statement
+        S_compound_statement = 145,              // compound_statement
+        S_statement_list = 146,                  // statement_list
+        S_expression_statement = 147,            // expression_statement
+        S_selection_statement = 148,             // selection_statement
+        S_iteration_statement = 149,             // iteration_statement
+        S_150_4 = 150,                           // $@4
+        S_151_5 = 151,                           // $@5
+        S_jump_statement = 152,                  // jump_statement
+        S_translation_unit = 153,                // translation_unit
+        S_external_declaration = 154,            // external_declaration
+        S_function_definition = 155,             // function_definition
+        S_156_6 = 156,                           // $@6
+        S_157_7 = 157                            // $@7
       };
     };
 
@@ -836,6 +836,7 @@ namespace yy {
         value.move< std::string > (std::move (that.value));
         break;
 
+      case symbol_kind::S_argument_expression_list: // argument_expression_list
       case symbol_kind::S_init_declarator_list: // init_declarator_list
         value.move< std::vector<mcc::Symbol> > (std::move (that.value));
         break;
@@ -1075,6 +1076,7 @@ switch (yykind)
         value.template destroy< std::string > ();
         break;
 
+      case symbol_kind::S_argument_expression_list: // argument_expression_list
       case symbol_kind::S_init_declarator_list: // init_declarator_list
         value.template destroy< std::vector<mcc::Symbol> > ();
         break;
@@ -2883,8 +2885,8 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 1347,     ///< Last index in yytable_.
-      yynnts_ = 73,  ///< Number of nonterminal symbols.
+      yylast_ = 1329,     ///< Last index in yytable_.
+      yynnts_ = 72,  ///< Number of nonterminal symbols.
       yyfinal_ = 57 ///< Termination state number.
     };
 
@@ -2962,6 +2964,7 @@ switch (yykind)
         value.copy< std::string > (YY_MOVE (that.value));
         break;
 
+      case symbol_kind::S_argument_expression_list: // argument_expression_list
       case symbol_kind::S_init_declarator_list: // init_declarator_list
         value.copy< std::vector<mcc::Symbol> > (YY_MOVE (that.value));
         break;
@@ -3059,6 +3062,7 @@ switch (yykind)
         value.move< std::string > (YY_MOVE (s.value));
         break;
 
+      case symbol_kind::S_argument_expression_list: // argument_expression_list
       case symbol_kind::S_init_declarator_list: // init_declarator_list
         value.move< std::vector<mcc::Symbol> > (YY_MOVE (s.value));
         break;
@@ -3139,7 +3143,7 @@ switch (yykind)
 
 
 } // yy
-#line 3143 "mcc_c.tab.h"
+#line 3147 "mcc_c.tab.h"
 
 
 

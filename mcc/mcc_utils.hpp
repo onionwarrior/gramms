@@ -181,6 +181,7 @@ class Func {
 public:
   auto SetReturnType(const mcc::T &new_t) { return_type_ = new_t; }
   auto GetReturnType() const { return return_type_; }
+  const auto & GetArgs() const {return args_;}
   Func(const std::vector<T> &args) : args_{args} {}
   Func(const T &ret, const std::vector<T> &args)
       : return_type_{ret}, args_{args} {}
@@ -198,7 +199,7 @@ class Symbol {
   mcc::T type_;
   bool defined_ = false;
   bool is_const_ = false;
-
+  bool is_default_constructed_= true;
 public:
   auto inline GetIndLevel() const { return type_.GetInd(); }
   auto inline IsPtr() const { return type_.IsPtrT(); }
@@ -210,8 +211,9 @@ public:
   auto inline IsConst() const { return is_const_; }
   Symbol(const T &type, const bool is_const, bool defined, bool is_lvalue)
       : type_{type}, is_const_(is_const), defined_{defined},
-        is_lvalue_(is_lvalue) {}
+        is_lvalue_(is_lvalue) {is_default_constructed_=false;}
   Symbol() = default;
+  auto isdef() {return is_default_constructed_;}
   Symbol(const Symbol &) = default;
   auto GetType() const { return type_.GetType(); }
 };

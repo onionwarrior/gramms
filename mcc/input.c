@@ -9,50 +9,13 @@ char sym = 's';
 struct s{
 	int z;
 	int c;
+};
+int swap(int a,int b)
+{
+	return a+b;
 }
 int main()
 {
-	int func();
-	int  z = (struct s*)sym;
-	double func(char * a);
-	const int constint=3;
-	constint=55;
-	
-	int arr[15];
-
-sus:
-	goto sus;
-	goto amogus;
-	goto bla;
-	blah blah_val;
-	const int gggg = ((int)0)?1:2;
-	int azzz[];
-	int braces =(5);
-	int ccc = arr[4];
-	int cast = (blah)ccc;
-	int int var;
-	int intojor = 5;
-	int ffffff=arr[arr[5]];
-	int darray[5][16];
-	int fff = darray[5][3][3];
-	float zzz=3,bbb=3;
-	{
-		int var =3;
-		float z=3;
-		{
-			float g=10;
-		}
-	}
-	while(1)
-	{
-			
-	}
-	fun(a,sym);
-	fun("%s","hello");
-	fun(1,2);
-	return 0;
-}
-void fun()
-{
-
+	swap(1,2,3);
+	swap(1,1);
 }

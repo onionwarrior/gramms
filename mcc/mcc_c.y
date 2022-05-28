@@ -108,6 +108,7 @@ class driver;
 %nonassoc "else"
 %type <std::size_t> array_dim;
 %type <std::vector<std::pair<std::string,mcc::Symbol>>> parameter_type_list
+%type <std::vector<mcc::Symbol>>argument_expression_list
 %type <std::vector<std::pair<std::string,mcc::Symbol>>> parameter_declaration parameter_list;
 %type <std::vector<std::size_t>> array_dim_list;
 %type <mcc::Symbol> init_declarator;
@@ -210,6 +211,15 @@ postfix_expression
 		if(mcc::IsFuncPtr($1))
 		{
 			const auto ftype = std::get<std::shared_ptr<mcc::Func>>($1.GetType());
+			auto & fargs = ftype->GetArgs();
+			if (!fargs.size())
+			{
+				$$={};
+				mcc::PrintColored("Argument count mismatch, function requires " +
+				 std::to_string(fargs.size())+" arguments," + " have 0"
+				,mcc::TextColor::Error);
+			}
+			else
 			$$={ftype->GetReturnType(),false,true,false};
 		}
 		else
@@ -217,10 +227,30 @@ postfix_expression
 			mcc::PrintColored("Is not a function",mcc::TextColor::Error);
 			$$={};
 		}
-		mcc::PrintColored("Function call with no args",mcc::TextColor::Good);
 	}
 	| postfix_expression "(" argument_expression_list ")"
-	{mcc::PrintColored("Function call with args",mcc::TextColor::Good);}
+	{
+		if(mcc::IsFuncPtr($1))
+		{
+			const auto ftype = std::get<std::shared_ptr<mcc::Func>>($1.GetType());
+			auto & fargs = ftype->GetArgs();
+			const auto arg_count_eq = fargs.size()==$3.size();
+			if (!arg_count_eq)
+			{
+				$$={};
+				mcc::PrintColored("Argument count mismatch, function requires " +
+				std::to_string(fargs.size()) + " arguments, " + "have " + std::to_string($3.size())
+				,mcc::TextColor::Error);
+			}
+			else
+			$$={ftype->GetReturnType(),false,true,false};
+		}
+		else
+		{
+			mcc::PrintColored("Is not a function",mcc::TextColor::Error);
+			$$={};
+		}
+	}
 	| postfix_expression "." "identifier"
 	{mcc::PrintColored("Non ptr struct or union field access",mcc::TextColor::Good);}
 	| postfix_expression "->" "identifier"
@@ -233,7 +263,12 @@ postfix_expression
 
 argument_expression_list
 	: assignment_expression
+		{$$={};$$.push_back($1);}
 	| argument_expression_list "," assignment_expression
+	{
+		$$=$1;
+		$$.push_back($3);
+	}
 	;
 
 unary_expression
@@ -272,8 +307,12 @@ multiplicative_expression
 	: cast_expression
 	{$$=$1;}
 	| multiplicative_expression "*" cast_expression
+	{$$=$1;}
 	| multiplicative_expression "/" cast_expression
+	{$$=$1;}
 	| multiplicative_expression "%" cast_expression
+	{$$=$1;}
+
 	;
 
 additive_expression
@@ -281,7 +320,9 @@ additive_expression
 	{$$=$1;}
 
 	| additive_expression "+" multiplicative_expression
+	{$$=$1;}
 	| additive_expression "-" multiplicative_expression
+	{$$=$1;}
 	;
 
 shift_expression
@@ -289,59 +330,72 @@ shift_expression
 	{$$=$1;}
 
 	| shift_expression "<<" additive_expression
+	{$$=$1;}
 	| shift_expression ">>" additive_expression
+	{$$=$1;}
 	;
 
 relational_expression
 	: shift_expression
 	{$$=$1;}
 
-	| relational_expression "<=" shift_expression
-	| relational_expression ">=" shift_expression
-	| relational_expression "<" shift_expression
-	| relational_expression ">" shift_expression
+	| relational_expression "<=" shift_expression{$$=$1;}
+
+	| relational_expression ">=" shift_expression{$$=$1;}
+
+	| relational_expression "<" shift_expression{$$=$1;}
+
+	| relational_expression ">" shift_expression{$$=$1;}
+
 	;
 
 equality_expression
 	: relational_expression
 	{$$=$1;}
 
-	| equality_expression "==" relational_expression
-	| equality_expression "!=" relational_expression
+	| equality_expression "==" relational_expression{$$=$1;}
+
+	| equality_expression "!=" relational_expression{$$=$1;}
+
 	;
 
 and_expression
 	: equality_expression
 	{$$=$1;}
 
-	| and_expression "&" equality_expression
+	| and_expression "&" equality_expression{$$=$1;}
+
 	;
 
 exclusive_or_expression
 	: and_expression
 	{$$=$1;}
 
-	| exclusive_or_expression "^" and_expression
+	| exclusive_or_expression "^" and_expression{$$=$1;}
+
 	;
 
 inclusive_or_expression
 	: exclusive_or_expression
 	{$$=$1;}
 
-	| inclusive_or_expression "|" exclusive_or_expression
+	| inclusive_or_expression "|" exclusive_or_expression{$$=$1;}
+
 	;
 logical_and_expression
 	: inclusive_or_expression
 	{$$=$1;}
 
-	| logical_and_expression "||" inclusive_or_expression
+	| logical_and_expression "||" inclusive_or_expression{$$=$1;}
+
 	;
 
 logical_or_expression
 	: logical_and_expression
 	{$$=$1;}
 
-	| logical_or_expression "&&" logical_and_expression
+	| logical_or_expression "&&" logical_and_expression{$$=$1;}
+
 	;
 
 conditional_expression
@@ -359,7 +413,8 @@ conditional_expression
 			mcc::PrintColored("Void where pointer or arithmetic type is required",mcc::TextColor::Error);
 		}
 	}
-	"?" expression ":" conditional_expression
+	"?" expression ":" conditional_expression {$$=$1;}
+
 		;
 
 assignment_expression
@@ -376,6 +431,7 @@ assignment_expression
 		{
 			mcc::PrintColored("Cant assign a non primitive to a primitive or vise-versa",mcc::TextColor::Error);
 		}
+		$$=$1;
 	}
 	;
 
@@ -400,7 +456,8 @@ expression
 	;
 
 constant_expression
-	: conditional_expression
+	: conditional_expression{$$=$1;}
+
 	;
 // check current scope
 declaration
@@ -535,11 +592,7 @@ struct_declarator_list
 struct_declarator
 	: declarator
 	| ":" constant_expression
-	| declarator ":" constant_expression| id_or_idptr "(" identifier_list  ")"
-	{
-		mcc::PrintColored("Func argnames",mcc::TextColor::Good);
-	}
-
+	| declarator ":" constant_expression
 	;
 
 enum_specifier
@@ -616,7 +669,7 @@ direct_declarator
 	: id_or_idptr
 	//return name for declarator
 	{
-		//this is name of the symbol or type idk
+		$$=$1;
 	}
 	//return array of direct_declarator
 	| id_or_idptr array_dim_list
@@ -624,14 +677,22 @@ direct_declarator
 		auto as_arr_t = mcc::T{$1.second.GetType()}.ToArrT();
 		drv.AddSymbol($1.first,{{mcc::CArray{as_arr_t,$2.begin(),$2.end()},$1.second.GetIndLevel()},drv.GetInConst(),true,false});
 		mcc::PrintColored("Array:",mcc::TextColor::Good);
+		$$={$1.first,{{mcc::CArray{as_arr_t,$2.begin(),$2.end()},$1.second.GetIndLevel()},drv.GetInConst(),true,false}};
 	}
 	| id_or_idptr "(" parameter_type_list  ")"
 	{
+		std::vector<mcc::T> param_types;
+		std::transform($3.begin(),$3.end(),std::back_inserter(param_types),[](auto&&arg)
+			{
+				return arg.second.GetType();
+			});
 		mcc::PrintColored("Func argnames",mcc::TextColor::Good);
+		$$={$1.first,{{std::make_shared<mcc::Func>(param_types),0},drv.GetInConst(),true,false}};
 	}
 	| id_or_idptr "(" ")"
 	{
-
+		mcc::PrintColored("Func argnames",mcc::TextColor::Good);
+		$$={$1.first,{{std::make_shared<mcc::Func>(std::vector<mcc::T>{}),0},drv.GetInConst(),true,false}};
 	}
 
 pointer
@@ -679,22 +740,19 @@ parameter_list
 	: parameter_declaration
 	{$$=$1;}
 	| parameter_list "," parameter_declaration
+	{$$=$1;
+	$$.push_back($3[0]);}
 	;
 
 parameter_declaration
 	: declaration_specifiers declarator
 	{
 			auto decl = $2.second;
-			mcc::PrintColored($2.first+"\n",mcc::TextColor::Warning);
 			$$={};
 			$$.push_back({$2.first,{$1,drv.GetInConst(),true,true}});
 	}
 	;
 
-identifier_list
-	: "identifier"
-	| identifier_list "," "identifier"
-	;
 
 type_name
 	: specifier_qualifier_list
@@ -805,24 +863,38 @@ external_declaration
 	;
 //All kinds of functions definitions...
 function_definition:
-	 declaration_specifiers direct_declarator {drv.EnterNewScope($2.first);} compound_statement
-		{drv.LeaveScope();}
+	 declaration_specifiers direct_declarator
+		{
+			if(mcc::IsFuncPtr($2.second))
+			{
+				auto func = std::get<std::shared_ptr<mcc::Func>>($2.second.GetType());
+				func->SetReturnType($1);
+				drv.AddSymbol($2.first,{{func,0},drv.GetInConst(),true,false});
+			}
+			else
+			{
+				mcc::PrintColored("Is not a valid function declaration",mcc::TextColor::Error);
+			}
+			drv.EnterNewScope($2.first);
+		}
+		compound_statement
+		{
+					drv.LeaveScope();
+		}
 	| direct_declarator
 		{
-			if(!mcc::IsFuncPtr($1.second))
+			if(mcc::IsFuncPtr($1.second))
 			{
-				//drv.AddSymbol();
 				drv.EnterNewScope($1.first);
 			}
 			else
 			{
-			//bad
+				mcc::PrintColored("Is not a valid function declaration",mcc::TextColor::Error);
 			}
 		}
 		compound_statement
 		{drv.LeaveScope();}
-	;
-
+		;
 %%
 void
 yy::parser::error (const location_type& l, const std::string& m)
