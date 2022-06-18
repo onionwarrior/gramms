@@ -22,4 +22,18 @@ int main()
 	int funz();
 	funz();
 	int a = arr[3]--;
+	int c=5;
+	++swap(a,c);
+	c++;
+	++c;
+	struct s r ;
+	float z = 0.3;
+	int q = &swap(1,2);
+	int * ptr;
+	struct s t;
+	int k =0;
+	int derfef;
+	int sh1=305;
+	int sh2=300;
+	char comp = sh2<sh2==sh2;
 }

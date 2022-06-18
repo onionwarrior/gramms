@@ -12,6 +12,7 @@
 #include <type_traits>
 #include <variant>
 #include <vector>
+#include <iomanip>
 #if !defined(MCC_UTILS)
 #define MCC_UTILS
 namespace mcc {
@@ -185,7 +186,8 @@ public:
          std::holds_alternative<Enum>(lt)) &&
         (std::holds_alternative<Primitive>(rt) ||
          std::holds_alternative<Enum>(rt)))
-      return std::get<Primitive>(lt)!=mcc::Primitive::Void&&std::get<Primitive>(rt)!=mcc::Primitive::Void;
+      return std::get<Primitive>(lt) != mcc::Primitive::Void &&
+             std::get<Primitive>(rt) != mcc::Primitive::Void;
     return false;
   }
 };
@@ -222,14 +224,19 @@ class Symbol {
 public:
   auto inline GetIndLevel() const { return type_.GetInd(); }
   auto inline IsPtr() const { return type_.IsPtrT(); }
+  auto inline EvalsToInt() const {
+    const auto t = type_.GetType();
+    return type_.IsPtrT() || std::holds_alternative<Enum>(t) ||
+           std::holds_alternative<mcc::Primitive>(t);
+  }
   auto inline DerefIsConst() const {
     return type_.GetPtr().GetBit(GetIndLevel() - 1);
   }
-
+  auto inline GetPtrTo() const { return mcc::Symbol{{type_.GetType(),type_.GetInd()+1},true,true,false};}
   auto inline GetDeref() const { return mcc::PtrBits{type_.GetInd() - 1}; }
   auto inline IsLvalue() const { return is_lvalue_; }
   auto inline IsConst() const { return is_const_; }
-  auto inline IsDefined() const { return defined_;}
+  auto inline IsDefined() const { return defined_; }
   Symbol(const T &type, const bool is_const, bool defined, bool is_lvalue)
       : type_{type}, is_const_(is_const), defined_{defined},
         is_lvalue_(is_lvalue) {
@@ -238,9 +245,15 @@ public:
   Symbol() = default;
   Symbol(const Symbol &) = default;
   auto GetType() const { return type_.GetType(); }
-  auto GetRvalue() const { return Symbol{type_,is_const_,defined_,false};}
-  auto IsUserType() const { return std::holds_alternative<mcc::UserType>(type_.GetType());}
+  auto GetRvalue() const { return Symbol{type_, is_const_, defined_, false}; }
+  auto IsUserType() const {
+    return std::holds_alternative<mcc::UserType>(type_.GetType());
+  }
 };
+auto inline AreComparable(const Symbol & l,const Symbol & r)
+{
+  return (l.EvalsToInt()&&r.EvalsToInt());
+}
 auto inline IsFuncPtr(const mcc::Symbol &s) {
   return std::holds_alternative<std::shared_ptr<Func>>(s.GetType());
 }

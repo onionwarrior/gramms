@@ -397,11 +397,8 @@ namespace yy {
       // shift_expression
       // relational_expression
       // equality_expression
-      // and_expression
-      // exclusive_or_expression
-      // inclusive_or_expression
-      // logical_and_expression
-      // logical_or_expression
+      // bitwise_logical_expression
+      // logical_expression
       // conditional_expression
       // assignment_expression
       // expression
@@ -425,6 +422,9 @@ namespace yy {
 
       // "identifier"
       // "typename"
+      // unary_operator
+      // bitwise_logical_operator
+      // logical_binary_operator
       // type_qualifier
       // type_qualifier_list
       char dummy6[sizeof (std::string)];
@@ -688,66 +688,65 @@ namespace yy {
         S_shift_expression = 95,                 // shift_expression
         S_relational_expression = 96,            // relational_expression
         S_equality_expression = 97,              // equality_expression
-        S_and_expression = 98,                   // and_expression
-        S_exclusive_or_expression = 99,          // exclusive_or_expression
-        S_inclusive_or_expression = 100,         // inclusive_or_expression
-        S_logical_and_expression = 101,          // logical_and_expression
-        S_logical_or_expression = 102,           // logical_or_expression
-        S_conditional_expression = 103,          // conditional_expression
-        S_104_1 = 104,                           // $@1
-        S_assignment_expression = 105,           // assignment_expression
-        S_106_2 = 106,                           // $@2
-        S_assignment_operator = 107,             // assignment_operator
-        S_expression = 108,                      // expression
-        S_constant_expression = 109,             // constant_expression
-        S_declaration = 110,                     // declaration
-        S_declaration_specifiers = 111,          // declaration_specifiers
-        S_init_declarator_list = 112,            // init_declarator_list
-        S_init_declarator = 113,                 // init_declarator
-        S_storage_class_specifier = 114,         // storage_class_specifier
-        S_type_specifier = 115,                  // type_specifier
-        S_struct_or_union_specifier = 116,       // struct_or_union_specifier
-        S_struct_or_union = 117,                 // struct_or_union
-        S_struct_declaration_list = 118,         // struct_declaration_list
-        S_struct_declaration = 119,              // struct_declaration
-        S_specifier_qualifier_list = 120,        // specifier_qualifier_list
-        S_struct_declarator_list = 121,          // struct_declarator_list
-        S_struct_declarator = 122,               // struct_declarator
-        S_enum_specifier = 123,                  // enum_specifier
-        S_enumerator_list = 124,                 // enumerator_list
-        S_enumerator = 125,                      // enumerator
-        S_type_qualifier = 126,                  // type_qualifier
-        S_declarator = 127,                      // declarator
-        S_id_or_idptr = 128,                     // id_or_idptr
-        S_array_dim = 129,                       // array_dim
-        S_array_dim_list = 130,                  // array_dim_list
-        S_direct_declarator = 131,               // direct_declarator
-        S_pointer = 132,                         // pointer
-        S_type_qualifier_list = 133,             // type_qualifier_list
-        S_parameter_type_list = 134,             // parameter_type_list
-        S_parameter_list = 135,                  // parameter_list
-        S_parameter_declaration = 136,           // parameter_declaration
-        S_type_name = 137,                       // type_name
-        S_abstract_declarator = 138,             // abstract_declarator
-        S_direct_abstract_declarator = 139,      // direct_abstract_declarator
-        S_initializer = 140,                     // initializer
-        S_initializer_list = 141,                // initializer_list
-        S_statement = 142,                       // statement
-        S_143_3 = 143,                           // $@3
-        S_labeled_statement = 144,               // labeled_statement
-        S_compound_statement = 145,              // compound_statement
-        S_statement_list = 146,                  // statement_list
-        S_expression_statement = 147,            // expression_statement
-        S_selection_statement = 148,             // selection_statement
-        S_iteration_statement = 149,             // iteration_statement
-        S_150_4 = 150,                           // $@4
-        S_151_5 = 151,                           // $@5
-        S_jump_statement = 152,                  // jump_statement
-        S_translation_unit = 153,                // translation_unit
-        S_external_declaration = 154,            // external_declaration
-        S_function_definition = 155,             // function_definition
-        S_156_6 = 156,                           // $@6
-        S_157_7 = 157                            // $@7
+        S_bitwise_logical_operator = 98,         // bitwise_logical_operator
+        S_bitwise_logical_expression = 99,       // bitwise_logical_expression
+        S_logical_binary_operator = 100,         // logical_binary_operator
+        S_logical_expression = 101,              // logical_expression
+        S_conditional_expression = 102,          // conditional_expression
+        S_103_1 = 103,                           // $@1
+        S_assignment_expression = 104,           // assignment_expression
+        S_105_2 = 105,                           // $@2
+        S_assignment_operator = 106,             // assignment_operator
+        S_expression = 107,                      // expression
+        S_constant_expression = 108,             // constant_expression
+        S_declaration = 109,                     // declaration
+        S_declaration_specifiers = 110,          // declaration_specifiers
+        S_init_declarator_list = 111,            // init_declarator_list
+        S_init_declarator = 112,                 // init_declarator
+        S_storage_class_specifier = 113,         // storage_class_specifier
+        S_type_specifier = 114,                  // type_specifier
+        S_struct_or_union_specifier = 115,       // struct_or_union_specifier
+        S_struct_or_union = 116,                 // struct_or_union
+        S_struct_declaration_list = 117,         // struct_declaration_list
+        S_struct_declaration = 118,              // struct_declaration
+        S_specifier_qualifier_list = 119,        // specifier_qualifier_list
+        S_struct_declarator_list = 120,          // struct_declarator_list
+        S_struct_declarator = 121,               // struct_declarator
+        S_enum_specifier = 122,                  // enum_specifier
+        S_enumerator_list = 123,                 // enumerator_list
+        S_enumerator = 124,                      // enumerator
+        S_type_qualifier = 125,                  // type_qualifier
+        S_declarator = 126,                      // declarator
+        S_id_or_idptr = 127,                     // id_or_idptr
+        S_array_dim = 128,                       // array_dim
+        S_array_dim_list = 129,                  // array_dim_list
+        S_direct_declarator = 130,               // direct_declarator
+        S_pointer = 131,                         // pointer
+        S_type_qualifier_list = 132,             // type_qualifier_list
+        S_parameter_type_list = 133,             // parameter_type_list
+        S_parameter_list = 134,                  // parameter_list
+        S_parameter_declaration = 135,           // parameter_declaration
+        S_type_name = 136,                       // type_name
+        S_abstract_declarator = 137,             // abstract_declarator
+        S_direct_abstract_declarator = 138,      // direct_abstract_declarator
+        S_initializer = 139,                     // initializer
+        S_initializer_list = 140,                // initializer_list
+        S_statement = 141,                       // statement
+        S_142_3 = 142,                           // $@3
+        S_labeled_statement = 143,               // labeled_statement
+        S_compound_statement = 144,              // compound_statement
+        S_statement_list = 145,                  // statement_list
+        S_expression_statement = 146,            // expression_statement
+        S_selection_statement = 147,             // selection_statement
+        S_iteration_statement = 148,             // iteration_statement
+        S_149_4 = 149,                           // $@4
+        S_150_5 = 150,                           // $@5
+        S_jump_statement = 151,                  // jump_statement
+        S_translation_unit = 152,                // translation_unit
+        S_external_declaration = 153,            // external_declaration
+        S_function_definition = 154,             // function_definition
+        S_155_6 = 155,                           // $@6
+        S_156_7 = 156                            // $@7
       };
     };
 
@@ -799,11 +798,8 @@ namespace yy {
       case symbol_kind::S_shift_expression: // shift_expression
       case symbol_kind::S_relational_expression: // relational_expression
       case symbol_kind::S_equality_expression: // equality_expression
-      case symbol_kind::S_and_expression: // and_expression
-      case symbol_kind::S_exclusive_or_expression: // exclusive_or_expression
-      case symbol_kind::S_inclusive_or_expression: // inclusive_or_expression
-      case symbol_kind::S_logical_and_expression: // logical_and_expression
-      case symbol_kind::S_logical_or_expression: // logical_or_expression
+      case symbol_kind::S_bitwise_logical_expression: // bitwise_logical_expression
+      case symbol_kind::S_logical_expression: // logical_expression
       case symbol_kind::S_conditional_expression: // conditional_expression
       case symbol_kind::S_assignment_expression: // assignment_expression
       case symbol_kind::S_expression: // expression
@@ -831,6 +827,9 @@ namespace yy {
 
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_TYPE_NAME: // "typename"
+      case symbol_kind::S_unary_operator: // unary_operator
+      case symbol_kind::S_bitwise_logical_operator: // bitwise_logical_operator
+      case symbol_kind::S_logical_binary_operator: // logical_binary_operator
       case symbol_kind::S_type_qualifier: // type_qualifier
       case symbol_kind::S_type_qualifier_list: // type_qualifier_list
         value.move< std::string > (std::move (that.value));
@@ -1039,11 +1038,8 @@ switch (yykind)
       case symbol_kind::S_shift_expression: // shift_expression
       case symbol_kind::S_relational_expression: // relational_expression
       case symbol_kind::S_equality_expression: // equality_expression
-      case symbol_kind::S_and_expression: // and_expression
-      case symbol_kind::S_exclusive_or_expression: // exclusive_or_expression
-      case symbol_kind::S_inclusive_or_expression: // inclusive_or_expression
-      case symbol_kind::S_logical_and_expression: // logical_and_expression
-      case symbol_kind::S_logical_or_expression: // logical_or_expression
+      case symbol_kind::S_bitwise_logical_expression: // bitwise_logical_expression
+      case symbol_kind::S_logical_expression: // logical_expression
       case symbol_kind::S_conditional_expression: // conditional_expression
       case symbol_kind::S_assignment_expression: // assignment_expression
       case symbol_kind::S_expression: // expression
@@ -1071,6 +1067,9 @@ switch (yykind)
 
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_TYPE_NAME: // "typename"
+      case symbol_kind::S_unary_operator: // unary_operator
+      case symbol_kind::S_bitwise_logical_operator: // bitwise_logical_operator
+      case symbol_kind::S_logical_binary_operator: // logical_binary_operator
       case symbol_kind::S_type_qualifier: // type_qualifier
       case symbol_kind::S_type_qualifier_list: // type_qualifier_list
         value.template destroy< std::string > ();
@@ -2885,8 +2884,8 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 1329,     ///< Last index in yytable_.
-      yynnts_ = 72,  ///< Number of nonterminal symbols.
+      yylast_ = 1290,     ///< Last index in yytable_.
+      yynnts_ = 71,  ///< Number of nonterminal symbols.
       yyfinal_ = 57 ///< Termination state number.
     };
 
@@ -2927,11 +2926,8 @@ switch (yykind)
       case symbol_kind::S_shift_expression: // shift_expression
       case symbol_kind::S_relational_expression: // relational_expression
       case symbol_kind::S_equality_expression: // equality_expression
-      case symbol_kind::S_and_expression: // and_expression
-      case symbol_kind::S_exclusive_or_expression: // exclusive_or_expression
-      case symbol_kind::S_inclusive_or_expression: // inclusive_or_expression
-      case symbol_kind::S_logical_and_expression: // logical_and_expression
-      case symbol_kind::S_logical_or_expression: // logical_or_expression
+      case symbol_kind::S_bitwise_logical_expression: // bitwise_logical_expression
+      case symbol_kind::S_logical_expression: // logical_expression
       case symbol_kind::S_conditional_expression: // conditional_expression
       case symbol_kind::S_assignment_expression: // assignment_expression
       case symbol_kind::S_expression: // expression
@@ -2959,6 +2955,9 @@ switch (yykind)
 
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_TYPE_NAME: // "typename"
+      case symbol_kind::S_unary_operator: // unary_operator
+      case symbol_kind::S_bitwise_logical_operator: // bitwise_logical_operator
+      case symbol_kind::S_logical_binary_operator: // logical_binary_operator
       case symbol_kind::S_type_qualifier: // type_qualifier
       case symbol_kind::S_type_qualifier_list: // type_qualifier_list
         value.copy< std::string > (YY_MOVE (that.value));
@@ -3025,11 +3024,8 @@ switch (yykind)
       case symbol_kind::S_shift_expression: // shift_expression
       case symbol_kind::S_relational_expression: // relational_expression
       case symbol_kind::S_equality_expression: // equality_expression
-      case symbol_kind::S_and_expression: // and_expression
-      case symbol_kind::S_exclusive_or_expression: // exclusive_or_expression
-      case symbol_kind::S_inclusive_or_expression: // inclusive_or_expression
-      case symbol_kind::S_logical_and_expression: // logical_and_expression
-      case symbol_kind::S_logical_or_expression: // logical_or_expression
+      case symbol_kind::S_bitwise_logical_expression: // bitwise_logical_expression
+      case symbol_kind::S_logical_expression: // logical_expression
       case symbol_kind::S_conditional_expression: // conditional_expression
       case symbol_kind::S_assignment_expression: // assignment_expression
       case symbol_kind::S_expression: // expression
@@ -3057,6 +3053,9 @@ switch (yykind)
 
       case symbol_kind::S_IDENTIFIER: // "identifier"
       case symbol_kind::S_TYPE_NAME: // "typename"
+      case symbol_kind::S_unary_operator: // unary_operator
+      case symbol_kind::S_bitwise_logical_operator: // bitwise_logical_operator
+      case symbol_kind::S_logical_binary_operator: // logical_binary_operator
       case symbol_kind::S_type_qualifier: // type_qualifier
       case symbol_kind::S_type_qualifier_list: // type_qualifier_list
         value.move< std::string > (YY_MOVE (s.value));
@@ -3143,7 +3142,7 @@ switch (yykind)
 
 
 } // yy
-#line 3147 "mcc_c.tab.h"
+#line 3146 "mcc_c.tab.h"
 
 
 
