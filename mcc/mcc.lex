@@ -2,7 +2,7 @@
 #include <string>
 #include <cstring>
 #include "driver.h"
-#include "mcc_c.tab.h"
+#include "mcc.tab.h"
 %}
 
 %option noyywrap nounput noinput batch debug

@@ -3,6 +3,7 @@
 #include <bitset>
 #include <cassert>
 #include <cstddef>
+#include <iomanip>
 #include <ios>
 #include <iostream>
 #include <map>
@@ -12,7 +13,6 @@
 #include <type_traits>
 #include <variant>
 #include <vector>
-#include <iomanip>
 #if !defined(MCC_UTILS)
 #define MCC_UTILS
 namespace mcc {
@@ -87,10 +87,9 @@ enum class UsrTypeKind { Struct, Union };
 class UserType {
 private:
   UsrTypeKind kind_;
-  // Either a single type in case of a typedef or a list of types (union or
-  // struct)
-  // maps a type alias to a real type or a field name to type
+  // maps a field name to type
   std::map<std::string, std::string> types_;
+  std::string name_;
 
 public:
   UserType(UsrTypeKind kind, const std::map<std::string, std::string> &types)
@@ -100,6 +99,12 @@ public:
   }
   auto GetFieldTName(const std::string &field) const {
     return types_.at(field);
+  }
+  friend bool operator==(const UserType &l, const UserType &r) {
+    return l.name_ == r.name_;
+  }
+  friend bool operator!=(const UserType &l, const UserType &r) {
+    return !(l == r);
   }
 };
 
@@ -167,6 +172,7 @@ public:
         },
         t_);
   }
+
   auto GetType() const { return t_; }
   auto GetPtr() const { return ptr_; }
   auto GetInd() const { return ptr_.GetIndirection(); }
@@ -188,6 +194,9 @@ public:
          std::holds_alternative<Enum>(rt)))
       return std::get<Primitive>(lt) != mcc::Primitive::Void &&
              std::get<Primitive>(rt) != mcc::Primitive::Void;
+    if (std::holds_alternative<UserType>(lt) &&
+        std::holds_alternative<UserType>(rt))
+      return std::get<UserType>(lt) == std::get<UserType>(rt);
     return false;
   }
 };
@@ -232,7 +241,10 @@ public:
   auto inline DerefIsConst() const {
     return type_.GetPtr().GetBit(GetIndLevel() - 1);
   }
-  auto inline GetPtrTo() const { return mcc::Symbol{{type_.GetType(),type_.GetInd()+1},true,true,false};}
+  auto inline GetPtrTo() const {
+    return mcc::Symbol{
+        {type_.GetType(), type_.GetInd() + 1}, true, true, false};
+  }
   auto inline GetDeref() const { return mcc::PtrBits{type_.GetInd() - 1}; }
   auto inline IsLvalue() const { return is_lvalue_; }
   auto inline IsConst() const { return is_const_; }
@@ -249,11 +261,16 @@ public:
   auto IsUserType() const {
     return std::holds_alternative<mcc::UserType>(type_.GetType());
   }
+  friend auto inline AreComparable(const Symbol &l, const Symbol &r);
+  friend auto inline AreCompactible(const Symbol &l, const Symbol &r);
 };
-auto inline AreComparable(const Symbol & l,const Symbol & r)
-{
-  return (l.EvalsToInt()&&r.EvalsToInt());
+auto inline AreComparable(const Symbol &l, const Symbol &r) {
+  return (l.EvalsToInt() && r.EvalsToInt());
 }
+auto inline AreCompactible(const Symbol &l, const Symbol &r) {
+  return AreComparable(l, r) || (l.type_ == r.type_);
+}
+
 auto inline IsFuncPtr(const mcc::Symbol &s) {
   return std::holds_alternative<std::shared_ptr<Func>>(s.GetType());
 }

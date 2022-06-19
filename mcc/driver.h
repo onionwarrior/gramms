@@ -1,7 +1,7 @@
 #ifndef _DRIVER_H_
 #define _DRIVER_H_
 #include "location.hh"
-#include "mcc_c.tab.h"
+#include "mcc.tab.h"
 #include <algorithm>
 #include <deque>
 #include <numeric>

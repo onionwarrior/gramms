@@ -1,5 +1,5 @@
 #include "driver.h"
-#include "mcc_c.tab.h"
+#include "mcc.tab.h"
 driver::driver()
 {
 

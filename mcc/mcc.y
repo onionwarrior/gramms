@@ -107,14 +107,14 @@ class driver;
 %nonassoc "if"
 %nonassoc "else"
 %type <std::size_t> array_dim;
-%type <std::string> logical_binary_operator bitwise_logical_operator
+%type <std::string> additive_operator multiplicative_operator shift_operator
 %type <std::vector<std::pair<std::string,mcc::Symbol>>> parameter_type_list
 %type <std::vector<mcc::Symbol>>argument_expression_list
 %type <std::vector<std::pair<std::string,mcc::Symbol>>> parameter_declaration parameter_list;
 %type <std::vector<std::size_t>> array_dim_list;
 %type <mcc::Symbol> init_declarator;
 %type <std::vector<mcc::Symbol>> init_declarator_list;
-%type <std::string> "identifier";
+%type <std::string> "identifier" assignment_operator;
 %type <mcc::Symbol> primary_expression;
 %type <mcc::Symbol> postfix_expression
 %type <mcc::Symbol> expression;
@@ -122,14 +122,14 @@ class driver;
 %type <mcc::Symbol> "constant";
 %type <mcc::T> declaration_specifiers;
 %type <mcc::T> type_specifier;
-%type <std::string> unary_operator;
+%type <std::string> unary_operator relational_operator equality_operator;
 %type <mcc::Symbol> cast_expression multiplicative_expression additive_expression;
 %type <mcc::Symbol> shift_expression relational_expression equality_expression;
-%type <mcc::Symbol> bitwise_logical_expression logical_expression constant_expression
+%type <mcc::Symbol> bitwise_and_expression bitwise_or_expression constant_expression
+%type <mcc::Symbol> bitwise_xor_expression logical_and_expression logical_or_expression
 %type <mcc::Symbol> conditional_expression assignment_expression unary_expression
 %type <mcc::PtrBits> pointer;
-%type <std::pair<std::string,mcc::Symbol>> id_or_idptr direct_declarator declarator
-;
+%type <std::pair<std::string,mcc::Symbol>> id_or_idptr direct_declarator declarator;
 %type <std::string> "typename";
 %type <std::string> type_qualifier;
 %type <std::string> type_qualifier_list;
@@ -398,110 +398,162 @@ cast_expression
 	| "(" type_name ")" cast_expression
 	{$$=mcc::Symbol{$2,true,true,false};}
 	;
-
+multiplicative_operator:
+	"*"{$$="*";}|
+	"/"{$$="/";}|
+	"%"{$$="%";}
 multiplicative_expression
 	: cast_expression
 	{$$=$1;}
-	| multiplicative_expression "*" cast_expression
-	{$$=$1;}
-	| multiplicative_expression "/" cast_expression
-	{$$=$1;}
-	| multiplicative_expression "%" cast_expression
-	{$$=$1;}
-
+	| multiplicative_expression multiplicative_operator cast_expression
+	{
+		if(!mcc::AreComparable($1,$3)||$1.IsPtr()||$3.IsPtr())
+		{
+			mcc::PrintColored("Invalid operands to binary operator \""+$2+"\"",mcc::TextColor::Error);
+		}
+		$$=$1;
+	}
 	;
+additive_operator:
+	"+"{$$="+";}
+	|"-"{$$="-";}
 
 additive_expression
 	: multiplicative_expression
 	{$$=$1;}
 
-	| additive_expression "+" multiplicative_expression
-	{$$=$1;}
-	| additive_expression "-" multiplicative_expression
-	{$$=$1;}
+	| additive_expression additive_operator multiplicative_expression
+	{
+		if(!mcc::AreComparable($1,$3))
+		{
+			mcc::PrintColored("Invalid operands to binary operator \""+$2+"\"",mcc::TextColor::Error);
+		}
+		$$=$1;
+	}
 	;
+
+shift_operator:
+	"<<"{$$="<<";}
+	|">>"{$$=">>";}
 
 shift_expression
 	: additive_expression
 	{$$=$1;}
-
-	| shift_expression "<<" additive_expression
-	{$$=$1;}
-	| shift_expression ">>" additive_expression
-	{$$=$1;}
+	| shift_expression shift_operator additive_expression
+	{
+		if(!mcc::AreComparable($1,$3)||$1.IsPtr()||$3.IsPtr())
+		{
+			mcc::PrintColored("Invalid operands to binary operator \""+$2+"\"",mcc::TextColor::Error);
+		}
+		$$=$1;
+	}
 	;
+
+relational_operator:
+	"<"{$$="<";}
+	|">"{$$=">";}
+	|"<="{$$="<=";}
+	|">="{$$=">=";}
+equality_operator:
+	"=="{$$="==";}
+	|"!="{$$="!=";}
 
 relational_expression
 	: shift_expression
-	{$$=$1;}
-
-	| relational_expression "<=" shift_expression{$$=$1;}
-
-	| relational_expression ">=" shift_expression{$$=$1;}
-
-	| relational_expression "<" shift_expression{$$=$1;}
-
-	| relational_expression ">" shift_expression{$$=$1;}
-
-	;
-
-equality_expression
-	: relational_expression
-	{$$=$1;}
-
-	| equality_expression "==" relational_expression
-	{
-		if(!mcc::AreComparable($1,$3))
-		{
-			mcc::PrintColored("Invalid operands to binary operator ==",mcc::TextColor::Error);
-		}
-		$$={{mcc::Primitive::Int,0},true,true,false};
-	}
-
-	| equality_expression "!=" relational_expression
-	{
-		if(!mcc::AreComparable($1,$3))
-		{
-			mcc::PrintColored("Invalid operands to binary operator !=",mcc::TextColor::Error);
-		}
-		$$={{mcc::Primitive::Int,0},true,true,false};
-	};
-
-bitwise_logical_operator:
-	"^"{$$="&";}
-	|"|"{$$="|";}
-	|"&"{$$="&";};
-
-bitwise_logical_expression:
-	equality_expression {$$=$1;}
-	|bitwise_logical_expression bitwise_logical_operator equality_expression
-	{
-		if(!(mcc::AreComparable($1,$3))||$1.IsPtr()||$3.IsPtr())
-		{
-			mcc::PrintColored("Invalid operands for binary " + $2 + " operator",mcc::TextColor::Error);
-		}
-		$$={{mcc::Primitive::Int,0},true,true,false};
-
-	}
-logical_binary_operator:
-	"&&"{$$="&&";}|
-	"||"{$$="||";};
-
-logical_expression:
-	bitwise_logical_expression{$$=$1;}
-	|logical_expression logical_binary_operator bitwise_logical_expression
+	| relational_expression relational_operator shift_expression
 	{
 		if(!(mcc::AreComparable($1,$3)))
 		{
 			mcc::PrintColored("Invalid operands for binary " + $2 + " operator",mcc::TextColor::Error);
 		}
 		$$={{mcc::Primitive::Int,0},true,true,false};
+	}
+	;
+
+equality_expression
+	: relational_expression
+	| equality_expression equality_operator relational_expression
+	{
+		if(!(mcc::AreComparable($1,$3)))
+		{
+			mcc::PrintColored("Invalid operands for binary " + $2 + " operator",mcc::TextColor::Error);
+		}
+		$$={{mcc::Primitive::Int,0},true,true,false};
+	}
+
+	;
+
+bitwise_and_expression
+	: equality_expression
+	| bitwise_and_expression "&" equality_expression
+	{
+		if(!mcc::AreComparable($1,$3)||$1.IsPtr()||$3.IsPtr())
+		{
+			mcc::PrintColored("Invalid operands for binary bitwise \"&\" operator",mcc::TextColor::Error);
+		}
+		$$={{mcc::Primitive::Int,0},true,true,false};
 
 	}
-conditional_expression
-	: logical_expression
+	;
+
+bitwise_xor_expression
+	: bitwise_and_expression
 	{$$=$1;}
-	| logical_expression {
+	| bitwise_xor_expression "^" bitwise_and_expression
+	{
+		if(!(mcc::AreComparable($1,$3))||$1.IsPtr()||$3.IsPtr())
+		{
+			mcc::PrintColored("Invalid operands for binary bitwise \"^\" operator",mcc::TextColor::Error);
+		}
+		$$={{mcc::Primitive::Int,0},true,true,false};
+
+	}
+	;
+
+bitwise_or_expression
+	: bitwise_xor_expression
+	{$$=$1;}
+	| bitwise_or_expression "|" bitwise_xor_expression
+	{
+		if(!(mcc::AreComparable($1,$3))||$1.IsPtr()||$3.IsPtr())
+		{
+			mcc::PrintColored("Invalid operands for binary bitwise \"|\" operator",mcc::TextColor::Error);
+		}
+		$$={{mcc::Primitive::Int,0},true,true,false};
+
+	}
+	;
+
+logical_and_expression
+	: bitwise_or_expression
+	| logical_and_expression "&&" bitwise_or_expression
+	{
+		if(!(mcc::AreComparable($1,$3)))
+		{
+			mcc::PrintColored("Invalid operands for binary \"&&\" operator",mcc::TextColor::Error);
+		}
+		$$={{mcc::Primitive::Int,0},true,true,false};
+
+	}
+	;
+
+logical_or_expression
+	: logical_and_expression
+	{$$=$1;}
+	| logical_or_expression "||" logical_and_expression
+	{
+		if(!(mcc::AreComparable($1,$3)))
+		{
+			mcc::PrintColored("Invalid operands for binary \"||\" operator",mcc::TextColor::Error);
+		}
+		$$={{mcc::Primitive::Int,0},true,true,false};
+
+	}
+	;
+conditional_expression
+	: logical_or_expression
+	{$$=$1;}
+	| logical_or_expression {
 		const auto is_primitive = std::holds_alternative<mcc::Primitive>($1.GetType());
 		const auto is_ptr = $1.IsPtr();
 		if(!is_primitive && !is_ptr)
@@ -513,7 +565,14 @@ conditional_expression
 			mcc::PrintColored("Void where pointer or arithmetic type is required",mcc::TextColor::Error);
 		}
 	}
-	"?" expression ":" conditional_expression {$$=$1;}
+	"?" expression ":" conditional_expression
+	{
+		if(!mcc::AreComparable($4,$6))
+		{
+			mcc::PrintColored("Invalid operand types",mcc::TextColor::Error);
+		}
+		$$=$1;
+	}
 //TODO :Check if both expression and conditional_expression have a type and types are
 //compactible, i.e. you cant do stuff like this:
 //char c =  true?"false":1;
@@ -529,32 +588,50 @@ assignment_expression
 	}
 	assignment_operator assignment_expression
 	{
-		if($1.GetType().index()!=$4.GetType().index())
+		if(!mcc::AreCompactible($1,$4))
 		{
-			mcc::PrintColored("Cant assign a non primitive to a primitive or vise-versa",mcc::TextColor::Error);
+			mcc::PrintColored("Invalid operands to binary expression operator",mcc::TextColor::Error);
+		}
+		else
+		{
+			switch($3[0])
+			{
+				case '=':
+				break;
+				case '+':
+				case '-':
+				if(!AreComparable($1,$4))
+					mcc::PrintColored("Invalid operands to binary expression",mcc::TextColor::Error);
+				break;
+				default:
+				if(!AreComparable($1,$4)||$1.IsPtr()||$4.IsPtr())
+					mcc::PrintColored("Invalid operands to binary expression",mcc::TextColor::Error);
+				break;
+			}
 		}
 		$$=$1;
 	}
 	;
 
 assignment_operator
-	: "="
-	| "*="
-	| "/="
-	| "%="
-	| "+="
-	| "-="
-	| "<<="
-	| ">>="
-	| "&="
-	| "^="
-	| "|="
+	: "="{$$="=";}
+	| "*="{$$="*=";}
+	| "/="{$$="/=";}
+	| "%="{$$="%=";}
+	| "+="{$$="+=";}
+	| "-="{$$="-=";}
+	| "<<="{$$="<<=";}
+	| ">>="{$$=">>=";}
+	| "&="{$$="&=";}
+	| "^="{$$="^=";}
+	| "|="{$$="|=";}
 	;
 
 expression
 	: assignment_expression
 	{$$=mcc::Symbol({$1.GetType(),$1.GetIndLevel()},false,true,true);}
 	| expression "," assignment_expression
+	{$$=mcc::Symbol({$1.GetType(),$1.GetIndLevel()},false,true,true);}
 	;
 
 constant_expression
@@ -959,12 +1036,7 @@ translation_unit
 	;
 
 external_declaration
-	: function_definition	if(!(mcc::AreComparable($1,$3)))
-		{
-			mcc::PrintColored("Invalid operands for binary " + $2 + " operator",mcc::TextColor::Error);
-		}
-		$$={{mcc::Primitive::Int,0},true,true,false};
-
+	: function_definition
 	| declaration //Global var or function declaration
 	{mcc::PrintColored("New global definition",mcc::TextColor::Good);}
 	;
@@ -978,12 +1050,7 @@ function_definition:
 				func->SetReturnType($1);
 				drv.AddSymbol($2.first,{{func,0},drv.GetInConst(),true,false});
 			}
-			else	if(!(mcc::AreComparable($1,$3)))
-		{
-			mcc::PrintColored("Invalid operands for binary " + $2 + " operator",mcc::TextColor::Error);
-		}
-		$$={{mcc::Primitive::Int,0},true,true,false};
-
+			else
 			{
 				mcc::PrintColored("Is not a valid function declaration",mcc::TextColor::Error);
 			}

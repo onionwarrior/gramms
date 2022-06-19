@@ -10,6 +10,10 @@ struct s{
 	int z;
 	int c;
 };
+struct s2{
+	int r;
+	int s;
+};
 int swap(int a,int b)
 {
 	return a+b;
@@ -35,5 +39,8 @@ int main()
 	int derfef;
 	int sh1=305;
 	int sh2=300;
+	r=t;
 	char comp = sh2<sh2==sh2;
+	struct s2 s2inst;
+	r=r/t;
 }
