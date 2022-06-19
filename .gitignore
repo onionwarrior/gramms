@@ -1,5 +1,9 @@
+*.*
+!*.tab.*
 !Makefile
-!calc.lex
-!calc.y
-!driver.h
-!driver.cpp
+!*.h
+!*.cpp
+!*Makefile
+!.gitignore
+!*.y
+!*.lex
