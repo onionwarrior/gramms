@@ -3,6 +3,11 @@ int fun(char (*a), char (*b))
 	return 1;
 }
 enum A  {a,c,d};
+enum A {a,c,d};
+typedef int A;
+typedef int A;
+typedef float A;
+int a;
 //fun will be def later
 int undef(char num);
 char sym = 's';
@@ -25,6 +30,7 @@ int main()
 	swap(swap,1);
 	int funz();
 	funz();
+	typedef int rrr;
 	int a = arr[3]--;
 	int c=5;
 	++swap(a,c);
@@ -40,6 +46,7 @@ int main()
 	int sh1=305;
 	int sh2=300;
 	r=t;
+	enum enumt {t,y,u} enumval;
 	char comp = sh2<sh2==sh2;
 	struct s2 s2inst;
 	switch(z)
@@ -50,5 +57,8 @@ int main()
 			}
 
 	}
+	const int ccc=3;
 	return r ;
 }
+rrr var;
+enum enumt en;

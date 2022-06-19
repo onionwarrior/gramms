@@ -37,7 +37,8 @@ public:
   bool trace_scanning = false;
   yy::location location;
   auto AddLabel(const std::string &label) {
-    if (labels_.find(label) != labels_.cend()) {
+    if (labels_.find(label) != labels_.cend())
+      {
       mcc::PrintColored("Label " + label + " already defined in this scope",
                         mcc::TextColor::Error);
     } else {
@@ -95,7 +96,7 @@ public:
       return std::accumulate(scopes_.begin(), scopes_.end(), std::string{});
   }
   auto AddSymbol(const std::string &name, const mcc::Symbol &symbol) {
-    symb_table_.DefineNewSymbol(GetCurrentScope() + name, symbol);
+   return symb_table_.DefineNewSymbol(GetCurrentScope() + name, symbol);
   }
   auto GetType(const std::string &name) const {
     return type_table_.GetTypeByName(name);

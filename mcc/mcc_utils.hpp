@@ -359,7 +359,14 @@ public:
   }
   auto DefineNewTypedef(const std::string &type_name,
                         const std::string &alias) {
-    types_[alias] = types_[type_name];
+    if(types_[alias]==types_[type_name])
+    {
+      types_[alias] = types_[type_name];
+    }
+    else
+    {
+      mcc::PrintColored("Typedef redefinition with different type ", TextColor::Error);
+    }
   }
 };
 inline auto EvalsToBool(const Symbol &sym) {

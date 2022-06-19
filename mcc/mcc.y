@@ -107,6 +107,8 @@ class driver;
 %nonassoc "if"
 %nonassoc "else"
 %type <std::size_t> array_dim;
+%type <std::string> enumerator
+%type <std::vector<std::string>> enumerator_list;
 %type <std::string> additive_operator multiplicative_operator shift_operator
 %type <std::vector<std::pair<std::string,mcc::Symbol>>> parameter_type_list
 %type <std::vector<mcc::Symbol>>argument_expression_list
@@ -122,6 +124,7 @@ class driver;
 %type <mcc::Symbol> "constant";
 %type <mcc::T> declaration_specifiers;
 %type <mcc::T> type_specifier;
+%type <mcc::T> enum_specifier
 %type <std::string> unary_operator relational_operator equality_operator;
 %type <mcc::Symbol> cast_expression multiplicative_expression additive_expression;
 %type <mcc::Symbol> shift_expression relational_expression equality_expression;
@@ -641,7 +644,7 @@ constant_expression
 // check current scope
 declaration
 	: declaration_specifiers ";"
-	{mcc::PrintColored("declaration does not declare anything",mcc::TextColor::Warning);}
+	{}
 	| declaration_specifiers init_declarator_list ";"
 	{
 		drv.UnsetCurrentType();
@@ -699,12 +702,12 @@ init_declarator
 	;
 
 storage_class_specifier
-	: "typedef"
-	| "extern"
+	:
+	"typedef"
+	|"extern"
 	| "static"
 	| "register"
 	;
-
 type_specifier
 	: "void"{$$={mcc::Primitive::Void};}
 	| "char"{$$={mcc::Primitive::Char};}
@@ -716,7 +719,7 @@ type_specifier
 	| "signed" {$$={mcc::Primitive::Int};}
 	| "unsigned"{$$={mcc::Primitive::UInt};}
 	| struct_or_union_specifier{}
-	| enum_specifier{}
+	| enum_specifier{$$={mcc::Primitive::Int};}
 	| "typename"
 		{
 			$$ = drv.GetType($1).value();
@@ -775,18 +778,69 @@ struct_declarator
 
 enum_specifier
 	: "enum" "{" enumerator_list "}"
+	{
+		$$={mcc::Primitive::Int};
+		for(auto&&name:$3)
+		{
+			drv.AddSymbol(name,{{mcc::Primitive::Int},true,true,true});
+		}
+	}
 	| "enum" "identifier" "{" enumerator_list "}"
+	{
+		$$={mcc::Primitive::Int};
+		for(auto&&name:$4)
+		{
+			drv.AddSymbol(name,{{mcc::Primitive::Int},true,true,true});
+		}
+		if(drv.GetType("enum "+$2))
+		{
+			mcc::PrintColored("Redefinition of Enumeration "+$2,mcc::TextColor::Error);
+		}
+		else
+		{
+			drv.AddTypeAlias("enum "+$2,"int");
+		}
+	}
+
 	| "enum" "identifier"
+	{
+		$$={mcc::Primitive::Int};
+		if(!drv.GetType("enum "+$2))
+		{
+			mcc::PrintColored("Enumeration "+$2+" is not defined",mcc::TextColor::Error);
+		}
+	}
 	;
 
 enumerator_list
 	: enumerator
+	{
+		$$={};
+		$$.push_back($1);
+	}
 	| enumerator_list "," enumerator
+	{
+		$$=$1;
+		$$.push_back($3);
+	}
 	;
 
 enumerator
 	: "identifier"
+	{
+		if(drv.GetSymbol($1))
+		{
+			mcc::PrintColored("Redefinition of identifier "+$1,mcc::TextColor::Error);
+		}
+	}
 	| "identifier" "=" constant_expression
+	{
+		if(drv.GetSymbol($1))
+		{
+			mcc::PrintColored("Redefinition of identifier "+$1,mcc::TextColor::Error);
+		}
+	}
+
 	;
 type_qualifier
 	: "const"{$$="const";drv.SetInConst(true);}

@@ -175,6 +175,8 @@ yy::parser::symbol_type check_type(driver & drv,const std::string & s,const yy::
 *	retrn(IDENTIFIER);
 */
 	auto type_val = drv.GetType(s);
+	if(s.find("enum ")!=std::string::npos)
+	  return make_IDENTIFIER(s,loc);
 	if(type_val)
 	  return yy::parser::make_TYPE_NAME(s,loc);
 /*
