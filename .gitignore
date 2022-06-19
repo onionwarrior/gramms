@@ -9,3 +9,5 @@
 !.gitignore
 !*.y
 !*.lex
+*.tab.*
+*.yy.*
