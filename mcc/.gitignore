@@ -1,5 +1,6 @@
 *
-
+!/*/
+/.cache
 !Makefile
 !*.h
 !*.hpp
