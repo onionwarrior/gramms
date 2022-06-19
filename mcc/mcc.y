@@ -159,6 +159,7 @@ primary_expression
 			}
 			else
 			{
+				mcc::PrintColored("Use of undeclared identifier "+$1,mcc::TextColor::Error);
 				$$={};
 			}
 		}
@@ -636,7 +637,6 @@ expression
 
 constant_expression
 	: conditional_expression{$$=$1;}
-
 	;
 // check current scope
 declaration
@@ -702,7 +702,6 @@ storage_class_specifier
 	: "typedef"
 	| "extern"
 	| "static"
-	| "auto"
 	| "register"
 	;
 
@@ -865,13 +864,24 @@ direct_declarator
 			{
 				return arg.second.GetType();
 			});
+		std::vector<std::string > param_names;
+		std::transform($3.begin(),$3.end(),std::back_inserter(param_names),[](auto&&arg)
+			{
+				return arg.first;
+			});
+		std::vector<bool > consts;
+		std::transform($3.begin(),$3.end(),std::back_inserter(consts),[](auto&&arg)
+			{
+				return arg.second.IsConst();
+			});
+
 		mcc::PrintColored("Func argnames",mcc::TextColor::Good);
-		$$={$1.first,{{std::make_shared<mcc::Func>(param_types),0},drv.GetInConst(),false,false}};
+		$$={$1.first,{{std::make_shared<mcc::Func>(param_types,param_names,consts),0},drv.GetInConst(),false,false}};
 	}
 	| id_or_idptr "(" ")"
 	{
 		mcc::PrintColored("Func argnames",mcc::TextColor::Good);
-		$$={$1.first,{{std::make_shared<mcc::Func>(std::vector<mcc::T>{}),0},drv.GetInConst(),true,false}};
+		$$={$1.first,{{std::make_shared<mcc::Func>(std::vector<mcc::T>{},std::vector<std::string>{},std::vector<bool>{}),0},drv.GetInConst(),true,false}};
 	}
 
 pointer
@@ -985,7 +995,12 @@ labeled_statement
 	{
 		drv.AddLabel($1);
 	}
-	| "case" constant_expression ":" statement
+	| "case" constant_expression":"
+	{
+		if(!IsIntegerT($2.GetType()))
+			mcc::PrintColored("Case constant has type which is incompactible with condition type",mcc::TextColor::Error);
+	}
+	statement
 	| "default" ":" statement
 	;
 
@@ -1003,20 +1018,45 @@ expression_statement
 	: ";"
 	| expression ";"
 	;
-
+//can't print if error in time
 selection_statement
-	: "if" "(" expression ")" statement %prec "if"
-	| "if" "(" expression ")" statement "else" statement
-	| "switch" "(" expression ")" statement
+	: "if" "(" expression  ")" statement %prec "if"
+	| "if" "(" expression ")"
+	statement "else" statement
+	| "switch" "(" expression ")"
+	{
+		const auto expr_t = $3.GetType();
+		if(!mcc::IsIntegerT(expr_t))
+		{
+			mcc::PrintColored("Statement requires expression of integer type",mcc::TextColor::Error);
+		}
+		drv.SetCurrentSwitchType($3.GetType());
+	}
+	statement
+	{
+		drv.UnsetCurrentSwitchType();
+	}
 	;
-
+new_scope_subroutine:
+		%empty {drv.EnterNewScope("");}
 iteration_statement
-	: "while" "(" expression {mcc::EvalsToBool($3);} ")" statement
-	| "do" statement "while" "(" expression {mcc::EvalsToBool($5);} ")" ";"
-	| "for" "(" expression_statement expression_statement ")" statement
+	: "while" new_scope_subroutine "(" expression
+		{
+			if(!$4.EvalsToInt())
+				mcc::PrintColored("Statement requires expression of scalar type",mcc::TextColor::Error);
+		}
+		")" statement
+	| "do" new_scope_subroutine statement "while" "(" expression
+		{
+			if(!$6.EvalsToInt())
+				mcc::PrintColored("Statement requires expression of scalar type",mcc::TextColor::Error);
+		}
+ ")" ";"
+	| "for" new_scope_subroutine "(" expression_statement expression_statement ")" statement
+	{drv.LeaveScope();}
 
-	{std::cout<<"param decl\n";}
-	| "for" "(" expression_statement expression_statement expression ")" statement
+	| "for" new_scope_subroutine "(" expression_statement expression_statement expression ")" statement
+	{drv.LeaveScope();}
 	;
 
 jump_statement
@@ -1027,7 +1067,24 @@ jump_statement
 	| "continue" ";"
 	| "break" ";"
 	| "return" ";"
+	{
+	  const auto ret_t = drv.GetCurrentFuncReturnType();
+		if(!ret_t.IsVoid())
+		{
+			auto scope_name = drv.GetCurrentScope();
+			scope_name = scope_name.substr(0,scope_name.find(":"));
+			mcc::PrintColored("Non-void function "+scope_name+" should return a value",mcc::TextColor::Error);
+		}
+	}
 	| "return" expression ";"
+	{
+		const auto ret_t = drv.GetCurrentFuncReturnType();
+		const auto phony_symbol = mcc::Symbol{ret_t,true,true,true};
+		if(!mcc::AreCompactible(phony_symbol,$2))
+		{
+			mcc::PrintColored("Return value type incompactible with function return type",mcc::TextColor::Error);
+		}
+	}
 	;
 //nothing to do here
 translation_unit
@@ -1049,12 +1106,17 @@ function_definition:
 				auto func = std::get<std::shared_ptr<mcc::Func>>($2.second.GetType());
 				func->SetReturnType($1);
 				drv.AddSymbol($2.first,{{func,0},drv.GetInConst(),true,false});
+				drv.SetCurrentFuncReturnType($1);
+				drv.EnterNewScope($2.first);
+				for(auto&& [name,type,constness]  : func->GetParams())
+				{
+					drv.AddSymbol(name,{type,constness,true,true});
+				}
 			}
 			else
 			{
 				mcc::PrintColored("Is not a valid function declaration",mcc::TextColor::Error);
 			}
-			drv.EnterNewScope($2.first);
 		}
 		compound_statement
 		{

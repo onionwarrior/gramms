@@ -172,6 +172,13 @@ public:
         },
         t_);
   }
+  template <typename T> auto IsT() const {
+    return std::holds_alternative<T>(t_);
+  }
+  auto IsVoid() const {
+    return IsT<mcc::Primitive>() &&
+           std::get<mcc::Primitive>(t_) == mcc::Primitive::Void;
+  }
 
   auto GetType() const { return t_; }
   auto GetPtr() const { return ptr_; }
@@ -199,6 +206,7 @@ public:
       return std::get<UserType>(lt) == std::get<UserType>(rt);
     return false;
   }
+  friend bool operator!=(const mcc::T &l, const mcc::T &r) { return !(l == r); }
 };
 inline auto IsNoneType(const mcc::TypeOrNone &t) {
   return std::holds_alternative<mcc::NoneType>(t);
@@ -206,16 +214,30 @@ inline auto IsNoneType(const mcc::TypeOrNone &t) {
 class Func {
   T return_type_ = {mcc::Primitive::Int};
   std::vector<T> args_;
+  std::vector<std::string> names_;
+  std::vector<bool> consts_;
 
 public:
   auto SetReturnType(const mcc::T &new_t) { return_type_ = new_t; }
   auto GetReturnType() const { return return_type_; }
+  const auto GetParams() const {
+    std::vector<std::tuple<std::string, T,bool>> ret;
+    for (auto i = 0u; i < args_.size(); i++) {
+      ret.emplace_back(std::make_tuple(names_[i], args_[i],consts_[i]));
+    }
+    return ret;
+  }
   const auto &GetArgs() const { return args_; }
-  Func(const std::vector<T> &args) : args_{args} {}
-  Func(const T &ret, const std::vector<T> &args)
-      : return_type_{ret}, args_{args} {}
+  Func(const std::vector<T> &args, const std::vector<std::string> &names,
+       const std::vector<bool> &consts)
+      : args_{args}, names_{names}, consts_{consts} {}
+  Func(const T &ret, const std::vector<T> &args,
+       const std::vector<std::string> &names,const std::vector<bool>&consts)
+      : return_type_{ret}, args_{args}, names_{names},consts_{consts}{}
 };
 inline auto IsIntegerT(const T &t) {
+  if (std::holds_alternative<Enum>(t.GetType()) && !t.IsPtrT())
+    return true;
   if (std::holds_alternative<Primitive>(t.GetType()) && !t.IsPtrT()) {
     const auto e_type = std::get<Primitive>(t.GetType());
     return e_type != Primitive::Void && e_type != Primitive::Float &&

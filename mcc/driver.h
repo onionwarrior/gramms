@@ -13,12 +13,15 @@ YY_DECL;
 class driver {
 private:
   std::deque<std::string> scopes_;
+  std::deque<mcc::T> switch_types_;
   std::size_t anon_scope_cnt_ = 0;
   mcc::SymbolTable symb_table_;
   mcc::TypeTable type_table_;
   std::set<std::string> labels_;
   std::set<std::string> labels_refd_;
   mcc::T cur_type_;
+  mcc::T current_func_ret_type;
+  mcc::Symbol subroutine_sym_;
   bool is_in_const_;
 
 public:
@@ -41,6 +44,10 @@ public:
       labels_.insert(label);
     }
   }
+  auto SetCurrentFuncReturnType(const mcc::T &t) { current_func_ret_type = t; }
+  auto GetCurrentFuncReturnType() const { return current_func_ret_type; }
+  auto EnterSubroutine(const mcc::Symbol &s) { subroutine_sym_ = s; }
+  const auto GetSubroutineSymbol() const { return subroutine_sym_; }
   auto UndefLabelRefs() const {
     std::set<std::string> diff;
     std::set_difference(labels_refd_.begin(), labels_refd_.end(),
@@ -58,6 +65,9 @@ public:
       scopes_.push_back("@" + std::to_string(anon_scope_cnt_) + "::");
     }
   }
+  auto SetCurrentSwitchType(const mcc::T&t) { switch_types_.push_back(t);}
+  auto GetCurrentSwitchType() const { return switch_types_.back();}
+  auto UnsetCurrentSwitchType() {switch_types_.pop_back();}
   auto GetCurrentType() const { return cur_type_; }
   auto SetCurrentType(const mcc::T &t) { cur_type_ = t; }
   auto UnsetCurrentType() { cur_type_ = {}; }

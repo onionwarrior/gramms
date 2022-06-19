@@ -34,7 +34,7 @@ int main()
 	float z = 0.3;
 	int q = &swap(1,2);
 	int * ptr;
-	struct s t;
+
 	int k =0;
 	int derfef;
 	int sh1=305;
@@ -42,5 +42,13 @@ int main()
 	r=t;
 	char comp = sh2<sh2==sh2;
 	struct s2 s2inst;
-	r=r/t;
+	switch(z)
+	{
+		case a12:
+			{
+
+			}
+
+	}
+	return r ;
 }
