@@ -414,6 +414,10 @@ additive_expression
 			mcc::PrintColored("Invalid operands to binary operator \""+$2+"\"",mcc::TextColor::Error);
 		}
 		$$=$1;
+		if($3.IsPtr())
+		{
+			$$=$3;
+		}
 	}
 	;
 
@@ -672,6 +676,12 @@ init_declarator
 	: declarator
 	{
 		auto sym = mcc::Symbol{drv.GetCurrentType().GetType(),drv.GetInConst(),true,true};
+		if(IsFuncPtr($1.second))
+		{
+			auto func_t = std::get<std::shared_ptr<mcc::Func>>($1.second.GetFullType().GetType());
+			func_t->SetReturnType(drv.GetCurrentType());
+			sym = mcc::Symbol{{func_t,0},true,true,true};
+		}
 		drv.AddSymbol($1.first,sym);
 	}
 	| declarator "=" initializer
@@ -714,10 +724,10 @@ init_declarator
 		{
 			if(!mcc::AreCompactible($1.second,$3))
 				mcc::PrintColored("Bad initializer",mcc::TextColor::Error);
+			auto sym = mcc::Symbol{{drv.GetCurrentType().GetType(),$1.second.GetFullType().GetPtr()},drv.GetInConst(),true,true};
+			drv.AddSymbol($1.first,sym);
 
 		}
-		auto sym = mcc::Symbol{drv.GetCurrentType(),drv.GetInConst(),true,true};
-		drv.AddSymbol($1.first,sym);
 	}
 	;
 
@@ -895,7 +905,6 @@ direct_declarator
 	{
 		auto as_arr_t = mcc::T{$1.second.GetType()}.ToArrT();
 		drv.AddSymbol($1.first,{{mcc::CArray{as_arr_t,$2.begin(),$2.end()},$1.second.GetIndLevel()},drv.GetInConst(),true,false});
-		mcc::PrintColored("Array:",mcc::TextColor::Good);
 		$$={$1.first,{{mcc::CArray{as_arr_t,$2.begin(),$2.end()},$1.second.GetIndLevel()},drv.GetInConst(),true,false}};
 	}
 	| id_or_idptr "(" parameter_type_list  ")"
@@ -903,7 +912,7 @@ direct_declarator
 		std::vector<mcc::T> param_types;
 		std::transform($3.begin(),$3.end(),std::back_inserter(param_types),[](auto&&arg)
 			{
-				return arg.second.GetType();
+				return arg.second.GetFullType();
 			});
 		std::vector<std::string > param_names;
 		std::transform($3.begin(),$3.end(),std::back_inserter(param_names),[](auto&&arg)
@@ -916,12 +925,10 @@ direct_declarator
 				return arg.second.IsConst();
 			});
 
-		mcc::PrintColored("Func argnames",mcc::TextColor::Good);
 		$$={$1.first,{{std::make_shared<mcc::Func>(param_types,param_names,consts),0},drv.GetInConst(),false,false}};
 	}
 	| id_or_idptr "(" ")"
 	{
-		mcc::PrintColored("Func argnames",mcc::TextColor::Good);
 		$$={$1.first,{{std::make_shared<mcc::Func>(std::vector<mcc::T>{},std::vector<std::string>{},std::vector<bool>{}),0},drv.GetInConst(),true,false}};
 	}
 
@@ -979,7 +986,8 @@ parameter_declaration
 	{
 			auto decl = $2.second;
 			$$={};
-			$$.push_back({$2.first,{$1,drv.GetInConst(),true,true}});
+			$$.push_back({$2.first,{{$1.GetType(),$2.second.GetFullType().GetPtr()},$2.second.IsConst(),true,true}});
+			drv.SetInConst(false);
 	}
 	;
 
@@ -1176,7 +1184,7 @@ translation_unit
 external_declaration
 	: function_definition
 	| declaration //Global var or function declaration
-	{mcc::PrintColored("New global definition",mcc::TextColor::Good);}
+	{}
 	;
 //All kinds of functions definitions...
 function_definition:

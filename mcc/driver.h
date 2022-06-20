@@ -59,6 +59,7 @@ public:
 
   auto AddLabelRef(const std::string &label) { labels_refd_.insert(label); }
   auto EnterNewScope(const std::string &scope) {
+    SetInConst(false);
     if (!scope.empty()) {
       scopes_.push_back(scope + "::");
     } else {
