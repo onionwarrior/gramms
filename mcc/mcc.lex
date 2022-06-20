@@ -19,7 +19,7 @@ oct			[0-7]
 exp			[Ee][+-]?{decimal}+
 fs			(f|F|l|L)
 sgn			(u|U|l|L)*
-
+valid_id		{letter}({letter}|{decimal})*
 %{
 void count();
 yy::parser::symbol_type check_type(driver & drv,const std::string & s,const yy::parser::location_type &loc);
@@ -43,6 +43,7 @@ yy::parser::symbol_type make_CFLOAT(const std::string &s,const yy::parser::locat
 <IN_COMMENT>"*"       // eat the lone star
 <IN_COMMENT>\n loc.lines();
 <IN_COMMENT><<EOF>> std::cerr<<"Warning: Could not match /* with */ at "<<loc<<std::endl; BEGIN(INITIAL);
+
 
 "auto"			{ count(); return yy::parser::make_AUTO(loc); }
 "break"			{ count(); return yy::parser::make_BREAK(loc); }
@@ -77,8 +78,7 @@ yy::parser::symbol_type make_CFLOAT(const std::string &s,const yy::parser::locat
 "volatile"		{ count(); return yy::parser::make_VOLATILE(loc); }
 "while"			{ count(); return yy::parser::make_WHILE(loc); }
 
-{letter}({letter}|{decimal})*		{ count(); return check_type(drv,yytext,loc); }
-
+{valid_id} { count(); return check_type(drv,yytext,loc); } 
 0[xX]{hex}+{sgn}?		{ count(); return make_CINT(yytext,loc); }
 0{decimal}+{sgn}?		{ count(); return make_CINT(yytext,loc); }
 {decimal}+{sgn}?		{ count(); return make_CINT(yytext,loc); }
@@ -96,7 +96,7 @@ L?\"(\\.|[^\\"])*\"	{ count(); return make_STRING_LITERAL(yytext,loc); }
 "+="			{ count(); return yy::parser::make_ADD_ASSIGN(loc); }
 "-="			{ count(); return yy::parser::make_SUB_ASSIGN(loc); }
 "*="			{ count(); return yy::parser::make_MUL_ASSIGN(loc); }
-	yy::location& loc = drv.location;
+	
 "/="			{ count(); return yy::parser::make_DIV_ASSIGN(loc); }
 "%="			{ count(); return yy::parser::make_MOD_ASSIGN(loc); }
 "&="			{ count(); return yy::parser::make_AND_ASSIGN(loc); }

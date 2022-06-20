@@ -718,31 +718,11 @@ type_specifier
 	| "double"{$$={mcc::Primitive::Double};}
 	| "signed" {$$={mcc::Primitive::Int};}
 	| "unsigned"{$$={mcc::Primitive::UInt};}
-	| struct_or_union_specifier{}
 	| enum_specifier{$$={mcc::Primitive::Int};}
 	| "typename"
 		{
 			$$ = drv.GetType($1).value();
 		}
-
-struct_or_union_specifier
-	: struct_or_union "identifier" "{" struct_declaration_list "}"
-	| struct_or_union "{" struct_declaration_list "}"
-	| struct_or_union "identifier"
-	;
-struct_or_union
-	: "struct"
-	| "union"
-	;
-
-struct_declaration_list
-	: struct_declaration
-	| struct_declaration_list struct_declaration
-	;
-
-struct_declaration
-	: specifier_qualifier_list struct_declarator_list ";"
-	;
 
 specifier_qualifier_list
 	: type_specifier specifier_qualifier_list
@@ -798,7 +778,7 @@ enum_specifier
 		}
 		else
 		{
-			drv.AddTypeAlias("enum "+$2,"int");
+			drv.AddTypeAlias("int","enum "+$2);
 		}
 	}
 

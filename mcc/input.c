@@ -7,7 +7,7 @@ enum A {a,c,d};
 typedef int A;
 typedef int A;
 typedef float A;
-int a;
+typedef int a;
 //fun will be def later
 int undef(char num);
 char sym = 's';
@@ -60,5 +60,5 @@ int main()
 	const int ccc=3;
 	return r ;
 }
-rrr var;
+enum rrr var;
 enum enumt en;

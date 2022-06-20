@@ -221,9 +221,9 @@ public:
   auto SetReturnType(const mcc::T &new_t) { return_type_ = new_t; }
   auto GetReturnType() const { return return_type_; }
   const auto GetParams() const {
-    std::vector<std::tuple<std::string, T,bool>> ret;
+    std::vector<std::tuple<std::string, T, bool>> ret;
     for (auto i = 0u; i < args_.size(); i++) {
-      ret.emplace_back(std::make_tuple(names_[i], args_[i],consts_[i]));
+      ret.emplace_back(std::make_tuple(names_[i], args_[i], consts_[i]));
     }
     return ret;
   }
@@ -232,8 +232,8 @@ public:
        const std::vector<bool> &consts)
       : args_{args}, names_{names}, consts_{consts} {}
   Func(const T &ret, const std::vector<T> &args,
-       const std::vector<std::string> &names,const std::vector<bool>&consts)
-      : return_type_{ret}, args_{args}, names_{names},consts_{consts}{}
+       const std::vector<std::string> &names, const std::vector<bool> &consts)
+      : return_type_{ret}, args_{args}, names_{names}, consts_{consts} {}
 };
 inline auto IsIntegerT(const T &t) {
   if (std::holds_alternative<Enum>(t.GetType()) && !t.IsPtrT())
@@ -359,13 +359,13 @@ public:
   }
   auto DefineNewTypedef(const std::string &type_name,
                         const std::string &alias) {
-    if(types_[alias]==types_[type_name])
-    {
+    if (TypeDefined(alias)) {
+      mcc::PrintColored("Redefinition of type '" + alias + "'",
+                        TextColor::Error);
+    } else if (!TypeDefined(type_name)) {
+      mcc::PrintColored("Unknown type name " + type_name, TextColor::Error);
+    } else {
       types_[alias] = types_[type_name];
-    }
-    else
-    {
-      mcc::PrintColored("Typedef redefinition with different type ", TextColor::Error);
     }
   }
 };
