@@ -69,16 +69,14 @@ yy::parser::symbol_type make_CFLOAT(const std::string &s,const yy::parser::locat
 "signed"		{ count(); return yy::parser::make_SIGNED(loc); }
 "sizeof"		{ count(); return yy::parser::make_SIZEOF(loc); }
 "static"		{ count(); return yy::parser::make_STATIC(loc); }
-"struct"		{ count(); return yy::parser::make_STRUCT(loc); }
 "switch"		{ count(); return yy::parser::make_SWITCH(loc); }
 "typedef"		{ count(); return yy::parser::make_TYPEDEF(loc); }
-"union"			{ count(); return yy::parser::make_UNION(loc); }
 "unsigned"		{ count(); return yy::parser::make_UNSIGNED(loc); }
 "void"			{ count(); return yy::parser::make_VOID(loc); }
 "volatile"		{ count(); return yy::parser::make_VOLATILE(loc); }
 "while"			{ count(); return yy::parser::make_WHILE(loc); }
 
-{valid_id} { count(); return check_type(drv,yytext,loc); } 
+{valid_id} { count(); return check_type(drv,yytext,loc); }
 0[xX]{hex}+{sgn}?		{ count(); return make_CINT(yytext,loc); }
 0{decimal}+{sgn}?		{ count(); return make_CINT(yytext,loc); }
 {decimal}+{sgn}?		{ count(); return make_CINT(yytext,loc); }

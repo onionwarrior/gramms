@@ -51,8 +51,6 @@ class driver;
 	CONTINUE "continue"
 	BREAK "break"
 	RETURN "return"
-	STRUCT "struct"
-	UNION "union"
 	ENUM "enum"
 	DIV_ASSIGN "/="
 	MOD_ASSIGN "%="
@@ -270,19 +268,6 @@ postfix_expression
 			mcc::PrintColored("Is not a function",mcc::TextColor::Error);
 			$$={};
 		}
-	}
-	| postfix_expression "." "identifier"
-	{
-		mcc::PrintColored("Non ptr struct or union field access",mcc::TextColor::Good);
-	}
-	| postfix_expression "->" "identifier"
-	{
-		auto t = $1.GetType();
-		if(!$1.IsUserType()&&!$1.IsPtr())
-		{
-			mcc::PrintColored("Cannot apply ++ operator to a non-lvalue",mcc::TextColor::Error);
-		}
-		mcc::PrintColored("Ptr struct or union field access",mcc::TextColor::Good);
 	}
 	| postfix_expression "++"
 	{
@@ -702,9 +687,7 @@ init_declarator
 	;
 
 storage_class_specifier
-	:
-	"typedef"
-	|"extern"
+	:"extern"
 	| "static"
 	| "register"
 	;
@@ -743,17 +726,6 @@ specifier_qualifier_list
 	{$$=$2;}
 	| type_qualifier
 	{$$={true};}
-	;
-
-struct_declarator_list
-	: struct_declarator
-	| struct_declarator_list "," struct_declarator
-	;
-
-struct_declarator
-	: declarator
-	| ":" constant_expression
-	| declarator ":" constant_expression
 	;
 
 enum_specifier
@@ -979,25 +951,56 @@ parameter_declaration
 
 type_name
 	: specifier_qualifier_list
-	| specifier_qualifier_list abstract_declarator
+	{
+		$$=$1;
+	}
+	| specifier_qualifier_list
+	{
+		drv.SetCurrentCastType($1);
+	}
+	abstract_declarator
+	{
+		$$=drv.GetCurrentCastType();
+	}
 	;
 
 abstract_declarator
 	: pointer
+	{
+		auto cur_t = drv.GetCurrentCastType().GetType();
+		drv.SetCurrentCastType({cur_t,$1});
+	}
 	| direct_abstract_declarator
-	| pointer direct_abstract_declarator
+	| pointer
+	{
+		auto cur_t = drv.GetCurrentCastType().GetType();
+		drv.SetCurrentCastType({cur_t,$1});
+	}
+	direct_abstract_declarator
+
 	;
 
 direct_abstract_declarator
 	: "(" abstract_declarator ")"
 	| "[" "]"
+	{
+		auto arr_t = drv.GetCurrentCastType().ToArrT();
+		std::vector<std::size_t> szs;
+		szs.push_back(0);
+		drv.SetCurrentCastType({mcc::CArray{arr_t,szs.begin(),szs.end()},{}});
+	}
 	| "[" constant_expression "]"
-	| direct_abstract_declarator "[" "]"
-	| direct_abstract_declarator "[" constant_expression "]"
+	{
+		auto arr_t = drv.GetCurrentCastType().ToArrT();
+		std::vector<std::size_t> szs;
+		szs.push_back(0);
+		drv.SetCurrentCastType({mcc::CArray{arr_t,szs.begin(),szs.end()},{}});
+	}
 	| "(" ")"
 	| "(" parameter_type_list ")"
-	| direct_abstract_declarator "(" ")"
-	| direct_abstract_declarator "(" parameter_type_list ")"
+	{
+		//Return function which has no return type
+	}
 	;
 
 initializer

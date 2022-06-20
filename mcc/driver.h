@@ -20,6 +20,7 @@ private:
   std::set<std::string> labels_;
   std::set<std::string> labels_refd_;
   mcc::T cur_type_;
+  mcc::T cast_t_;
   mcc::T current_func_ret_type;
   mcc::Symbol subroutine_sym_;
   bool is_in_const_;
@@ -69,6 +70,10 @@ public:
   auto SetCurrentSwitchType(const mcc::T&t) { switch_types_.push_back(t);}
   auto GetCurrentSwitchType() const { return switch_types_.back();}
   auto UnsetCurrentSwitchType() {switch_types_.pop_back();}
+  auto SetCurrentCastType(const mcc::T&t) { cast_t_=t;}
+  auto GetCurrentCastType() const { return cast_t_;}
+  auto UnsetCurrentCastType() {cast_t_={};}
+
   auto GetCurrentType() const { return cur_type_; }
   auto SetCurrentType(const mcc::T &t) { cur_type_ = t; }
   auto UnsetCurrentType() { cur_type_ = {}; }
