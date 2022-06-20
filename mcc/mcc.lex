@@ -36,7 +36,7 @@ yy::parser::symbol_type make_CFLOAT(const std::string &s,const yy::parser::locat
   // Code run each time yylex is called.
   loc.step ();
 %}
-^"//".*
+^[\ \t]*"\/\/".*
 <INITIAL>"/*" BEGIN(IN_COMMENT);
 <IN_COMMENT>"*/"      BEGIN(INITIAL);
 <IN_COMMENT>[^*\n]+   // eat comment in chunks

@@ -135,6 +135,7 @@ class driver;
 %type <std::string> type_qualifier;
 %type <std::string> type_qualifier_list;
 %type <mcc::T> type_name;
+%type <mcc::Symbol> initializer;
 %type <mcc::T> specifier_qualifier_list;
 %param { driver& drv }
 %code {
@@ -146,23 +147,14 @@ class driver;
 primary_expression
 	: "identifier"
 	{
-		const auto sym = drv.GetSymbol(drv.GetCurrentScope()+$1);
-		if(sym)
+		if(auto sym = drv.SearchForSymbol($1))
 		{
 			$$=sym.value();
 		}
 		else
 		{
-			const auto global_lookup = drv.GetSymbol("@::"+$1);
-			if(global_lookup)
-			{
-				$$=global_lookup.value();
-			}
-			else
-			{
 				mcc::PrintColored("Use of undeclared identifier "+$1,mcc::TextColor::Error);
 				$$={};
-			}
 		}
 	}
 	| "constant"
@@ -202,9 +194,8 @@ postfix_expression
 		{
 			auto arr_t = std::get<mcc::CArray>($1.GetType());
 			auto deref_t = arr_t.GetDerefT();
-			$$={{deref_t},true,true,true};
-			mcc::PrintColored(std::to_string($$.IsLvalue()),mcc::TextColor::Error);
-					}
+			$$={{deref_t},false,true,true};
+		}
 		else
 		{
 			mcc::PrintColored("Cannot apply subscript operator to a non pointer value",mcc::TextColor::Error);
@@ -254,7 +245,7 @@ postfix_expression
 			{
 				if(std::equal(fargs.begin(),fargs.end(),$3.begin(),$3.end(),[](auto&&l,auto&&r)
 				{
-					return l==r.GetType();
+					return l.Decay()==r.GetFullType().Decay();
 				}))
 				$$={ftype->GetReturnType(),false,true,false};
 				else {
@@ -277,7 +268,6 @@ postfix_expression
 		}
 
 		$$=$1.GetRvalue();
-		mcc::PrintColored("Postfix increment",mcc::TextColor::Good);
 	}
 	| postfix_expression "--"
 	{
@@ -286,7 +276,6 @@ postfix_expression
 			mcc::PrintColored("Cannot apply -- operator to a non-lvalue",mcc::TextColor::Error);
 		}
 		$$=$1.GetRvalue();
-		mcc::PrintColored("Postfix decrement",mcc::TextColor::Good);
 	}
 	;
 
@@ -385,7 +374,14 @@ cast_expression
 	: unary_expression
 	{$$=$1;}
 	| "(" type_name ")" cast_expression
-	{$$=mcc::Symbol{$2,true,true,false};}
+	{
+		if($2.IsT<mcc::CArray>())
+		{
+			mcc::PrintColored("Cast to incomplete type",mcc::TextColor::Error);
+		}
+
+		$$=mcc::Symbol{$2,true,true,false};
+	}
 	;
 multiplicative_operator:
 	"*"{$$="*";}|
@@ -562,9 +558,6 @@ conditional_expression
 		}
 		$$=$1;
 	}
-//TODO :Check if both expression and conditional_expression have a type and types are
-//compactible, i.e. you cant do stuff like this:
-//char c =  true?"false":1;
 		;
 
 assignment_expression
@@ -629,7 +622,9 @@ constant_expression
 // check current scope
 declaration
 	: declaration_specifiers ";"
-	{}
+	{
+		
+	}
 	| declaration_specifiers init_declarator_list ";"
 	{
 		drv.UnsetCurrentType();
@@ -676,13 +671,53 @@ init_declarator_list
 init_declarator
 	: declarator
 	{
-		auto sym = mcc::Symbol{drv.GetCurrentType(),drv.GetInConst(),true,true};
-		drv.AddSymbol($1.first,$1.second);
+		auto sym = mcc::Symbol{drv.GetCurrentType().GetType(),drv.GetInConst(),true,true};
+		drv.AddSymbol($1.first,sym);
 	}
 	| declarator "=" initializer
 	{
-		auto sym=mcc::Symbol{drv.GetCurrentType(),drv.GetInConst(),true,true};
-		drv.AddSymbol($1.first,$1.second);
+		const auto array_deref_t = drv.GetCurrentType();
+		const auto decl_type = $1.second.GetFullType();
+		const auto init_type = $3.GetFullType();
+		if(decl_type.IsT<mcc::CArray>())
+		{
+			if(array_deref_t.IsT<mcc::Primitive>())
+			{
+				const auto primitive_t = std::get<mcc::Primitive>(array_deref_t.GetType());
+				if(primitive_t==mcc::Primitive::Void)
+				{
+					mcc::PrintColored("Array can not have value type void",mcc::TextColor::Error);
+				}
+				if(primitive_t==mcc::Primitive::Char)
+				{
+					if(init_type.IsT<mcc::Primitive>()&&init_type.IsPtrT())
+					{
+						const auto init_primitive_t = std::get<mcc::Primitive>(init_type.GetType());
+						if(init_primitive_t!=mcc::Primitive::Char)
+						{
+							mcc::PrintColored("Array char[] can not be initialized with a non string literal",mcc::TextColor::Error);
+						}
+					}
+					else {
+						mcc::PrintColored("Bad initalizer",mcc::TextColor::Error);
+					}
+				}
+				else mcc::PrintColored("Bad initializer",mcc::TextColor::Error);
+
+			}
+			else
+			{
+				mcc::PrintColored("Bad initializer",mcc::TextColor::Error);
+			}
+		}
+		else
+		{
+			if(!mcc::AreCompactible($1.second,$3))
+				mcc::PrintColored("Bad initializer",mcc::TextColor::Error);
+
+		}
+		auto sym = mcc::Symbol{drv.GetCurrentType(),drv.GetInConst(),true,true};
+		drv.AddSymbol($1.first,sym);
 	}
 	;
 
@@ -802,7 +837,7 @@ type_qualifier
 declarator
 	: pointer direct_declarator
 	{
-		$$=$2;
+		$$={$2.first,{{$1,$2.second.GetType()},$2.second.IsConst(),true,drv.GetInConst()}};
 	}
 	| direct_declarator
 	{
@@ -953,6 +988,7 @@ type_name
 	: specifier_qualifier_list
 	{
 		$$=$1;
+		drv.SetCurrentCastType($1);
 	}
 	| specifier_qualifier_list
 	{
@@ -1000,13 +1036,16 @@ direct_abstract_declarator
 	| "(" parameter_type_list ")"
 	{
 		//Return function which has no return type
-	}
+	;}
 	;
 
 initializer
 	: assignment_expression
+	{$$=$1;}
 	| "{" initializer_list "}"
+	{$$={};}
 	| "{" initializer_list "," "}"
+	{$$={};}
 	;
 
 initializer_list
@@ -1053,7 +1092,11 @@ statement_list
 	;
 expression_statement
 	: ";"
+	{
+	drv.SetInConst(false);
+	}
 	| expression ";"
+	{drv.SetInConst(false);}
 	;
 //can't print if error in time
 selection_statement
@@ -1115,6 +1158,7 @@ jump_statement
 	}
 	| "return" expression ";"
 	{
+		const auto symt = $2.GetFullType();
 		const auto ret_t = drv.GetCurrentFuncReturnType();
 		const auto phony_symbol = mcc::Symbol{ret_t,true,true,true};
 		if(!mcc::AreCompactible(phony_symbol,$2))
@@ -1136,12 +1180,12 @@ external_declaration
 	;
 //All kinds of functions definitions...
 function_definition:
-	 declaration_specifiers direct_declarator
+	 declaration_specifiers declarator
 		{
 			if(mcc::IsFuncPtr($2.second))
 			{
 				auto func = std::get<std::shared_ptr<mcc::Func>>($2.second.GetType());
-				func->SetReturnType($1);
+				func->SetReturnType({$1.GetType(),$2.second.GetFullType().GetPtr()});
 				drv.AddSymbol($2.first,{{func,0},drv.GetInConst(),true,false});
 				drv.SetCurrentFuncReturnType($1);
 				drv.EnterNewScope($2.first);
@@ -1159,7 +1203,7 @@ function_definition:
 		{
 					drv.LeaveScope();
 		}
-	| direct_declarator
+	| declarator
 		{
 			if(mcc::IsFuncPtr($1.second))
 			{

@@ -128,12 +128,14 @@ class CArray {
 public:
   auto GetArrayIndirection() const { return sizes_.size(); }
   auto GetSizeAt(const std::size_t idx) const { return sizes_[idx]; }
+  auto GetArrT() const { return arr_type_; }
   mcc::TypeOrNone GetDerefT() const {
     if (sizes_.size() > 1)
       return mcc::CArray{arr_type_, sizes_.begin(), sizes_.end() - 1};
     else
       return variant_cast(arr_type_);
   }
+  template <typename T> auto SetType(const T &&t) { arr_type_ = t; }
   template <
       typename T, typename It,
       std::enable_if_t<
@@ -179,7 +181,13 @@ public:
     return IsT<mcc::Primitive>() &&
            std::get<mcc::Primitive>(t_) == mcc::Primitive::Void;
   }
-
+  auto Decay() const {
+    if (IsT<CArray>()) {
+      const auto arr = std::get<CArray>(t_);
+      return mcc::T{arr.GetArrayIndirection(), variant_cast(arr.GetArrT())};
+    } else
+      return *this;
+  }
   auto GetType() const { return t_; }
   auto GetPtr() const { return ptr_; }
   auto GetInd() const { return ptr_.GetIndirection(); }
@@ -190,17 +198,17 @@ public:
   friend bool operator==(const mcc::T &l, const mcc::T &r) {
     auto lt = l.GetType();
     auto rt = r.GetType();
-    auto li = l.GetInd();
-    auto ri = r.GetInd();
     if (std::holds_alternative<NoneType>(lt) &&
-        std::holds_alternative<NoneType>(rt))
+        std::holds_alternative<NoneType>(rt)) {
       return true;
+    }
     if ((std::holds_alternative<Primitive>(lt) ||
          std::holds_alternative<Enum>(lt)) &&
         (std::holds_alternative<Primitive>(rt) ||
-         std::holds_alternative<Enum>(rt)))
-      return std::get<Primitive>(lt) != mcc::Primitive::Void &&
-             std::get<Primitive>(rt) != mcc::Primitive::Void;
+         std::holds_alternative<Enum>(rt))) {
+      return (std::get<Primitive>(lt) != mcc::Primitive::Void) &&
+             (std::get<Primitive>(rt) != mcc::Primitive::Void);
+    }
     if (std::holds_alternative<UserType>(lt) &&
         std::holds_alternative<UserType>(rt))
       return std::get<UserType>(lt) == std::get<UserType>(rt);
@@ -258,7 +266,8 @@ public:
   auto inline EvalsToInt() const {
     const auto t = type_.GetType();
     return type_.IsPtrT() || std::holds_alternative<Enum>(t) ||
-           std::holds_alternative<mcc::Primitive>(t);
+           (std::holds_alternative<mcc::Primitive>(t) &&
+            std::get<mcc::Primitive>(t) != mcc::Primitive::Void);
   }
   auto inline DerefIsConst() const {
     return type_.GetPtr().GetBit(GetIndLevel() - 1);
@@ -267,6 +276,7 @@ public:
     return mcc::Symbol{
         {type_.GetType(), type_.GetInd() + 1}, true, true, false};
   }
+  auto GetFullType() const { return type_; }
   auto inline GetDeref() const { return mcc::PtrBits{type_.GetInd() - 1}; }
   auto inline IsLvalue() const { return is_lvalue_; }
   auto inline IsConst() const { return is_const_; }
@@ -290,7 +300,8 @@ auto inline AreComparable(const Symbol &l, const Symbol &r) {
   return (l.EvalsToInt() && r.EvalsToInt());
 }
 auto inline AreCompactible(const Symbol &l, const Symbol &r) {
-  return AreComparable(l, r) || (l.type_ == r.type_);
+  return AreComparable(l, r) ||
+         (l.GetFullType().Decay() == r.GetFullType().Decay());
 }
 
 auto inline IsFuncPtr(const mcc::Symbol &s) {

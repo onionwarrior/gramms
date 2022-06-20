@@ -38,8 +38,7 @@ public:
   bool trace_scanning = false;
   yy::location location;
   auto AddLabel(const std::string &label) {
-    if (labels_.find(label) != labels_.cend())
-      {
+    if (labels_.find(label) != labels_.cend()) {
       mcc::PrintColored("Label " + label + " already defined in this scope",
                         mcc::TextColor::Error);
     } else {
@@ -67,12 +66,12 @@ public:
       scopes_.push_back("@" + std::to_string(anon_scope_cnt_) + "::");
     }
   }
-  auto SetCurrentSwitchType(const mcc::T&t) { switch_types_.push_back(t);}
-  auto GetCurrentSwitchType() const { return switch_types_.back();}
-  auto UnsetCurrentSwitchType() {switch_types_.pop_back();}
-  auto SetCurrentCastType(const mcc::T&t) { cast_t_=t;}
-  auto GetCurrentCastType() const { return cast_t_;}
-  auto UnsetCurrentCastType() {cast_t_={};}
+  auto SetCurrentSwitchType(const mcc::T &t) { switch_types_.push_back(t); }
+  auto GetCurrentSwitchType() const { return switch_types_.back(); }
+  auto UnsetCurrentSwitchType() { switch_types_.pop_back(); }
+  auto SetCurrentCastType(const mcc::T &t) { cast_t_ = t; }
+  auto GetCurrentCastType() const { return cast_t_; }
+  auto UnsetCurrentCastType() { cast_t_ = {}; }
 
   auto GetCurrentType() const { return cur_type_; }
   auto SetCurrentType(const mcc::T &t) { cur_type_ = t; }
@@ -101,7 +100,7 @@ public:
       return std::accumulate(scopes_.begin(), scopes_.end(), std::string{});
   }
   auto AddSymbol(const std::string &name, const mcc::Symbol &symbol) {
-   return symb_table_.DefineNewSymbol(GetCurrentScope() + name, symbol);
+    return symb_table_.DefineNewSymbol(GetCurrentScope() + name, symbol);
   }
   auto GetType(const std::string &name) const {
     return type_table_.GetTypeByName(name);
@@ -109,6 +108,24 @@ public:
   auto GetSymbol(const std::string &name) {
     return symb_table_.GetSymbol(name);
   }
+  auto SearchForSymbol(const std::string &name) {
+    auto scopes_copy = scopes_;
+    while (!scopes_.empty()) {
+      if (auto sym = GetSymbol(GetCurrentScope() + name)) {
+        scopes_ = std::move(scopes_copy);
+        return sym;
+      }
+      scopes_.pop_back();
+    }
+
+    if (auto sym = GetSymbol("@::" + name)) {
+      scopes_ = std::move(scopes_copy);
+      return sym;
+    }
+    scopes_ = std::move(scopes_copy);
+    return std::optional<mcc::Symbol>{};
+  }
+
   auto DumpSymbols() const { symb_table_.Dump(); }
   auto AddTypeAlias(const std::string &type_name, const std::string &alias) {
     type_table_.DefineNewTypedef(type_name, alias);
